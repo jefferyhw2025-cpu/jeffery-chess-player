@@ -1,11 +1,13 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.29";
+const appVersion = "1.0.30";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
+const lanMinimumCompatibleProtocolVersion = 1;
 const releaseNotes = {
   zh: [
+    "v1.0.30：局域网新增一键诊断、二维码图片复制/下载、扫码限制说明和旧版兼容包脚本。",
     "v1.0.29：确认局域网协议向后兼容，不同游戏版本也可通过房间号或二维码对战。",
     "v1.0.28：局域网新增扫码双人对战卡片，可一键生成房间二维码让朋友加入。",
     "v1.0.27：反馈窗口新增备用发送方案，可复制反馈内容或用邮箱发送，并补充版本中心分享自动测试。",
@@ -50,6 +52,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.30: added one-click LAN diagnostics, QR image copy/download, scan limits, and an old-version compatibility pack script.",
     "v1.0.29: confirmed LAN protocol compatibility so different game versions can still duel by room code or QR.",
     "v1.0.28: LAN play now has a scan-to-duel QR card so friends can join a room faster.",
     "v1.0.27: added backup feedback options for copying or emailing feedback, plus automated checks for version-center sharing.",
@@ -772,10 +775,17 @@ const i18n = {
     lanDuelRoomEmpty: "房间号：—",
     lanDuelRoom: "房间号：{room}",
     lanDuelQrAria: "双人对战二维码",
+    lanDuelNote: "扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。外网扫码无法连接本机房间。",
     lanDuelNotReady: "未生成",
     lanDuelReady: "可扫码",
     lanDuelGenerate: "生成对战二维码",
     lanDuelCreated: "双人对战二维码已生成：{room}",
+    lanQrCopy: "复制二维码图片",
+    lanQrDownload: "下载二维码图片",
+    lanQrCopied: "二维码图片已复制",
+    lanQrDownloaded: "二维码图片已下载",
+    lanQrCopyFallback: "无法直接复制图片，已改为下载二维码",
+    lanQrMissing: "请先生成二维码",
     lanCheckLabel: "联机状态",
     lanCheckTitle: "检测结果",
     lanCheckIdle: "待检测",
@@ -787,7 +797,9 @@ const i18n = {
     lanCheckServerOff: "未检测到，请先运行“本地局域网启动器”。",
     lanCheckRoom: "房间",
     lanCheckVersion: "版本兼容",
-    lanCheckVersionCompatible: "可兼容：本机 v{version}，协议 v{protocol}。不同游戏版本也可对战。",
+    lanCheckVersionCompatible: "本机版本 v{version} / LAN 协议 v{protocol} / 可与旧版兼容",
+    lanCheckVersionPeer: "本机版本 v{version} / LAN 协议 v{protocol} / 对方最低协议 v{peer} / 可兼容",
+    lanCheckVersionTooOld: "需要更新：本机 v{version} / LAN 协议 v{protocol}，对方协议 v{peer} 太旧。",
     lanCheckRoomConnected: "已连接：{room}",
     lanCheckRoomPending: "未连接：{room}",
     lanCheckRoomEmpty: "未输入房间号",
@@ -798,6 +810,24 @@ const i18n = {
     lanCheckOpponentDisconnected: "尚未连接房间",
     lanCheckNoticeOk: "联机状态检测完成",
     lanCheckNoticeBad: "未检测到局域网服务器",
+    lanDiagnostic: "一键诊断",
+    lanDiagnosticLabel: "联机诊断",
+    lanDiagnosticTitle: "联机问题一键诊断",
+    lanDiagnosticCloseAria: "关闭联机诊断",
+    lanDiagnosticIdle: "点击后会检查服务器、房间、对手和局域网地址。",
+    lanDiagnosticChecking: "正在检查联机状态...",
+    lanDiagnosticReady: "诊断完成。把这些信息发给朋友或开发者，就能更快排查 LAN 问题。",
+    lanDiagnosticCopy: "复制诊断结果",
+    lanDiagnosticCopied: "诊断结果已复制",
+    lanDiagnosticDone: "完成",
+    lanDiagnosticAddress: "局域网地址",
+    lanDiagnosticAddressReady: "{url}",
+    lanDiagnosticAddressMissing: "未检测到局域网地址，请先运行局域网启动器。",
+    lanDiagnosticColor: "我的颜色",
+    lanDiagnosticColorWhite: "白方",
+    lanDiagnosticColorBlack: "黑方",
+    lanDiagnosticColorSpectator: "观战者",
+    lanDiagnosticColorNone: "尚未加入房间",
     lanInviteLabel: "邀请朋友",
     lanInviteTitle: "房间已准备好",
     lanInviteCloseAria: "关闭邀请提示",
@@ -1342,10 +1372,17 @@ const i18n = {
     lanDuelRoomEmpty: "Room code: —",
     lanDuelRoom: "Room code: {room}",
     lanDuelQrAria: "Two-player duel QR code",
+    lanDuelNote: "Scan duels only work on the same Wi-Fi / same LAN server. Internet scans cannot reach a local room.",
     lanDuelNotReady: "Not ready",
     lanDuelReady: "Scan ready",
     lanDuelGenerate: "Generate Duel QR",
     lanDuelCreated: "Two-player QR created: {room}",
+    lanQrCopy: "Copy QR image",
+    lanQrDownload: "Download QR image",
+    lanQrCopied: "QR image copied",
+    lanQrDownloaded: "QR image downloaded",
+    lanQrCopyFallback: "Could not copy the image, so the QR was downloaded instead.",
+    lanQrMissing: "Generate a QR code first",
     lanCheckLabel: "Connection Status",
     lanCheckTitle: "Check Result",
     lanCheckIdle: "Not checked",
@@ -1357,7 +1394,9 @@ const i18n = {
     lanCheckServerOff: "Not found. Run the LAN launcher first.",
     lanCheckRoom: "Room",
     lanCheckVersion: "Version compatibility",
-    lanCheckVersionCompatible: "Compatible: this device v{version}, protocol v{protocol}. Different game versions can still duel.",
+    lanCheckVersionCompatible: "This device v{version} / LAN protocol v{protocol} / compatible with older versions",
+    lanCheckVersionPeer: "This device v{version} / LAN protocol v{protocol} / peer minimum v{peer} / compatible",
+    lanCheckVersionTooOld: "Update needed: this device v{version} / LAN protocol v{protocol}; peer protocol v{peer} is too old.",
     lanCheckRoomConnected: "Connected: {room}",
     lanCheckRoomPending: "Not connected: {room}",
     lanCheckRoomEmpty: "No room code",
@@ -1368,6 +1407,24 @@ const i18n = {
     lanCheckOpponentDisconnected: "Not connected to a room",
     lanCheckNoticeOk: "LAN status check complete",
     lanCheckNoticeBad: "LAN server not found",
+    lanDiagnostic: "Diagnose",
+    lanDiagnosticLabel: "LAN Diagnostics",
+    lanDiagnosticTitle: "One-Click Connection Diagnosis",
+    lanDiagnosticCloseAria: "Close LAN diagnostics",
+    lanDiagnosticIdle: "This checks the server, room, opponent, and LAN address.",
+    lanDiagnosticChecking: "Checking LAN status...",
+    lanDiagnosticReady: "Diagnosis complete. Share these details with a friend or developer to debug faster.",
+    lanDiagnosticCopy: "Copy diagnosis",
+    lanDiagnosticCopied: "Diagnosis copied",
+    lanDiagnosticDone: "Done",
+    lanDiagnosticAddress: "LAN address",
+    lanDiagnosticAddressReady: "{url}",
+    lanDiagnosticAddressMissing: "No LAN address detected. Run the LAN launcher first.",
+    lanDiagnosticColor: "My color",
+    lanDiagnosticColorWhite: "White",
+    lanDiagnosticColorBlack: "Black",
+    lanDiagnosticColorSpectator: "Spectator",
+    lanDiagnosticColorNone: "Not in a room yet",
     lanInviteLabel: "Invite a Friend",
     lanInviteTitle: "Room Ready",
     lanInviteCloseAria: "Close invite tip",
@@ -2000,6 +2057,7 @@ const els = {
   lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
   lanDetail: document.querySelector("#lanDetail"),
   lanCheckBtn: document.querySelector("#lanCheckBtn"),
+  lanDiagnosticBtn: document.querySelector("#lanDiagnosticBtn"),
   lanCheckCard: document.querySelector("#lanCheckCard"),
   lanCheckLabel: document.querySelector("#lanCheckLabel"),
   lanCheckTitle: document.querySelector("#lanCheckTitle"),
@@ -2013,9 +2071,12 @@ const els = {
   lanDuelTitle: document.querySelector("#lanDuelTitle"),
   lanDuelPill: document.querySelector("#lanDuelPill"),
   lanDuelText: document.querySelector("#lanDuelText"),
+  lanDuelNote: document.querySelector("#lanDuelNote"),
   lanDuelRoom: document.querySelector("#lanDuelRoom"),
   lanDuelQr: document.querySelector("#lanDuelQr"),
   lanDuelLink: document.querySelector("#lanDuelLink"),
+  lanCopyQrBtn: document.querySelector("#lanCopyQrBtn"),
+  lanDownloadQrBtn: document.querySelector("#lanDownloadQrBtn"),
   lanDuelQrBtn: document.querySelector("#lanDuelQrBtn"),
   lanInviteCard: document.querySelector("#lanInviteCard"),
   lanInviteLabel: document.querySelector("#lanInviteLabel"),
@@ -2025,6 +2086,16 @@ const els = {
   lanInviteRoom: document.querySelector("#lanInviteRoom"),
   lanInviteQr: document.querySelector("#lanInviteQr"),
   lanInviteLink: document.querySelector("#lanInviteLink"),
+  lanInviteCopyQrBtn: document.querySelector("#lanInviteCopyQrBtn"),
+  lanInviteDownloadQrBtn: document.querySelector("#lanInviteDownloadQrBtn"),
+  lanDiagnosticDialog: document.querySelector("#lanDiagnosticDialog"),
+  lanDiagnosticLabel: document.querySelector("#lanDiagnosticLabel"),
+  lanDiagnosticTitle: document.querySelector("#lanDiagnosticTitle"),
+  lanDiagnosticStatus: document.querySelector("#lanDiagnosticStatus"),
+  lanDiagnosticList: document.querySelector("#lanDiagnosticList"),
+  closeLanDiagnosticBtn: document.querySelector("#closeLanDiagnosticBtn"),
+  copyLanDiagnosticBtn: document.querySelector("#copyLanDiagnosticBtn"),
+  closeLanDiagnosticDoneBtn: document.querySelector("#closeLanDiagnosticDoneBtn"),
   versionBtn: document.querySelector("#versionBtn"),
   versionUpdateDot: document.querySelector("#versionUpdateDot"),
   releaseDialog: document.querySelector("#releaseDialog"),
@@ -5389,6 +5460,7 @@ function renderLanguage() {
   setButtonContent(els.lanDisconnectBtn, "×", t("lanDisconnect"));
   setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
   setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
+  setButtonContent(els.lanDiagnosticBtn, "?", t("lanDiagnostic"));
   els.lanShareLabel.textContent = t("lanShareLabel");
   const duelRoom = normalizeLanRoom(els.lanRoomInput.value || els.lanDuelCard.dataset.room || "");
   const duelHref = els.lanDuelLink.getAttribute("href") || "";
@@ -5402,10 +5474,22 @@ function renderLanguage() {
   els.lanInviteTitle.textContent = t("lanInviteTitle");
   els.lanInviteCloseBtn.setAttribute("aria-label", t("lanInviteCloseAria"));
   els.lanInviteText.textContent = t("lanInviteText");
+  setButtonContent(els.lanInviteCopyQrBtn, "⧉", t("lanQrCopy"));
+  setButtonContent(els.lanInviteDownloadQrBtn, "↓", t("lanQrDownload"));
+  els.lanDiagnosticLabel.textContent = t("lanDiagnosticLabel");
+  els.lanDiagnosticTitle.textContent = t("lanDiagnosticTitle");
+  els.closeLanDiagnosticBtn.setAttribute("aria-label", t("lanDiagnosticCloseAria"));
+  setButtonContent(els.copyLanDiagnosticBtn, "⧉", t("lanDiagnosticCopy"));
+  els.closeLanDiagnosticDoneBtn.textContent = t("lanDiagnosticDone");
+  if (els.lanDiagnosticDialog.hidden) {
+    els.lanDiagnosticStatus.textContent = t("lanDiagnosticIdle");
+  }
   const inviteRoom = normalizeLanRoom(els.lanInviteCard.dataset.room ?? "");
   if (inviteRoom) {
     els.lanInviteRoom.textContent = t("lanInviteRoom", { room: inviteRoom });
-    renderLanInviteQr(els.lanInviteLink.href);
+    const rendered = renderLanInviteQr(els.lanInviteLink.href);
+    els.lanInviteCopyQrBtn.disabled = !rendered;
+    els.lanInviteDownloadQrBtn.disabled = !rendered;
   }
   renderLanPanel();
 
@@ -8478,6 +8562,50 @@ function lanOpponentCheckText() {
   return t("lanCheckOpponentDisconnected");
 }
 
+function lanProtocolCompatibilityText() {
+  const peerProtocol = Number(lanState.protocolVersion) || lanProtocolVersion;
+  if (peerProtocol < lanMinimumCompatibleProtocolVersion) {
+    return t("lanCheckVersionTooOld", {
+      version: appVersion,
+      protocol: lanProtocolVersion,
+      peer: peerProtocol,
+    });
+  }
+  if (isLanConnected() && peerProtocol !== lanProtocolVersion) {
+    return t("lanCheckVersionPeer", {
+      version: appVersion,
+      protocol: lanProtocolVersion,
+      peer: peerProtocol,
+    });
+  }
+  return t("lanCheckVersionCompatible", { version: appVersion, protocol: lanProtocolVersion });
+}
+
+function lanColorText() {
+  if (lanState.color === "w") {
+    return t("lanDiagnosticColorWhite");
+  }
+  if (lanState.color === "b") {
+    return t("lanDiagnosticColorBlack");
+  }
+  if (lanState.color === "s") {
+    return t("lanDiagnosticColorSpectator");
+  }
+  return t("lanDiagnosticColorNone");
+}
+
+function lanAddressText(check = lastLanCheck) {
+  const address = Array.isArray(check?.info?.addresses) ? check.info.addresses[0] : "";
+  const port = Number(check?.info?.port) || "";
+  if (check?.ok && address && port) {
+    return t("lanDiagnosticAddressReady", { url: `http://${address}:${port}/index.html` });
+  }
+  if (check?.ok && check.base) {
+    return t("lanDiagnosticAddressReady", { url: `${check.base}/index.html` });
+  }
+  return t("lanDiagnosticAddressMissing");
+}
+
 function appendLanCheckRow(label, value, href = "") {
   const row = document.createElement("div");
   row.className = "lan-check-row";
@@ -8510,7 +8638,7 @@ function renderLanCheckResult(check = lastLanCheck) {
 
   appendLanCheckRow(t("lanCheckServer"), check.ok ? t("lanCheckServerOn") : t("lanCheckServerOff"));
   appendLanCheckRow(t("lanCheckRoom"), lanRoomCheckText());
-  appendLanCheckRow(t("lanCheckVersion"), t("lanCheckVersionCompatible", { version: appVersion, protocol: lanProtocolVersion }));
+  appendLanCheckRow(t("lanCheckVersion"), lanProtocolCompatibilityText());
   appendLanCheckRow(t("lanCheckOpponent"), lanOpponentCheckText());
   if (!check.ok) {
     appendLanCheckRow(t("releaseHealthWarning", { label: t("lanCheck") }), t("releaseHealthLanGuide"));
@@ -8530,6 +8658,62 @@ async function checkLanStatus() {
   renderLanCheckResult(check);
   els.lanCheckBtn.disabled = false;
   setNotice(check.ok ? t("lanCheckNoticeOk") : t("lanCheckNoticeBad"));
+}
+
+function lanDiagnosticRows(check = lastLanCheck) {
+  return [
+    [t("lanCheckServer"), check?.ok ? t("lanCheckServerOn") : t("lanCheckServerOff")],
+    [t("lanCheckRoom"), lanRoomCheckText()],
+    [t("lanDiagnosticColor"), lanColorText()],
+    [t("lanCheckOpponent"), lanOpponentCheckText()],
+    [t("lanCheckVersion"), lanProtocolCompatibilityText()],
+    [t("lanDiagnosticAddress"), lanAddressText(check)],
+  ];
+}
+
+function renderLanDiagnostic(check = lastLanCheck) {
+  const rows = lanDiagnosticRows(check);
+  els.lanDiagnosticStatus.textContent = check ? t("lanDiagnosticReady") : t("lanDiagnosticIdle");
+  els.lanDiagnosticList.innerHTML = "";
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "lan-diagnostic-row";
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const detail = document.createElement("dd");
+    detail.textContent = value;
+    row.append(term, detail);
+    els.lanDiagnosticList.append(row);
+  });
+}
+
+async function openLanDiagnostic() {
+  els.lanDiagnosticDialog.hidden = false;
+  els.lanDiagnosticStatus.textContent = t("lanDiagnosticChecking");
+  els.lanDiagnosticList.innerHTML = "";
+  els.lanDiagnosticBtn.disabled = true;
+  const check = await fetchLanInfoStatus();
+  lastLanCheck = check;
+  renderLanCheckResult(check);
+  renderLanDiagnostic(check);
+  els.lanDiagnosticBtn.disabled = false;
+  window.setTimeout(() => els.closeLanDiagnosticBtn.focus(), 0);
+}
+
+function closeLanDiagnostic() {
+  els.lanDiagnosticDialog.hidden = true;
+}
+
+async function copyLanDiagnostic() {
+  const text = lanDiagnosticRows(lastLanCheck)
+    .map(([label, value]) => `${label}: ${value}`)
+    .join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    setNotice(t("lanDiagnosticCopied"));
+  } catch (error) {
+    setNotice(t("copyBlocked"));
+  }
 }
 
 async function lanWebSocketUrl() {
@@ -8608,7 +8792,7 @@ function renderLanInviteQr(shareUrl) {
   els.lanInviteQr.innerHTML = "";
   els.lanInviteQr.setAttribute("aria-label", t("lanInviteQrAria"));
   if (!shareUrl || typeof window.qrcode !== "function") {
-    return;
+    return false;
   }
 
   try {
@@ -8616,8 +8800,10 @@ function renderLanInviteQr(shareUrl) {
     qr.addData(shareUrl);
     qr.make();
     els.lanInviteQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, title: t("lanInviteQrAria") });
+    return true;
   } catch (error) {
     els.lanInviteQr.innerHTML = "";
+    return false;
   }
 }
 
@@ -8625,7 +8811,7 @@ function renderLanDuelQr(shareUrl) {
   els.lanDuelQr.innerHTML = "";
   els.lanDuelQr.setAttribute("aria-label", t("lanDuelQrAria"));
   if (!shareUrl || typeof window.qrcode !== "function") {
-    return;
+    return false;
   }
 
   try {
@@ -8633,8 +8819,88 @@ function renderLanDuelQr(shareUrl) {
     qr.addData(shareUrl);
     qr.make();
     els.lanDuelQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, title: t("lanDuelQrAria") });
+    return true;
   } catch (error) {
     els.lanDuelQr.innerHTML = "";
+    return false;
+  }
+}
+
+function qrFileName(room = currentLanRoom()) {
+  const cleanRoom = normalizeLanRoom(room) || "room";
+  return `jeffery-chess-${cleanRoom}-qr.png`;
+}
+
+function qrSvgElement(qrContainer) {
+  return qrContainer?.querySelector("svg") || null;
+}
+
+async function qrPngBlob(qrContainer) {
+  const svg = qrSvgElement(qrContainer);
+  if (!svg) {
+    return null;
+  }
+  const source = new XMLSerializer().serializeToString(svg);
+  const svgBlob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+  const svgUrl = URL.createObjectURL(svgBlob);
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = svgUrl;
+    });
+    const size = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, size, size);
+    context.drawImage(image, 0, 0, size, size);
+    return await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function downloadLanQr(qrContainer = els.lanDuelQr, room = currentLanRoom()) {
+  const blob = await qrPngBlob(qrContainer);
+  if (!blob) {
+    setNotice(t("lanQrMissing"));
+    return false;
+  }
+  downloadBlob(blob, qrFileName(room));
+  setNotice(t("lanQrDownloaded"));
+  return true;
+}
+
+async function copyLanQr(qrContainer = els.lanDuelQr, room = currentLanRoom()) {
+  const blob = await qrPngBlob(qrContainer);
+  if (!blob) {
+    setNotice(t("lanQrMissing"));
+    return;
+  }
+  try {
+    if (!window.ClipboardItem || !navigator.clipboard?.write) {
+      throw new Error("Image clipboard is unavailable");
+    }
+    await navigator.clipboard.write([new window.ClipboardItem({ "image/png": blob })]);
+    setNotice(t("lanQrCopied"));
+  } catch (error) {
+    downloadBlob(blob, qrFileName(room));
+    setNotice(t("lanQrCopyFallback"));
   }
 }
 
@@ -8645,9 +8911,12 @@ function showLanDuelCard(room = "", shareUrl = "") {
   els.lanDuelLabel.textContent = t("lanDuelLabel");
   els.lanDuelTitle.textContent = t("lanDuelTitle");
   els.lanDuelText.textContent = t("lanDuelText");
+  els.lanDuelNote.textContent = t("lanDuelNote");
   els.lanDuelRoom.textContent = cleanRoom ? t("lanDuelRoom", { room: cleanRoom }) : t("lanDuelRoomEmpty");
   els.lanDuelPill.textContent = isReady ? t("lanDuelReady") : t("lanDuelNotReady");
   els.lanDuelPill.classList.toggle("is-ready", isReady);
+  setButtonContent(els.lanCopyQrBtn, "⧉", t("lanQrCopy"));
+  setButtonContent(els.lanDownloadQrBtn, "↓", t("lanQrDownload"));
   setButtonContent(els.lanDuelQrBtn, "▣", t("lanDuelGenerate"));
   if (isReady) {
     els.lanDuelLink.hidden = false;
@@ -8658,7 +8927,9 @@ function showLanDuelCard(room = "", shareUrl = "") {
     els.lanDuelLink.removeAttribute("href");
     els.lanDuelLink.textContent = "";
   }
-  renderLanDuelQr(isReady ? shareUrl : "");
+  const rendered = renderLanDuelQr(isReady ? shareUrl : "");
+  els.lanCopyQrBtn.disabled = !rendered;
+  els.lanDownloadQrBtn.disabled = !rendered;
 }
 
 function showLanInviteCard(room, shareUrl) {
@@ -8673,7 +8944,9 @@ function showLanInviteCard(room, shareUrl) {
   els.lanInviteRoom.textContent = t("lanInviteRoom", { room: cleanRoom });
   els.lanInviteLink.href = shareUrl;
   els.lanInviteLink.textContent = shareUrl;
-  renderLanInviteQr(shareUrl);
+  const rendered = renderLanInviteQr(shareUrl);
+  els.lanInviteCopyQrBtn.disabled = !rendered;
+  els.lanInviteDownloadQrBtn.disabled = !rendered;
 }
 
 function hideLanInviteCard() {
@@ -8682,6 +8955,8 @@ function hideLanInviteCard() {
   els.lanInviteQr.innerHTML = "";
   els.lanInviteLink.removeAttribute("href");
   els.lanInviteLink.textContent = "";
+  els.lanInviteCopyQrBtn.disabled = true;
+  els.lanInviteDownloadQrBtn.disabled = true;
 }
 
 function sendLan(payload) {
@@ -9153,7 +9428,15 @@ els.lanDisconnectBtn.addEventListener("click", () => disconnectLan());
 els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
+els.lanDiagnosticBtn.addEventListener("click", openLanDiagnostic);
+els.lanCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanDuelQr, els.lanDuelCard.dataset.room || currentLanRoom()));
+els.lanDownloadQrBtn.addEventListener("click", () => downloadLanQr(els.lanDuelQr, els.lanDuelCard.dataset.room || currentLanRoom()));
+els.lanInviteCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanInviteQr, els.lanInviteCard.dataset.room || currentLanRoom()));
+els.lanInviteDownloadQrBtn.addEventListener("click", () => downloadLanQr(els.lanInviteQr, els.lanInviteCard.dataset.room || currentLanRoom()));
 els.lanInviteCloseBtn.addEventListener("click", hideLanInviteCard);
+els.closeLanDiagnosticBtn.addEventListener("click", closeLanDiagnostic);
+els.closeLanDiagnosticDoneBtn.addEventListener("click", closeLanDiagnostic);
+els.copyLanDiagnosticBtn.addEventListener("click", copyLanDiagnostic);
 els.lanRoomInput.addEventListener("input", renderLanPanel);
 els.lanRoomInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
@@ -9241,6 +9524,11 @@ els.releaseDialog.addEventListener("click", (event) => {
     closeReleaseDialog();
   }
 });
+els.lanDiagnosticDialog.addEventListener("click", (event) => {
+  if (event.target === els.lanDiagnosticDialog) {
+    closeLanDiagnostic();
+  }
+});
 els.profileDialog.addEventListener("click", (event) => {
   if (event.target === els.profileDialog) {
     closeProfile();
@@ -9259,6 +9547,7 @@ document.addEventListener("keydown", (event) => {
     closeLeaderboardDialog();
     closeFeedback();
     closeReleaseDialog();
+    closeLanDiagnostic();
   }
 });
 els.promotionDialog.addEventListener("click", (event) => {

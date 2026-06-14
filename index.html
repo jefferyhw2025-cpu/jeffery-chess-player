@@ -424,6 +424,10 @@
                   <span class="button-icon">✓</span>
                   检测状态
                 </button>
+                <button class="action-button" id="lanDiagnosticBtn" type="button">
+                  <span class="button-icon">?</span>
+                  一键诊断
+                </button>
                 <button class="action-button" id="lanDisconnectBtn" type="button" hidden>
                   <span class="button-icon">×</span>
                   断开
@@ -439,9 +443,18 @@
                   <span class="lan-duel-pill" id="lanDuelPill">未生成</span>
                 </div>
                 <p class="lan-duel-text" id="lanDuelText">创建房间后，朋友扫描二维码即可进入同一房间。</p>
+                <p class="lan-duel-note" id="lanDuelNote">扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。</p>
                 <p class="lan-duel-room" id="lanDuelRoom">房间号：—</p>
                 <div class="lan-duel-qr" id="lanDuelQr" aria-label="双人对战二维码"></div>
                 <a class="lan-duel-link" id="lanDuelLink" href="#"></a>
+                <div class="lan-qr-actions">
+                  <button class="action-button" id="lanCopyQrBtn" type="button" disabled>
+                    复制二维码图片
+                  </button>
+                  <button class="action-button" id="lanDownloadQrBtn" type="button" disabled>
+                    下载二维码图片
+                  </button>
+                </div>
                 <button class="action-button" id="lanDuelQrBtn" type="button">
                   <span class="button-icon">▣</span>
                   生成对战二维码
@@ -475,6 +488,14 @@
                 <p class="lan-invite-room" id="lanInviteRoom">房间号</p>
                 <div class="lan-invite-qr" id="lanInviteQr" aria-label="邀请二维码"></div>
                 <a class="lan-invite-link" id="lanInviteLink" href="#"></a>
+                <div class="lan-qr-actions">
+                  <button class="action-button" id="lanInviteCopyQrBtn" type="button">
+                    复制二维码图片
+                  </button>
+                  <button class="action-button" id="lanInviteDownloadQrBtn" type="button">
+                    下载二维码图片
+                  </button>
+                </div>
               </article>
             </div>
           </details>
@@ -913,7 +934,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.29</p>
+        <p class="release-version" id="releaseVersionText">v1.0.30</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1005,13 +1026,37 @@
       </div>
     </div>
 
+    <div class="lan-diagnostic-dialog" id="lanDiagnosticDialog" hidden>
+      <div class="lan-diagnostic-card" role="dialog" aria-modal="true" aria-labelledby="lanDiagnosticTitle">
+        <div class="lan-diagnostic-top">
+          <div>
+            <p class="panel-label" id="lanDiagnosticLabel">联机诊断</p>
+            <h2 id="lanDiagnosticTitle">联机问题一键诊断</h2>
+          </div>
+          <button class="icon-button" id="closeLanDiagnosticBtn" type="button" aria-label="关闭联机诊断">
+            ×
+          </button>
+        </div>
+        <p class="lan-diagnostic-status" id="lanDiagnosticStatus">点击后会检查服务器、房间、对手和局域网地址。</p>
+        <dl class="lan-diagnostic-list" id="lanDiagnosticList"></dl>
+        <div class="lan-diagnostic-actions">
+          <button class="action-button" id="copyLanDiagnosticBtn" type="button">
+            复制诊断结果
+          </button>
+          <button class="action-button primary" id="closeLanDiagnosticDoneBtn" type="button">
+            完成
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="daily-reward-toast" id="dailyRewardToast" role="status" aria-live="polite" hidden>
       <span class="daily-reward-badge" id="dailyRewardBadge">★</span>
       <span id="dailyRewardText">每日任务完成</span>
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.29"></script>
-    <script src="./app.js?v=1.0.29"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.30"></script>
+    <script src="./app.js?v=1.0.30"></script>
   </body>
 </html>

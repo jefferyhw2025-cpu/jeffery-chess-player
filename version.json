@@ -1,7 +1,12 @@
 {
-  "version": "1.0.29",
+  "version": "1.0.30",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.30",
+      "releasedAt": "2026-06-14",
+      "summary": "Clearer LAN diagnostics, QR image copy/download, scan limits, and a retained v1.0.28 compatibility test pack."
+    },
     {
       "version": "1.0.29",
       "releasedAt": "2026-06-14",

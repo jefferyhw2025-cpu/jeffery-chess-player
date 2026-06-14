@@ -1166,6 +1166,7 @@ h2 {
 }
 
 .lan-duel-text,
+.lan-duel-note,
 .lan-duel-room {
   margin: 0;
   font-size: 0.88rem;
@@ -1175,6 +1176,13 @@ h2 {
 
 .lan-duel-text {
   color: var(--muted);
+}
+
+.lan-duel-note {
+  border-left: 3px solid rgb(159 66 47 / 45%);
+  padding-left: 9px;
+  color: #7a4b3a;
+  background: linear-gradient(90deg, rgb(159 66 47 / 8%), transparent);
 }
 
 .lan-duel-room {
@@ -1218,6 +1226,19 @@ h2 {
 
 .lan-duel-link:hover {
   text-decoration: underline;
+}
+
+.lan-qr-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lan-qr-actions .action-button {
+  min-width: 0;
+  min-height: 38px;
+  padding-inline: 10px;
+  font-size: 0.82rem;
 }
 
 .lan-share {
@@ -2158,7 +2179,8 @@ textarea:focus {
 .feedback-dialog,
 .promotion-dialog,
 .tutorial-dialog,
-.release-dialog {
+.release-dialog,
+.lan-diagnostic-dialog {
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -2176,7 +2198,8 @@ textarea:focus {
 .feedback-dialog[hidden],
 .promotion-dialog[hidden],
 .tutorial-dialog[hidden],
-.release-dialog[hidden] {
+.release-dialog[hidden],
+.lan-diagnostic-dialog[hidden] {
   display: none;
 }
 
@@ -2187,7 +2210,8 @@ textarea:focus {
 .feedback-card,
 .promotion-card,
 .tutorial-card,
-.release-card {
+.release-card,
+.lan-diagnostic-card {
   width: min(420px, 100%);
   border: 1px solid rgb(255 255 255 / 34%);
   border-radius: var(--radius);
@@ -2215,6 +2239,75 @@ textarea:focus {
   max-height: min(84vh, 760px);
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+.lan-diagnostic-card {
+  display: grid;
+  gap: 12px;
+  width: min(520px, 100%);
+  max-height: min(84vh, 720px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.lan-diagnostic-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lan-diagnostic-top h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.45rem;
+  line-height: 1.08;
+}
+
+.lan-diagnostic-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 850;
+  line-height: 1.4;
+}
+
+.lan-diagnostic-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.lan-diagnostic-row {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid rgb(36 80 57 / 14%);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #ffffff;
+}
+
+.lan-diagnostic-row dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.lan-diagnostic-row dd {
+  margin: 0;
+  color: var(--green-deep);
+  font-size: 0.86rem;
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.lan-diagnostic-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .release-version {
