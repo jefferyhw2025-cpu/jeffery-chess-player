@@ -1,10 +1,11 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.23";
+const appVersion = "1.0.24";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
-const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/";
+const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const releaseNotes = {
   zh: [
+    "v1.0.24：备用网址改为独立公开玩家仓库，私有主仓库继续保持私有。",
     "v1.0.23：版本中心新增 GitHub Pages 下一步提示、PWA 安装提示、上线自检，以及档案导入前预览确认。",
     "v1.0.22：新增离线可玩 PWA、发布状态面板、共享包双击启动页，以及玩家档案导出/导入。",
     "v1.0.21：版本中心新增 GitHub Pages 备用网址，共享包新增先看我说明，并加入发布前一键总控脚本。",
@@ -43,6 +44,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.24: moved the backup site to the separate public player repository while keeping the main repository private.",
     "v1.0.23: added GitHub Pages next-step hints, PWA install guidance, online self-check, and profile import preview.",
     "v1.0.22: added offline-play PWA support, a release status panel, a share-package launch page, and player profile export/import.",
     "v1.0.21: added a GitHub Pages backup link in the version center, a read-me-first share note, and a one-command release controller.",

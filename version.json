@@ -1,7 +1,12 @@
 {
-  "version": "1.0.23",
+  "version": "1.0.24",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.24",
+      "releasedAt": "2026-06-14",
+      "summary": "Backup GitHub Pages site moved to the separate public player repository while the main repository stays private."
+    },
     {
       "version": "1.0.23",
       "releasedAt": "2026-06-14",
