@@ -1,7 +1,12 @@
 {
-  "version": "1.0.31",
+  "version": "1.0.32",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.32",
+      "releasedAt": "2026-06-14",
+      "summary": "Terminal virtual LAN dual-client testing plus reconnect color reclaim for fast reconnects."
+    },
     {
       "version": "1.0.31",
       "releasedAt": "2026-06-14",

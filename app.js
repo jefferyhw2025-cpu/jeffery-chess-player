@@ -1,6 +1,6 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.31";
+const appVersion = "1.0.32";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -9,6 +9,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
   zh: [
+    "v1.0.32：新增本地终端虚拟双客户端 LAN 测试，并修复快速重连后玩家颜色可能变成观战者的问题。",
     "v1.0.31：局域网新增自动重连、重新连接按钮、对方版本显示、二维码有效期提示和真实 LAN 自动化测试。",
     "v1.0.30：局域网新增一键诊断、二维码图片复制/下载、扫码限制说明和旧版兼容包脚本。",
     "v1.0.29：确认局域网协议向后兼容，不同游戏版本也可通过房间号或二维码对战。",
@@ -55,6 +56,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.32: added a local terminal dual-client LAN test and fixed fast reconnects so players reclaim their original color.",
     "v1.0.31: added LAN auto-reconnect, reconnect button, peer version display, QR lifetime hints, and a real LAN automation test.",
     "v1.0.30: added one-click LAN diagnostics, QR image copy/download, scan limits, and an old-version compatibility pack script.",
     "v1.0.29: confirmed LAN protocol compatibility so different game versions can still duel by room code or QR.",
@@ -166,6 +168,7 @@ const volumeSettingsStorageKey = "local-chess-volume-settings-v1";
 const leagueSeasonRewardStorageKey = "local-chess-league-season-rewards-v1";
 const friendModeStorageKey = "local-chess-friend-mode-v1";
 const continuePromptStorageKey = "local-chess-continue-dismissed-v1";
+const lanClientIdStorageKey = "local-chess-lan-client-id-v1";
 const localAdminServerBases = ["http://127.0.0.1:5173", "http://127.0.0.1:5174"];
 let liveVersionState = { status: "idle", version: "", url: productionSiteUrl };
 let pagesVersionState = { status: "idle", version: "", url: backupSiteUrl };
@@ -9096,6 +9099,22 @@ function updateLanPeerMetadata(payload) {
   lanState.protocolVersion = Number(payload.protocolVersion) || lanState.protocolVersion || lanProtocolVersion;
 }
 
+function getLanClientId() {
+  try {
+    const saved = window.localStorage.getItem(lanClientIdStorageKey);
+    if (saved) {
+      return saved;
+    }
+    const created = window.crypto?.randomUUID
+      ? window.crypto.randomUUID()
+      : `lan-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    window.localStorage.setItem(lanClientIdStorageKey, created);
+    return created;
+  } catch (error) {
+    return `lan-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  }
+}
+
 function markLanDisconnected({ keepRoom = true } = {}) {
   clearLanReconnectTimer();
   lanState.status = "disconnected";
@@ -9229,6 +9248,7 @@ async function connectLan({ reconnect = false } = {}) {
         room,
         clientVersion: appVersion,
         protocolVersion: lanProtocolVersion,
+        clientId: getLanClientId(),
       }));
     });
     socket.addEventListener("message", (event) => {
