@@ -1,7 +1,12 @@
 {
-  "version": "1.0.26",
+  "version": "1.0.27",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.27",
+      "releasedAt": "2026-06-14",
+      "summary": "Backup feedback copy/email options plus automated version-center share checks."
+    },
     {
       "version": "1.0.26",
       "releasedAt": "2026-06-14",

@@ -3019,6 +3019,39 @@ textarea:focus {
   color: var(--muted);
 }
 
+.feedback-backup {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgb(36 80 57 / 18%);
+  border-radius: var(--radius);
+  background: rgb(242 247 239 / 78%);
+}
+
+.feedback-backup strong {
+  color: var(--green-deep);
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.feedback-backup p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 780;
+  line-height: 1.35;
+}
+
+.feedback-backup-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.feedback-backup-actions a {
+  text-decoration: none;
+}
+
 .feedback-message {
   color: var(--sky);
 }

@@ -1,10 +1,11 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.26";
+const appVersion = "1.0.27";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const releaseNotes = {
   zh: [
+    "v1.0.27：反馈窗口新增备用发送方案，可复制反馈内容或用邮箱发送，并补充版本中心分享自动测试。",
     "v1.0.26：备用线路会提示云端功能限制，版本中心新增分享给朋友链接和二维码。",
     "v1.0.25：README、公开玩家仓库说明和一键同步脚本已更新，版本中心会更清楚显示备用线路状态。",
     "v1.0.24：备用网址改为独立公开玩家仓库，私有主仓库继续保持私有。",
@@ -46,6 +47,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.27: added backup feedback options for copying or emailing feedback, plus automated checks for version-center sharing.",
     "v1.0.26: backup route now explains cloud-feature limits, and the version center can share the public link with a QR code.",
     "v1.0.25: updated README files, public player repo notes, one-click public sync, and clearer backup-site status.",
     "v1.0.24: moved the backup site to the separate public player repository while keeping the main repository private.",
@@ -131,6 +133,7 @@ const accountStorageKey = "local-chess-accounts-v1";
 const currentAccountStorageKey = "local-chess-current-account";
 const feedbackStorageKey = "local-chess-feedback-v1";
 const feedbackMailboxAddress = "feedback@jeffery-chess.local";
+const feedbackDeveloperEmail = "wuhuangjunzhe@icloud.com";
 const onlineRankPlayerStorageKey = "local-chess-online-rank-player-v1";
 const officialRankProfileStorageKey = "local-chess-official-rank-profile-v1";
 const languageStorageKey = "local-chess-language";
@@ -516,6 +519,12 @@ const i18n = {
     feedbackSavedLocal: "反馈已在本机保存；线上发送暂时失败",
     feedbackSavedLocalWithId: "反馈已在本机保存，编号：{id}；线上发送暂时失败",
     feedbackSaveFailed: "暂时无法保存反馈",
+    feedbackBackupTitle: "备用发送",
+    feedbackBackupText: "如果当前线路无法发送，可复制反馈内容，或用邮箱发给开发者。",
+    feedbackBackupCopy: "复制反馈内容",
+    feedbackBackupMail: "用邮箱发送",
+    feedbackBackupCopied: "反馈内容已复制，可直接发给开发者。",
+    feedbackBackupSubject: "Jeffery Chess 玩家反馈",
     playerProfileButton: "档案",
     playerProfileButtonAria: "打开玩家档案",
     playerProfileLabel: "玩家档案",
@@ -1068,6 +1077,12 @@ const i18n = {
     feedbackSavedLocal: "Feedback was saved locally; online sending failed for now.",
     feedbackSavedLocalWithId: "Feedback saved locally. ID: {id}; online sending failed for now.",
     feedbackSaveFailed: "Feedback could not be saved right now",
+    feedbackBackupTitle: "Backup Send",
+    feedbackBackupText: "If this route cannot send, copy the feedback or email it to the developer.",
+    feedbackBackupCopy: "Copy Feedback",
+    feedbackBackupMail: "Send by Email",
+    feedbackBackupCopied: "Feedback copied. You can send it to the developer.",
+    feedbackBackupSubject: "Jeffery Chess Player Feedback",
     playerProfileButton: "Profile",
     playerProfileButtonAria: "Open player profile",
     playerProfileLabel: "Player Profile",
@@ -1910,6 +1925,10 @@ const els = {
   feedbackCount: document.querySelector("#feedbackCount"),
   feedbackInboxSummary: document.querySelector("#feedbackInboxSummary"),
   feedbackInboxList: document.querySelector("#feedbackInboxList"),
+  feedbackBackupTitle: document.querySelector("#feedbackBackupTitle"),
+  feedbackBackupText: document.querySelector("#feedbackBackupText"),
+  copyFeedbackBackupBtn: document.querySelector("#copyFeedbackBackupBtn"),
+  mailFeedbackBackupBtn: document.querySelector("#mailFeedbackBackupBtn"),
   feedbackMessage: document.querySelector("#feedbackMessage"),
   feedbackKindInput: document.querySelector("#feedbackKindInput"),
   feedbackIdInput: document.querySelector("#feedbackIdInput"),
@@ -2941,6 +2960,80 @@ function saveFeedbackEntry(entry) {
 
 function createFeedbackId() {
   return `FB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+}
+
+function feedbackBackupBody() {
+  const account = currentAccount();
+  const text = els.feedbackText?.value.trim() || "";
+  const fen = typeof game?.fen === "function" ? game.fen() : "";
+  const pgn = typeof game?.pgn === "function" ? game.pgn() : "";
+  const labels = currentLanguage === "en"
+    ? {
+        title: "Jeffery Chess feedback",
+        kind: "Type",
+        account: "Account",
+        language: "Language",
+        page: "Page",
+        time: "Time",
+        fen: "FEN",
+        pgn: "PGN",
+        message: "Message",
+        empty: "(empty)",
+      }
+    : {
+        title: "Jeffery Chess 玩家反馈",
+        kind: "类型",
+        account: "账号",
+        language: "语言",
+        page: "页面",
+        time: "时间",
+        fen: "FEN",
+        pgn: "PGN",
+        message: "内容",
+        empty: "（空）",
+      };
+
+  return [
+    labels.title,
+    `${labels.kind}: ${feedbackKindName()}`,
+    `${labels.account}: ${account?.name ?? t("accountGuest")}`,
+    `${labels.language}: ${currentLanguage}`,
+    `${labels.page}: ${window.location.href}`,
+    `${labels.time}: ${new Date().toISOString()}`,
+    `${labels.fen}: ${fen}`,
+    `${labels.pgn}: ${pgn || labels.empty}`,
+    "",
+    `${labels.message}:`,
+    text || labels.empty,
+  ].join("\n");
+}
+
+function updateFeedbackBackup() {
+  if (!els.feedbackBackupTitle || !els.mailFeedbackBackupBtn) {
+    return;
+  }
+  els.feedbackBackupTitle.textContent = t("feedbackBackupTitle");
+  els.feedbackBackupText.textContent = t("feedbackBackupText");
+  setButtonContent(els.copyFeedbackBackupBtn, "⧉", t("feedbackBackupCopy"));
+  els.mailFeedbackBackupBtn.textContent = t("feedbackBackupMail");
+  const subject = encodeURIComponent(t("feedbackBackupSubject"));
+  const body = encodeURIComponent(feedbackBackupBody());
+  els.mailFeedbackBackupBtn.href = `mailto:${feedbackDeveloperEmail}?subject=${subject}&body=${body}`;
+}
+
+async function copyFeedbackBackup() {
+  if (!els.feedbackText.value.trim()) {
+    els.feedbackMessage.textContent = t("feedbackNeedText");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(feedbackBackupBody());
+    els.feedbackMessage.textContent = t("feedbackBackupCopied");
+    setNotice(t("feedbackBackupCopied"));
+  } catch (error) {
+    els.feedbackMessage.textContent = t("copyBlocked");
+    setNotice(t("copyBlocked"));
+  }
 }
 
 function isNetlifyHost() {
@@ -4265,6 +4358,7 @@ function renderFeedbackState() {
   const entries = loadFeedbackEntries();
   els.feedbackCount.textContent = t("feedbackCount", { count: entries.length });
   els.feedbackInboxList.innerHTML = "";
+  updateFeedbackBackup();
   if (!entries.length) {
     const empty = document.createElement("p");
     empty.className = "feedback-inbox-empty";
@@ -5226,6 +5320,7 @@ function renderLanguage() {
   els.feedbackInboxSummary.textContent = t("feedbackInboxSummary");
   els.cancelFeedbackBtn.textContent = t("cancel");
   els.submitFeedbackBtn.textContent = t("submitFeedback");
+  updateFeedbackBackup();
   renderFeedbackState();
   els.moreMenuBtn.setAttribute("aria-label", t("moreMenuAria"));
   els.settingsCenterLabel.textContent = t("settingsCenterLabel");
@@ -8710,6 +8805,7 @@ async function copyLanLink() {
 function setFeedbackKind(kind) {
   feedbackKind = ["bug", "idea", "praise"].includes(kind) ? kind : "bug";
   renderFeedbackState();
+  updateFeedbackBackup();
 }
 
 function updateAdminStarVisibility() {}
@@ -8793,6 +8889,7 @@ function openFeedback() {
   els.feedbackMessage.textContent = "";
   els.feedbackDialog.hidden = false;
   renderFeedbackState();
+  updateFeedbackBackup();
   window.setTimeout(() => els.feedbackText.focus(), 0);
 }
 
@@ -8839,6 +8936,7 @@ async function handleFeedbackSubmit(event) {
     els.feedbackMessage.textContent = t("feedbackSending");
     const sentOnline = await submitFeedbackOnline(entry);
     els.feedbackText.value = "";
+    updateFeedbackBackup();
     const feedbackNotice = sentOnline
       ? t("feedbackSavedWithId", { id: entry.id })
       : t("feedbackSavedLocalWithId", { id: entry.id });
@@ -8908,6 +9006,8 @@ els.feedbackBtn.addEventListener("click", openFeedback);
 els.closeFeedbackBtn.addEventListener("click", closeFeedback);
 els.cancelFeedbackBtn.addEventListener("click", closeFeedback);
 els.feedbackForm.addEventListener("submit", handleFeedbackSubmit);
+els.feedbackText.addEventListener("input", updateFeedbackBackup);
+els.copyFeedbackBackupBtn.addEventListener("click", copyFeedbackBackup);
 els.versionBtn.addEventListener("click", openReleaseDialog);
 els.closeReleaseBtn.addEventListener("click", closeReleaseDialog);
 els.checkUpdateBtn.addEventListener("click", checkForUpdates);

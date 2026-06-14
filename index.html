@@ -780,6 +780,18 @@
             <summary id="feedbackInboxSummary">虚拟邮箱收件箱</summary>
             <div class="feedback-inbox-list" id="feedbackInboxList"></div>
           </details>
+          <article class="feedback-backup" id="feedbackBackupCard">
+            <strong id="feedbackBackupTitle">备用发送</strong>
+            <p id="feedbackBackupText">如果当前线路无法发送，可复制反馈内容，或用邮箱发给开发者。</p>
+            <div class="feedback-backup-actions">
+              <button class="action-button" id="copyFeedbackBackupBtn" type="button">
+                复制反馈内容
+              </button>
+              <a class="action-button" id="mailFeedbackBackupBtn" href="mailto:wuhuangjunzhe@icloud.com">
+                用邮箱发送
+              </a>
+            </div>
+          </article>
           <p class="feedback-message" id="feedbackMessage" role="status" aria-live="polite"></p>
           <div class="feedback-actions">
             <button class="action-button" id="cancelFeedbackBtn" type="button">
@@ -884,7 +896,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.26</p>
+        <p class="release-version" id="releaseVersionText">v1.0.27</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -982,7 +994,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.26"></script>
-    <script src="./app.js?v=1.0.26"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.27"></script>
+    <script src="./app.js?v=1.0.27"></script>
   </body>
 </html>
