@@ -1,7 +1,12 @@
 {
-  "version": "1.0.30",
+  "version": "1.0.31",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.31",
+      "releasedAt": "2026-06-14",
+      "summary": "LAN auto-reconnect, reconnect button, peer version display, QR lifetime hints, and real LAN automation coverage."
+    },
     {
       "version": "1.0.30",
       "releasedAt": "2026-06-14",

@@ -1,12 +1,15 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.30";
+const appVersion = "1.0.31";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
 const lanMinimumCompatibleProtocolVersion = 1;
+const lanReconnectMaxAttempts = 3;
+const lanReconnectDelayMs = 1200;
 const releaseNotes = {
   zh: [
+    "v1.0.31：局域网新增自动重连、重新连接按钮、对方版本显示、二维码有效期提示和真实 LAN 自动化测试。",
     "v1.0.30：局域网新增一键诊断、二维码图片复制/下载、扫码限制说明和旧版兼容包脚本。",
     "v1.0.29：确认局域网协议向后兼容，不同游戏版本也可通过房间号或二维码对战。",
     "v1.0.28：局域网新增扫码双人对战卡片，可一键生成房间二维码让朋友加入。",
@@ -52,6 +55,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.31: added LAN auto-reconnect, reconnect button, peer version display, QR lifetime hints, and a real LAN automation test.",
     "v1.0.30: added one-click LAN diagnostics, QR image copy/download, scan limits, and an old-version compatibility pack script.",
     "v1.0.29: confirmed LAN protocol compatibility so different game versions can still duel by room code or QR.",
     "v1.0.28: LAN play now has a scan-to-duel QR card so friends can join a room faster.",
@@ -765,6 +769,7 @@ const i18n = {
     lanRoomPlaceholder: "房间号",
     lanCreate: "创建房间",
     lanConnect: "连接",
+    lanReconnect: "重新连接",
     lanDisconnect: "断开",
     lanCopyLink: "复制连接",
     lanCheck: "检测状态",
@@ -775,7 +780,7 @@ const i18n = {
     lanDuelRoomEmpty: "房间号：—",
     lanDuelRoom: "房间号：{room}",
     lanDuelQrAria: "双人对战二维码",
-    lanDuelNote: "扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。外网扫码无法连接本机房间。",
+    lanDuelNote: "扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。二维码只在本次局域网服务器开启期间有效。",
     lanDuelNotReady: "未生成",
     lanDuelReady: "可扫码",
     lanDuelGenerate: "生成对战二维码",
@@ -800,6 +805,12 @@ const i18n = {
     lanCheckVersionCompatible: "本机版本 v{version} / LAN 协议 v{protocol} / 可与旧版兼容",
     lanCheckVersionPeer: "本机版本 v{version} / LAN 协议 v{protocol} / 对方最低协议 v{peer} / 可兼容",
     lanCheckVersionTooOld: "需要更新：本机 v{version} / LAN 协议 v{protocol}，对方协议 v{peer} 太旧。",
+    lanCheckPeerVersion: "对方版本",
+    lanCheckPeerVersionReady: "{version} / 协议 v{protocol} / {status}",
+    lanCheckPeerVersionWaiting: "等待对方加入",
+    lanPeerVersionUnknown: "旧版或未知",
+    lanPeerCompatible: "可兼容",
+    lanPeerTooOld: "需要更新",
     lanCheckRoomConnected: "已连接：{room}",
     lanCheckRoomPending: "未连接：{room}",
     lanCheckRoomEmpty: "未输入房间号",
@@ -843,6 +854,9 @@ const i18n = {
     lanNeedRoom: "请输入房间号",
     lanConnectError: "无法连接局域网服务器，请先运行“本地局域网启动器”。",
     lanConnectedNotice: "已连接局域网房间：{room}",
+    lanReconnectedNotice: "已重新连接房间：{room}",
+    lanReconnectNotice: "连接断开，正在自动重连 {attempt}/{max}...",
+    lanReconnectFailed: "自动重连失败，可点击“重新连接”。",
     lanRoomCreated: "已创建房间：{room}",
     lanRoomCreatedCopied: "已创建房间并复制邀请链接：{room}",
     lanDisconnectedNotice: "局域网已断开",
@@ -1362,6 +1376,7 @@ const i18n = {
     lanRoomPlaceholder: "Room code",
     lanCreate: "Create Room",
     lanConnect: "Connect",
+    lanReconnect: "Reconnect",
     lanDisconnect: "Disconnect",
     lanCopyLink: "Copy Link",
     lanCheck: "Check Status",
@@ -1372,7 +1387,7 @@ const i18n = {
     lanDuelRoomEmpty: "Room code: —",
     lanDuelRoom: "Room code: {room}",
     lanDuelQrAria: "Two-player duel QR code",
-    lanDuelNote: "Scan duels only work on the same Wi-Fi / same LAN server. Internet scans cannot reach a local room.",
+    lanDuelNote: "Scan duels only work on the same Wi-Fi / same LAN server. This QR only works while the current LAN server stays open.",
     lanDuelNotReady: "Not ready",
     lanDuelReady: "Scan ready",
     lanDuelGenerate: "Generate Duel QR",
@@ -1397,6 +1412,12 @@ const i18n = {
     lanCheckVersionCompatible: "This device v{version} / LAN protocol v{protocol} / compatible with older versions",
     lanCheckVersionPeer: "This device v{version} / LAN protocol v{protocol} / peer minimum v{peer} / compatible",
     lanCheckVersionTooOld: "Update needed: this device v{version} / LAN protocol v{protocol}; peer protocol v{peer} is too old.",
+    lanCheckPeerVersion: "Peer version",
+    lanCheckPeerVersionReady: "{version} / protocol v{protocol} / {status}",
+    lanCheckPeerVersionWaiting: "Waiting for peer",
+    lanPeerVersionUnknown: "old or unknown",
+    lanPeerCompatible: "compatible",
+    lanPeerTooOld: "update needed",
     lanCheckRoomConnected: "Connected: {room}",
     lanCheckRoomPending: "Not connected: {room}",
     lanCheckRoomEmpty: "No room code",
@@ -1440,6 +1461,9 @@ const i18n = {
     lanNeedRoom: "Enter a room code",
     lanConnectError: "Could not connect to the LAN server. Run the LAN launcher first.",
     lanConnectedNotice: "Connected to LAN room: {room}",
+    lanReconnectedNotice: "Reconnected to room: {room}",
+    lanReconnectNotice: "Connection dropped. Reconnecting {attempt}/{max}...",
+    lanReconnectFailed: "Auto-reconnect failed. Tap Reconnect.",
     lanRoomCreated: "Room created: {room}",
     lanRoomCreatedCopied: "Room created and invite link copied: {room}",
     lanDisconnectedNotice: "LAN disconnected",
@@ -2053,6 +2077,7 @@ const els = {
   lanRoomInput: document.querySelector("#lanRoomInput"),
   lanCreateBtn: document.querySelector("#lanCreateBtn"),
   lanConnectBtn: document.querySelector("#lanConnectBtn"),
+  lanReconnectBtn: document.querySelector("#lanReconnectBtn"),
   lanDisconnectBtn: document.querySelector("#lanDisconnectBtn"),
   lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
   lanDetail: document.querySelector("#lanDetail"),
@@ -2265,7 +2290,11 @@ let lanState = {
   color: null,
   clients: 0,
   versions: [],
+  peers: [],
   protocolVersion: lanProtocolVersion,
+  reconnectAttempts: 0,
+  reconnectTimer: null,
+  manualDisconnect: false,
 };
 let lastLanCheck = null;
 let releaseHealthState = { status: "idle", rows: [] };
@@ -5374,10 +5403,17 @@ function renderLanPanel() {
   els.lanDetail.classList.toggle("is-spectator", spectating);
   els.lanCreateBtn.disabled = connected || connecting;
   els.lanConnectBtn.disabled = connected || connecting;
+  els.lanReconnectBtn.hidden = connected || connecting || !room;
+  els.lanReconnectBtn.disabled = connected || connecting || !room;
   els.lanDisconnectBtn.hidden = !connected && !connecting;
   els.lanCopyLinkBtn.disabled = !room;
 
-  if (connecting) {
+  if (connecting && lanState.reconnectAttempts > 0) {
+    els.lanDetail.textContent = t("lanReconnectNotice", {
+      attempt: lanState.reconnectAttempts,
+      max: lanReconnectMaxAttempts,
+    });
+  } else if (connecting) {
     els.lanDetail.textContent = t("lanDetailConnecting", { room: lanState.room });
   } else if (!connected) {
     els.lanDetail.textContent = t("lanDetailIdle");
@@ -5457,6 +5493,7 @@ function renderLanguage() {
   els.lanRoomInput.placeholder = t("lanRoomPlaceholder");
   setButtonContent(els.lanCreateBtn, "+", t("lanCreate"));
   setButtonContent(els.lanConnectBtn, "LAN", t("lanConnect"));
+  setButtonContent(els.lanReconnectBtn, "↻", t("lanReconnect"));
   setButtonContent(els.lanDisconnectBtn, "×", t("lanDisconnect"));
   setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
   setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
@@ -8581,6 +8618,31 @@ function lanProtocolCompatibilityText() {
   return t("lanCheckVersionCompatible", { version: appVersion, protocol: lanProtocolVersion });
 }
 
+function lanPeerEntries() {
+  const peers = Array.isArray(lanState.peers) ? lanState.peers : [];
+  if (!peers.length) {
+    return [];
+  }
+  if (lanState.color === "s") {
+    return peers.filter((peer) => peer.color === "w" || peer.color === "b");
+  }
+  return peers.filter((peer) => peer.color !== lanState.color);
+}
+
+function lanPeerVersionText() {
+  const peer = lanPeerEntries().find((entry) => entry.color === "w" || entry.color === "b" || entry.version || entry.protocolVersion);
+  if (!peer) {
+    return t("lanCheckPeerVersionWaiting");
+  }
+  const protocol = Number(peer.protocolVersion) || lanProtocolVersion;
+  const status = protocol < lanMinimumCompatibleProtocolVersion ? t("lanPeerTooOld") : t("lanPeerCompatible");
+  return t("lanCheckPeerVersionReady", {
+    version: peer.version ? `v${peer.version}` : t("lanPeerVersionUnknown"),
+    protocol,
+    status,
+  });
+}
+
 function lanColorText() {
   if (lanState.color === "w") {
     return t("lanDiagnosticColorWhite");
@@ -8639,6 +8701,7 @@ function renderLanCheckResult(check = lastLanCheck) {
   appendLanCheckRow(t("lanCheckServer"), check.ok ? t("lanCheckServerOn") : t("lanCheckServerOff"));
   appendLanCheckRow(t("lanCheckRoom"), lanRoomCheckText());
   appendLanCheckRow(t("lanCheckVersion"), lanProtocolCompatibilityText());
+  appendLanCheckRow(t("lanCheckPeerVersion"), lanPeerVersionText());
   appendLanCheckRow(t("lanCheckOpponent"), lanOpponentCheckText());
   if (!check.ok) {
     appendLanCheckRow(t("releaseHealthWarning", { label: t("lanCheck") }), t("releaseHealthLanGuide"));
@@ -8667,6 +8730,7 @@ function lanDiagnosticRows(check = lastLanCheck) {
     [t("lanDiagnosticColor"), lanColorText()],
     [t("lanCheckOpponent"), lanOpponentCheckText()],
     [t("lanCheckVersion"), lanProtocolCompatibilityText()],
+    [t("lanCheckPeerVersion"), lanPeerVersionText()],
     [t("lanDiagnosticAddress"), lanAddressText(check)],
   ];
 }
@@ -9019,14 +9083,73 @@ function applyLanMove(payload) {
   loadLanFen(payload.fen, payload.lastMove ?? null);
 }
 
+function clearLanReconnectTimer() {
+  if (lanState.reconnectTimer) {
+    window.clearTimeout(lanState.reconnectTimer);
+    lanState.reconnectTimer = null;
+  }
+}
+
+function updateLanPeerMetadata(payload) {
+  lanState.versions = Array.isArray(payload.versions) ? payload.versions : lanState.versions || [];
+  lanState.peers = Array.isArray(payload.peers) ? payload.peers : lanState.peers || [];
+  lanState.protocolVersion = Number(payload.protocolVersion) || lanState.protocolVersion || lanProtocolVersion;
+}
+
+function markLanDisconnected({ keepRoom = true } = {}) {
+  clearLanReconnectTimer();
+  lanState.status = "disconnected";
+  lanState.socket = null;
+  lanState.color = null;
+  lanState.clients = 0;
+  lanState.versions = [];
+  lanState.peers = [];
+  lanState.protocolVersion = lanProtocolVersion;
+  lanState.reconnectAttempts = 0;
+  if (!keepRoom) {
+    lanState.room = "";
+  }
+  renderLanPanel();
+}
+
+function scheduleLanReconnect(socket) {
+  if (lanState.socket !== socket || lanState.manualDisconnect || !lanState.room) {
+    return false;
+  }
+  if (lanState.reconnectAttempts >= lanReconnectMaxAttempts) {
+    markLanDisconnected();
+    setNotice(t("lanReconnectFailed"));
+    return true;
+  }
+  lanState.reconnectAttempts += 1;
+  lanState.status = "connecting";
+  lanState.socket = null;
+  lanState.color = null;
+  lanState.clients = 0;
+  lanState.versions = [];
+  lanState.peers = [];
+  lanState.protocolVersion = lanProtocolVersion;
+  renderLanPanel();
+  setNotice(t("lanReconnectNotice", { attempt: lanState.reconnectAttempts, max: lanReconnectMaxAttempts }));
+  clearLanReconnectTimer();
+  lanState.reconnectTimer = window.setTimeout(() => {
+    lanState.reconnectTimer = null;
+    connectLan({ reconnect: true });
+  }, lanReconnectDelayMs);
+  return true;
+}
+
 function handleLanMessage(payload) {
   if (payload.type === "joined") {
+    const wasReconnecting = lanState.reconnectAttempts > 0;
+    clearLanReconnectTimer();
     lanState.status = "connected";
     lanState.room = payload.room;
     lanState.color = payload.color;
     lanState.clients = payload.clients || 1;
-    lanState.versions = Array.isArray(payload.versions) ? payload.versions : [];
-    lanState.protocolVersion = Number(payload.protocolVersion) || lanProtocolVersion;
+    updateLanPeerMetadata(payload);
+    lanState.reconnectAttempts = 0;
+    lanState.manualDisconnect = false;
     aiEnabled = false;
     rankedModeEnabled = false;
     professionalLeagueModeEnabled = false;
@@ -9040,14 +9163,13 @@ function handleLanMessage(payload) {
     }
     loadLanFen(payload.fen, payload.lastMove ?? null);
     render();
-    setNotice(t("lanConnectedNotice", { room: payload.room }));
+    setNotice(t(wasReconnecting ? "lanReconnectedNotice" : "lanConnectedNotice", { room: payload.room }));
     return;
   }
 
   if (payload.type === "presence") {
     lanState.clients = payload.clients || lanState.clients;
-    lanState.versions = Array.isArray(payload.versions) ? payload.versions : lanState.versions;
-    lanState.protocolVersion = Number(payload.protocolVersion) || lanState.protocolVersion || lanProtocolVersion;
+    updateLanPeerMetadata(payload);
     renderLanPanel();
     return;
   }
@@ -9063,23 +9185,26 @@ function handleLanMessage(payload) {
   }
 }
 
-async function connectLan() {
+async function connectLan({ reconnect = false } = {}) {
   const room = normalizeLanRoom(els.lanRoomInput.value);
   if (!room) {
     setNotice(t("lanNeedRoom"));
     return;
   }
   els.lanRoomInput.value = room;
-  disconnectLan({ silent: true });
-  stopAiThinking();
-  aiEnabled = false;
-  rankedModeEnabled = false;
-  professionalLeagueModeEnabled = false;
-  saveRankedMode();
-  saveProfessionalLeagueMode();
-  clearRankedGameEligibility();
-  clearProfessionalLeagueGameEligibility();
-  showLanShareLink(room);
+  const reconnectAttempts = reconnect ? lanState.reconnectAttempts : 0;
+  if (!reconnect) {
+    disconnectLan({ silent: true, manual: false });
+    stopAiThinking();
+    aiEnabled = false;
+    rankedModeEnabled = false;
+    professionalLeagueModeEnabled = false;
+    saveRankedMode();
+    saveProfessionalLeagueMode();
+    clearRankedGameEligibility();
+    clearProfessionalLeagueGameEligibility();
+    showLanShareLink(room);
+  }
   lanState = {
     socket: null,
     status: "connecting",
@@ -9087,7 +9212,11 @@ async function connectLan() {
     color: null,
     clients: 0,
     versions: [appVersion],
+    peers: [],
     protocolVersion: lanProtocolVersion,
+    reconnectAttempts,
+    reconnectTimer: lanState.reconnectTimer || null,
+    manualDisconnect: false,
   };
   renderLanPanel();
 
@@ -9110,16 +9239,7 @@ async function connectLan() {
       }
     });
     socket.addEventListener("close", () => {
-      if (lanState.socket !== socket) {
-        return;
-      }
-      lanState.status = "disconnected";
-      lanState.socket = null;
-      lanState.color = null;
-      lanState.clients = 0;
-      lanState.versions = [];
-      lanState.protocolVersion = lanProtocolVersion;
-      renderLanPanel();
+      scheduleLanReconnect(socket);
     });
     socket.addEventListener("error", () => {
       if (lanState.socket !== socket) {
@@ -9128,28 +9248,36 @@ async function connectLan() {
       setNotice(t("lanConnectError"));
     });
   } catch (error) {
-    lanState.status = "disconnected";
-    lanState.versions = [];
-    lanState.protocolVersion = lanProtocolVersion;
-    renderLanPanel();
-    setNotice(t("lanConnectError"));
+    if (reconnect && lanState.reconnectAttempts < lanReconnectMaxAttempts) {
+      lanState.socket = { readyState: WebSocket.CLOSED };
+      scheduleLanReconnect(lanState.socket);
+      return;
+    }
+    markLanDisconnected();
+    setNotice(reconnect ? t("lanReconnectFailed") : t("lanConnectError"));
   }
 }
 
-function disconnectLan({ silent = false } = {}) {
+function disconnectLan({ silent = false, manual = true } = {}) {
+  clearLanReconnectTimer();
+  lanState.manualDisconnect = manual;
   if (lanState.socket) {
     lanState.socket.close();
   }
-  lanState.socket = null;
-  lanState.status = "disconnected";
-  lanState.color = null;
-  lanState.clients = 0;
-  lanState.versions = [];
-  lanState.protocolVersion = lanProtocolVersion;
-  renderLanPanel();
+  markLanDisconnected();
   if (!silent) {
     setNotice(t("lanDisconnectedNotice"));
   }
+}
+
+function reconnectLan() {
+  const room = currentLanRoom();
+  if (!room) {
+    setNotice(t("lanNeedRoom"));
+    return;
+  }
+  els.lanRoomInput.value = room;
+  connectLan();
 }
 
 async function createLanRoom() {
@@ -9424,6 +9552,7 @@ els.feedbackKindButtons.forEach((button) => {
 });
 els.lanCreateBtn.addEventListener("click", createLanRoom);
 els.lanConnectBtn.addEventListener("click", connectLan);
+els.lanReconnectBtn.addEventListener("click", reconnectLan);
 els.lanDisconnectBtn.addEventListener("click", () => disconnectLan());
 els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);

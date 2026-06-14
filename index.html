@@ -410,6 +410,10 @@
                   <span class="button-icon">LAN</span>
                   连接
                 </button>
+                <button class="action-button" id="lanReconnectBtn" type="button" hidden>
+                  <span class="button-icon">↻</span>
+                  重新连接
+                </button>
               </div>
               <div class="lan-actions">
                 <button class="action-button" id="lanCreateBtn" type="button">
@@ -443,7 +447,7 @@
                   <span class="lan-duel-pill" id="lanDuelPill">未生成</span>
                 </div>
                 <p class="lan-duel-text" id="lanDuelText">创建房间后，朋友扫描二维码即可进入同一房间。</p>
-                <p class="lan-duel-note" id="lanDuelNote">扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。</p>
+                <p class="lan-duel-note" id="lanDuelNote">扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。本二维码只在当前局域网服务器开启期间有效。</p>
                 <p class="lan-duel-room" id="lanDuelRoom">房间号：—</p>
                 <div class="lan-duel-qr" id="lanDuelQr" aria-label="双人对战二维码"></div>
                 <a class="lan-duel-link" id="lanDuelLink" href="#"></a>
@@ -934,7 +938,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.30</p>
+        <p class="release-version" id="releaseVersionText">v1.0.31</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1056,7 +1060,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.30"></script>
-    <script src="./app.js?v=1.0.30"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.31"></script>
+    <script src="./app.js?v=1.0.31"></script>
   </body>
 </html>
