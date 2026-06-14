@@ -1,10 +1,11 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.24";
+const appVersion = "1.0.25";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const releaseNotes = {
   zh: [
+    "v1.0.25：README、公开玩家仓库说明和一键同步脚本已更新，版本中心会更清楚显示备用线路状态。",
     "v1.0.24：备用网址改为独立公开玩家仓库，私有主仓库继续保持私有。",
     "v1.0.23：版本中心新增 GitHub Pages 下一步提示、PWA 安装提示、上线自检，以及档案导入前预览确认。",
     "v1.0.22：新增离线可玩 PWA、发布状态面板、共享包双击启动页，以及玩家档案导出/导入。",
@@ -44,6 +45,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.25: updated README files, public player repo notes, one-click public sync, and clearer backup-site status.",
     "v1.0.24: moved the backup site to the separate public player repository while keeping the main repository private.",
     "v1.0.23: added GitHub Pages next-step hints, PWA install guidance, online self-check, and profile import preview.",
     "v1.0.22: added offline-play PWA support, a release status panel, a share-package launch page, and player profile export/import.",
@@ -594,6 +596,9 @@ const i18n = {
     releaseStatusLocal: "本地版本",
     releaseStatusNetlify: "Netlify",
     releaseStatusPages: "GitHub Pages",
+    releaseStatusBackupLine: "备用线路",
+    releaseStatusBackupOnline: "已上线：GitHub Pages",
+    releaseStatusPublicVersion: "公开玩家版",
     releaseStatusShare: "共享包",
     releaseStatusVersion: "v{version}",
     releaseStatusUnavailable: "无法访问",
@@ -601,7 +606,7 @@ const i18n = {
     releaseStatusReady: "已同步 v{version}",
     releaseStatusHintIdle: "这里会提示 Netlify 和 GitHub Pages 是否同步。",
     releaseStatusHintPages: "GitHub Pages 未开启时，请到 GitHub 仓库 Settings -> Pages，把 Source 设为 GitHub Actions。",
-    releaseStatusHintReady: "备用页面已可用，玩家可从 GitHub Pages 继续进入游戏。",
+    releaseStatusHintReady: "备用线路已上线，玩家可从 GitHub Pages 继续进入游戏。",
     pwaInstallTitle: "安装到桌面",
     pwaInstallReady: "此浏览器可直接安装游戏。",
     pwaInstallManual: "Chrome 可点地址栏安装图标；Safari 可用分享按钮添加到主屏幕。",
@@ -1135,6 +1140,9 @@ const i18n = {
     releaseStatusLocal: "Local Version",
     releaseStatusNetlify: "Netlify",
     releaseStatusPages: "GitHub Pages",
+    releaseStatusBackupLine: "Backup Route",
+    releaseStatusBackupOnline: "Online: GitHub Pages",
+    releaseStatusPublicVersion: "Public Player Build",
     releaseStatusShare: "Share Package",
     releaseStatusVersion: "v{version}",
     releaseStatusUnavailable: "Unavailable",
@@ -1142,7 +1150,7 @@ const i18n = {
     releaseStatusReady: "Synced v{version}",
     releaseStatusHintIdle: "This shows whether Netlify and GitHub Pages are synced.",
     releaseStatusHintPages: "If GitHub Pages is unavailable, open GitHub Settings -> Pages and set Source to GitHub Actions.",
-    releaseStatusHintReady: "The backup page is available, so players can keep playing from GitHub Pages.",
+    releaseStatusHintReady: "The backup route is online, so players can keep playing from GitHub Pages.",
     pwaInstallTitle: "Install to Desktop",
     pwaInstallReady: "This browser can install the game directly.",
     pwaInstallManual: "In Chrome, use the install icon in the address bar. In Safari, use Share and Add to Home Screen.",
@@ -4510,6 +4518,16 @@ function renderReleaseStatus() {
   appendReleaseStatusRow(
     t("releaseStatusPages"),
     publishStatusValue(pagesVersionState),
+    pagesVersionState.status === "synced",
+  );
+  appendReleaseStatusRow(
+    t("releaseStatusBackupLine"),
+    pagesVersionState.status === "synced" ? t("releaseStatusBackupOnline") : t("releaseStatusUnavailable"),
+    pagesVersionState.status === "synced",
+  );
+  appendReleaseStatusRow(
+    t("releaseStatusPublicVersion"),
+    pagesVersionState.version ? t("releaseStatusVersion", { version: pagesVersionState.version }) : t("releaseStatusUnavailable"),
     pagesVersionState.status === "synced",
   );
   appendReleaseStatusRow(t("releaseStatusShare"), t("releaseStatusVersion", { version: appVersion }), true);

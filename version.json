@@ -1,7 +1,12 @@
 {
-  "version": "1.0.24",
+  "version": "1.0.25",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.25",
+      "releasedAt": "2026-06-14",
+      "summary": "README files, one-click public player publishing, and clearer GitHub Pages backup status."
+    },
     {
       "version": "1.0.24",
       "releasedAt": "2026-06-14",
