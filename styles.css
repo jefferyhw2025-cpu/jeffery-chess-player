@@ -1118,6 +1118,108 @@ h2 {
   color: #9f422f;
 }
 
+.lan-duel-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgb(36 80 57 / 18%);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: #ffffff;
+}
+
+.lan-duel-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lan-duel-label {
+  margin: 0 0 2px;
+  color: var(--brick);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.lan-duel-card h3 {
+  margin: 0;
+  color: var(--green-deep);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.lan-duel-pill {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--green-deep);
+  background: var(--soft);
+  font-size: 0.78rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.lan-duel-pill.is-ready {
+  color: #ffffff;
+  background: var(--green-deep);
+}
+
+.lan-duel-text,
+.lan-duel-room {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.lan-duel-text {
+  color: var(--muted);
+}
+
+.lan-duel-room {
+  color: var(--ink);
+}
+
+.lan-duel-qr {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: min(168px, 100%);
+  aspect-ratio: 1;
+  padding: 10px;
+  border: 1px solid rgb(36 80 57 / 16%);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.lan-duel-qr:empty {
+  display: none;
+}
+
+.lan-duel-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lan-duel-link {
+  color: var(--sky);
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.lan-duel-link[hidden] {
+  display: none;
+}
+
+.lan-duel-link:hover {
+  text-decoration: underline;
+}
+
 .lan-share {
   display: grid;
   gap: 5px;

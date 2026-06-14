@@ -1,10 +1,11 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.27";
+const appVersion = "1.0.28";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const releaseNotes = {
   zh: [
+    "v1.0.28：局域网新增扫码双人对战卡片，可一键生成房间二维码让朋友加入。",
     "v1.0.27：反馈窗口新增备用发送方案，可复制反馈内容或用邮箱发送，并补充版本中心分享自动测试。",
     "v1.0.26：备用线路会提示云端功能限制，版本中心新增分享给朋友链接和二维码。",
     "v1.0.25：README、公开玩家仓库说明和一键同步脚本已更新，版本中心会更清楚显示备用线路状态。",
@@ -47,6 +48,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.28: LAN play now has a scan-to-duel QR card so friends can join a room faster.",
     "v1.0.27: added backup feedback options for copying or emailing feedback, plus automated checks for version-center sharing.",
     "v1.0.26: backup route now explains cloud-feature limits, and the version center can share the public link with a QR code.",
     "v1.0.25: updated README files, public player repo notes, one-click public sync, and clearer backup-site status.",
@@ -761,6 +763,16 @@ const i18n = {
     lanCopyLink: "复制连接",
     lanCheck: "检测状态",
     lanShareLabel: "邀请链接",
+    lanDuelLabel: "扫码双人对战",
+    lanDuelTitle: "生成对战二维码",
+    lanDuelText: "创建房间后，朋友扫描二维码即可进入同一房间。",
+    lanDuelRoomEmpty: "房间号：—",
+    lanDuelRoom: "房间号：{room}",
+    lanDuelQrAria: "双人对战二维码",
+    lanDuelNotReady: "未生成",
+    lanDuelReady: "可扫码",
+    lanDuelGenerate: "生成对战二维码",
+    lanDuelCreated: "双人对战二维码已生成：{room}",
     lanCheckLabel: "联机状态",
     lanCheckTitle: "检测结果",
     lanCheckIdle: "待检测",
@@ -1319,6 +1331,16 @@ const i18n = {
     lanCopyLink: "Copy Link",
     lanCheck: "Check Status",
     lanShareLabel: "Invite link",
+    lanDuelLabel: "Scan to Duel",
+    lanDuelTitle: "Generate Duel QR",
+    lanDuelText: "Create a room, then your friend can scan the QR code to join the same room.",
+    lanDuelRoomEmpty: "Room code: —",
+    lanDuelRoom: "Room code: {room}",
+    lanDuelQrAria: "Two-player duel QR code",
+    lanDuelNotReady: "Not ready",
+    lanDuelReady: "Scan ready",
+    lanDuelGenerate: "Generate Duel QR",
+    lanDuelCreated: "Two-player QR created: {room}",
     lanCheckLabel: "Connection Status",
     lanCheckTitle: "Check Result",
     lanCheckIdle: "Not checked",
@@ -1979,6 +2001,15 @@ const els = {
   lanShareLine: document.querySelector("#lanShareLine"),
   lanShareLabel: document.querySelector("#lanShareLabel"),
   lanShareLink: document.querySelector("#lanShareLink"),
+  lanDuelCard: document.querySelector("#lanDuelCard"),
+  lanDuelLabel: document.querySelector("#lanDuelLabel"),
+  lanDuelTitle: document.querySelector("#lanDuelTitle"),
+  lanDuelPill: document.querySelector("#lanDuelPill"),
+  lanDuelText: document.querySelector("#lanDuelText"),
+  lanDuelRoom: document.querySelector("#lanDuelRoom"),
+  lanDuelQr: document.querySelector("#lanDuelQr"),
+  lanDuelLink: document.querySelector("#lanDuelLink"),
+  lanDuelQrBtn: document.querySelector("#lanDuelQrBtn"),
   lanInviteCard: document.querySelector("#lanInviteCard"),
   lanInviteLabel: document.querySelector("#lanInviteLabel"),
   lanInviteTitle: document.querySelector("#lanInviteTitle"),
@@ -5254,6 +5285,7 @@ function renderLanPanel() {
   const connected = isLanConnected();
   const connecting = lanState.status === "connecting";
   const spectating = connected && lanState.color === "s";
+  const room = normalizeLanRoom(els.lanRoomInput.value.trim());
   els.lanStatus.textContent = spectating ? t("lanSpectating") : connected ? t("lanConnected") : connecting ? t("lanConnecting") : t("lanDisconnected");
   els.lanStatus.classList.toggle("is-connected", connected);
   els.lanStatus.classList.toggle("is-connecting", connecting);
@@ -5263,7 +5295,7 @@ function renderLanPanel() {
   els.lanCreateBtn.disabled = connected || connecting;
   els.lanConnectBtn.disabled = connected || connecting;
   els.lanDisconnectBtn.hidden = !connected && !connecting;
-  els.lanCopyLinkBtn.disabled = !els.lanRoomInput.value.trim();
+  els.lanCopyLinkBtn.disabled = !room;
 
   if (connecting) {
     els.lanDetail.textContent = t("lanDetailConnecting", { room: lanState.room });
@@ -5277,9 +5309,12 @@ function renderLanPanel() {
     els.lanDetail.textContent = lanState.color === "w" ? t("lanDetailWhite") : t("lanDetailBlack");
   }
 
-  if (!els.lanRoomInput.value.trim()) {
+  if (!room) {
     hideLanInviteCard();
   }
+  const existingDuelHref = els.lanDuelLink.getAttribute("href") || "";
+  const existingDuelShare = existingDuelHref && existingDuelHref !== "#" ? els.lanDuelLink.href : "";
+  showLanDuelCard(room, room ? existingDuelShare : "");
   if (!els.lanCheckCard.hidden) {
     renderLanCheckResult();
   }
@@ -5346,6 +5381,9 @@ function renderLanguage() {
   setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
   setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
   els.lanShareLabel.textContent = t("lanShareLabel");
+  const duelRoom = normalizeLanRoom(els.lanRoomInput.value || els.lanDuelCard.dataset.room || "");
+  const duelHref = els.lanDuelLink.getAttribute("href") || "";
+  showLanDuelCard(duelRoom, duelHref && duelHref !== "#" ? els.lanDuelLink.href : "");
   els.lanCheckLabel.textContent = t("lanCheckLabel");
   els.lanCheckTitle.textContent = t("lanCheckTitle");
   if (!lastLanCheck) {
@@ -8544,6 +8582,7 @@ async function showLanShareLink(room) {
     els.lanShareLink.removeAttribute("href");
     els.lanShareLink.textContent = "";
     hideLanInviteCard();
+    showLanDuelCard("", "");
     return "";
   }
 
@@ -8551,6 +8590,7 @@ async function showLanShareLink(room) {
   els.lanShareLine.hidden = false;
   els.lanShareLink.href = shareUrl;
   els.lanShareLink.textContent = shareUrl;
+  showLanDuelCard(cleanRoom, shareUrl);
   return shareUrl;
 }
 
@@ -8569,6 +8609,46 @@ function renderLanInviteQr(shareUrl) {
   } catch (error) {
     els.lanInviteQr.innerHTML = "";
   }
+}
+
+function renderLanDuelQr(shareUrl) {
+  els.lanDuelQr.innerHTML = "";
+  els.lanDuelQr.setAttribute("aria-label", t("lanDuelQrAria"));
+  if (!shareUrl || typeof window.qrcode !== "function") {
+    return;
+  }
+
+  try {
+    const qr = window.qrcode(0, "M");
+    qr.addData(shareUrl);
+    qr.make();
+    els.lanDuelQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, title: t("lanDuelQrAria") });
+  } catch (error) {
+    els.lanDuelQr.innerHTML = "";
+  }
+}
+
+function showLanDuelCard(room = "", shareUrl = "") {
+  const cleanRoom = normalizeLanRoom(room);
+  const isReady = Boolean(cleanRoom && shareUrl);
+  els.lanDuelCard.dataset.room = cleanRoom;
+  els.lanDuelLabel.textContent = t("lanDuelLabel");
+  els.lanDuelTitle.textContent = t("lanDuelTitle");
+  els.lanDuelText.textContent = t("lanDuelText");
+  els.lanDuelRoom.textContent = cleanRoom ? t("lanDuelRoom", { room: cleanRoom }) : t("lanDuelRoomEmpty");
+  els.lanDuelPill.textContent = isReady ? t("lanDuelReady") : t("lanDuelNotReady");
+  els.lanDuelPill.classList.toggle("is-ready", isReady);
+  setButtonContent(els.lanDuelQrBtn, "▣", t("lanDuelGenerate"));
+  if (isReady) {
+    els.lanDuelLink.hidden = false;
+    els.lanDuelLink.href = shareUrl;
+    els.lanDuelLink.textContent = shareUrl;
+  } else {
+    els.lanDuelLink.hidden = true;
+    els.lanDuelLink.removeAttribute("href");
+    els.lanDuelLink.textContent = "";
+  }
+  renderLanDuelQr(isReady ? shareUrl : "");
 }
 
 function showLanInviteCard(room, shareUrl) {
@@ -8802,6 +8882,18 @@ async function copyLanLink() {
   }
 }
 
+async function generateLanDuelQr() {
+  let room = normalizeLanRoom(els.lanRoomInput.value);
+  if (!room) {
+    room = createLanRoomCode();
+    els.lanRoomInput.value = room;
+  }
+  renderLanPanel();
+  const shareUrl = await showLanShareLink(room);
+  showLanInviteCard(room, shareUrl);
+  setNotice(t("lanDuelCreated", { room }));
+}
+
 function setFeedbackKind(kind) {
   feedbackKind = ["bug", "idea", "praise"].includes(kind) ? kind : "bug";
   renderFeedbackState();
@@ -9027,6 +9119,7 @@ els.lanCreateBtn.addEventListener("click", createLanRoom);
 els.lanConnectBtn.addEventListener("click", connectLan);
 els.lanDisconnectBtn.addEventListener("click", () => disconnectLan());
 els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
+els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
 els.lanInviteCloseBtn.addEventListener("click", hideLanInviteCard);
 els.lanRoomInput.addEventListener("input", renderLanPanel);
