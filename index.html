@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>国际象棋</title>
+    <meta name="theme-color" content="#245039" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
+      <symbol id="pawn" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <circle cx="32" cy="18" r="9" />
+          <path d="M24 30h16l4 17H20z" />
+          <path d="M17 49h30l5 8H12z" />
+        </g>
+      </symbol>
+
+      <symbol id="rook" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <path d="M17 9h8v8h5V9h8v8h5V9h8v17H17z" />
+          <path d="M22 27h20l3 21H19z" />
+          <path d="M16 49h32l5 8H11z" />
+        </g>
+      </symbol>
+
+      <symbol id="knight" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <path d="M19 48c2-9 6-15 13-20l-6-6 3-11 17 7c7 7 8 16 3 27l-2 3z" />
+          <path d="M14 50h36l5 7H9z" />
+          <circle cx="38" cy="24" r="2.2" fill="#5f7f5b" />
+        </g>
+      </symbol>
+
+      <symbol id="bishop" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <circle cx="32" cy="11" r="5" />
+          <path d="M32 17c10 7 14 16 10 28H22c-4-12 0-21 10-28z" />
+          <path d="M36 19 25 40h5l10-18z" fill="#5f7f5b" opacity=".85" />
+          <path d="M17 48h30l5 9H12z" />
+        </g>
+      </symbol>
+
+      <symbol id="queen" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <circle cx="15" cy="18" r="5" />
+          <circle cx="27" cy="11" r="5" />
+          <circle cx="37" cy="11" r="5" />
+          <circle cx="49" cy="18" r="5" />
+          <path d="M15 24h34l-7 24H22z" />
+          <path d="M17 49h30l5 8H12z" />
+        </g>
+      </symbol>
+
+      <symbol id="king" viewBox="0 0 64 64">
+        <g fill="currentColor">
+          <path d="M28 8h8v8h8v7h-8v9h-8v-9h-8v-7h8z" />
+          <path d="M22 34c2-7 18-7 20 0l3 14H19z" />
+          <path d="M16 49h32l5 8H11z" />
+        </g>
+      </symbol>
+    </svg>
+
+    <button class="profile-button" id="profileBtn" type="button" aria-label="玩家档案">
+      <span class="profile-button-badge" id="profileButtonBadge">♙</span>
+      <span id="profileBtnText">档案</span>
+    </button>
+
+    <button class="feedback-button" id="feedbackBtn" type="button" aria-label="反馈">
+      <span class="button-icon">!</span>
+      <span id="feedbackBtnText">反馈</span>
+    </button>
+
+    <button class="version-button" id="versionBtn" type="button" aria-label="查看版本更新">
+      <span class="version-dot" id="versionUpdateDot" hidden></span>
+      v1.0.9
+    </button>
+
+    <main class="app-shell">
+      <section class="game-stage" aria-label="国际象棋棋盘">
+        <header class="top-bar">
+          <div>
+            <p class="eyebrow">Web Chess</p>
+            <h1 class="game-title">国际象棋</h1>
+          </div>
+          <div class="top-actions">
+            <div class="turn-chip" id="turnChip">白方走棋</div>
+            <button class="rank-summary-button" id="rankSummaryBtn" type="button" aria-label="查看段位" aria-expanded="false" aria-controls="rankPopover">
+              <span class="button-icon" id="rankSummaryMedal">I</span>
+              <span id="rankSummaryText">入门棋手</span>
+            </button>
+            <button class="achievement-button" id="achievementBtn" type="button" aria-label="查看成就">
+              <span class="button-icon" id="achievementButtonBadge">◇</span>
+              <span id="achievementProgressText">0/16</span>
+            </button>
+            <button class="leaderboard-button" id="leaderboardBtn" type="button" aria-label="查看排行榜">
+              <span class="button-icon">♕</span>
+              <span id="leaderboardBtnText">榜单</span>
+            </button>
+            <button class="more-button" id="moreMenuBtn" type="button" aria-label="更多功能" aria-expanded="false" aria-controls="moreMenu">
+              <span class="more-dots" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </button>
+          </div>
+        </header>
+
+        <section class="panel rank-panel rank-popover" id="rankPopover" data-rank-level="1" hidden>
+          <div class="panel-header rank-header">
+            <div>
+              <p class="panel-label" id="rankLabel">玩家段位</p>
+              <h2 id="rankTitle">入门棋手</h2>
+            </div>
+            <div class="rank-medal" id="rankMedal" aria-hidden="true">
+              <span id="rankMedalSymbol">I</span>
+            </div>
+          </div>
+          <div class="rank-details">
+            <div class="rank-points">
+              <span id="rankPointsLabel">段位积分</span>
+              <strong id="rankPoints">0</strong>
+            </div>
+            <div
+              class="rank-progress"
+              id="rankProgressBar"
+              role="progressbar"
+              aria-label="段位进度"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+            >
+              <span id="rankProgress"></span>
+            </div>
+            <p class="rank-progress-text" id="rankProgressText">再得 3 分升级到青铜骑士</p>
+          </div>
+          <p class="rank-rules" id="rankRules">只有 AI 对局计算段位：不同难度有不同积分。</p>
+        </section>
+
+        <div class="more-menu" id="moreMenu" hidden>
+          <section class="panel settings-center-panel">
+            <p class="panel-label" id="settingsCenterLabel">设置中心</p>
+            <h2 id="settingsCenterTitle">快速管理</h2>
+          </section>
+
+          <section class="panel account-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-label" id="accountLabel">玩家账号</p>
+                <h2 id="accountTitle">游客</h2>
+              </div>
+            </div>
+            <p class="account-detail" id="accountDetail">登录后会单独保存你的比分和段位。</p>
+            <div class="account-actions">
+              <button class="action-button primary" id="authOpenBtn" type="button">
+                <span class="button-icon">ID</span>
+                登录 / 注册
+              </button>
+              <button class="action-button" id="logoutBtn" type="button" hidden>
+                <span class="button-icon">×</span>
+                退出登录
+              </button>
+            </div>
+          </section>
+
+          <section class="panel language-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-label" id="languageLabel">語言</p>
+                <h2 id="languageTitle">中英文</h2>
+              </div>
+            </div>
+            <div class="language-toggle" role="group" aria-label="语言选择">
+              <button class="language-button is-active" type="button" data-language="zh" aria-pressed="true">
+                中文
+              </button>
+              <button class="language-button" type="button" data-language="en" aria-pressed="false">
+                English
+              </button>
+            </div>
+          </section>
+
+          <section class="panel move-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-label">棋谱</p>
+                <h2>走法记录</h2>
+              </div>
+              <button class="icon-button" id="copyPgnBtn" type="button" aria-label="复制 PGN">
+                PGN
+              </button>
+            </div>
+            <div class="move-list" id="moveList" aria-live="polite"></div>
+          </section>
+        </div>
+
+        <div class="board-frame">
+          <div id="board" class="board" aria-label="棋盘"></div>
+        </div>
+      </section>
+
+      <aside class="side-panel" aria-label="对局面板">
+        <section class="panel status-panel">
+          <div>
+            <p class="panel-label">当前局面</p>
+            <h2 id="statusTitle">白方走棋</h2>
+            <p id="statusDetail">第 1 回合</p>
+          </div>
+          <article class="continue-card" id="continueCard" hidden>
+            <div>
+              <strong id="continueTitle">继续上次对局</strong>
+              <p id="continueText">已恢复未完成的棋局。</p>
+            </div>
+            <button class="action-button primary" id="continueGameBtn" type="button">
+              继续
+            </button>
+          </article>
+          <article class="goal-card" id="goalCard">
+            <p class="panel-label" id="goalLabel">本局目标</p>
+            <strong id="goalTitle">控制中心</strong>
+            <p id="goalText">先把马和象发展出来。</p>
+          </article>
+          <div class="notice" id="notice" role="status" aria-live="polite"></div>
+        </section>
+
+        <section class="panel review-panel" id="postGameReviewPanel" hidden>
+          <div class="panel-header">
+            <div>
+              <p class="panel-label" id="reviewLabel">赛后复盘</p>
+              <h2 id="reviewTitle">本局复盘</h2>
+            </div>
+            <span class="review-chip" id="reviewChip">训练</span>
+          </div>
+          <p class="review-summary" id="reviewSummary"></p>
+          <section class="ranked-settlement-card" id="rankedSettlementCard" hidden>
+            <div>
+              <p class="panel-label" id="rankedSettlementLabel">段位结算</p>
+              <h3 id="rankedSettlementTitle">本局段位赛无效</h3>
+            </div>
+            <div class="ranked-settlement-score" id="rankedSettlementDelta">0</div>
+            <p id="rankedSettlementReason">非完整 AI 段位赛不计算段位积分</p>
+          </section>
+          <div class="review-list" id="reviewList"></div>
+          <div class="review-actions">
+            <button class="action-button review-practice-button" id="reviewPracticeBtn" type="button">
+              练习这个错误
+            </button>
+          </div>
+        </section>
+
+        <section class="panel controls-panel">
+          <details class="control-drawer" open>
+            <summary class="control-drawer-summary">
+              <span class="control-group-label" id="gameControlsLabel">对局</span>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="control-group-actions">
+              <button class="action-button primary" id="newGameBtn" type="button">
+                <span class="button-icon">+</span>
+                新对局
+              </button>
+              <button class="action-button" id="undoBtn" type="button">
+                <span class="button-icon">↶</span>
+                悔棋
+              </button>
+            </div>
+          </details>
+          <details class="control-drawer">
+            <summary class="control-drawer-summary">
+              <span class="control-group-label" id="helpControlsLabel">帮助</span>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="control-group-actions">
+              <button class="action-button" id="tipBtn" type="button">
+                <span class="button-icon">?</span>
+                提示
+              </button>
+              <button class="action-button" id="tutorialBtn" type="button">
+                <span class="button-icon">i</span>
+                新手教程
+              </button>
+            </div>
+          </details>
+          <details class="control-drawer">
+            <summary class="control-drawer-summary">
+              <span class="control-group-label" id="viewControlsLabel">显示与声音</span>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="control-group-actions">
+              <button class="action-button" id="flipBtn" type="button">
+                <span class="button-icon">⇄</span>
+                翻转
+              </button>
+              <button class="action-button is-active" id="musicBtn" type="button" aria-pressed="true">
+                <span class="button-icon">♪</span>
+                音樂開
+              </button>
+              <div class="sound-test-actions" id="soundTestActions" aria-label="试听声音">
+                <button class="icon-action-button" id="testMusicBtn" type="button">
+                  <span class="button-icon">♪</span>
+                  试听音乐
+                </button>
+                <button class="icon-action-button" id="testEffectsBtn" type="button">
+                  <span class="button-icon">♙</span>
+                  试听音效
+                </button>
+                <button class="icon-action-button" id="testVoiceBtn" type="button">
+                  <span class="button-icon">♘</span>
+                  试听语音
+                </button>
+              </div>
+              <p class="sound-status" id="soundStatus">如果没有声音，请先点击一次页面。</p>
+              <div class="volume-controls" id="volumeControls">
+                <label class="volume-control" for="musicVolumeInput">
+                  <span id="musicVolumeLabel">背景音乐</span>
+                  <input id="musicVolumeInput" type="range" min="0" max="100" value="70" />
+                  <strong id="musicVolumeValue">70%</strong>
+                </label>
+                <label class="volume-control" for="effectsVolumeInput">
+                  <span id="effectsVolumeLabel">棋子音效</span>
+                  <input id="effectsVolumeInput" type="range" min="0" max="100" value="85" />
+                  <strong id="effectsVolumeValue">85%</strong>
+                </label>
+                <label class="volume-control" for="voiceVolumeInput">
+                  <span id="voiceVolumeLabel">棋子语音</span>
+                  <input id="voiceVolumeInput" type="range" min="0" max="100" value="80" />
+                  <strong id="voiceVolumeValue">80%</strong>
+                </label>
+              </div>
+            </div>
+          </details>
+          <details class="control-drawer ai-panel">
+            <summary class="control-drawer-summary">
+              <div class="drawer-title">
+                <p class="panel-label">AI 对手</p>
+                <h2 id="aiTitle">本地双人</h2>
+              </div>
+              <span class="ai-badge" id="aiBadge">关闭</span>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="drawer-content">
+              <div class="ai-controls">
+                <button class="action-button" id="aiToggleBtn" type="button">
+                  <span class="button-icon">AI</span>
+                  开启 AI
+                </button>
+                <button class="action-button" id="playerSideBtn" type="button">
+                  <span class="button-icon">♙</span>
+                  你执白
+                </button>
+                <button class="action-button ranked-button" id="rankedModeBtn" type="button" aria-pressed="false">
+                  <span class="button-icon">★</span>
+                  段位赛
+                </button>
+                <button class="action-button league-button" id="professionalLeagueBtn" type="button" aria-pressed="false">
+                  <span class="button-icon">♛</span>
+                  职业联赛
+                </button>
+              </div>
+              <div class="ai-level-row">
+                <p class="panel-label">AI 难度</p>
+                <div class="ai-levels" role="group" aria-label="AI 难度选择">
+                  <button class="level-button" type="button" data-ai-level="1">新手</button>
+                  <button class="level-button" type="button" data-ai-level="2">简单</button>
+                  <button class="level-button is-active" type="button" data-ai-level="3">普通</button>
+                  <button class="level-button" type="button" data-ai-level="4">困难</button>
+                  <button class="level-button" type="button" data-ai-level="5">大师</button>
+                  <button class="level-button" type="button" data-ai-level="6">职业</button>
+                </div>
+              </div>
+              <article class="ai-persona-card" id="aiPersonaCard">
+                <p class="panel-label" id="aiPersonaLabel">AI 个性</p>
+                <h3 id="aiPersonaName">稳健学徒</h3>
+                <p id="aiPersonaStyle">稳健型</p>
+                <p id="aiPersonaMotto">先守住中心，再寻找机会。</p>
+              </article>
+              <p class="ai-level-detail" id="aiLevelDetail">普通：会看吃子、将军和简单反击。</p>
+              <p class="ai-detail" id="aiDetail">关闭 AI 时，可以本地双人轮流走棋。</p>
+              <p class="ranked-detail" id="rankedDetail">段位赛会强制完整 AI 对局，禁止提示和悔棋。</p>
+              <p class="league-detail" id="professionalLeagueDetail">登录后可开启职业联赛。</p>
+              <article class="league-card" id="professionalLeagueCard">
+                <div class="league-card-top">
+                  <div>
+                    <p class="panel-label" id="professionalLeagueLabel">职业联赛</p>
+                    <h3 id="professionalLeagueTitle">职业联赛榜</h3>
+                  </div>
+                  <span id="professionalLeaguePoints">0</span>
+                </div>
+                <p id="professionalLeagueCurrent">我的联赛积分：0 分 · 0 局</p>
+                <ol class="league-leaderboard" id="professionalLeagueLeaderboard"></ol>
+              </article>
+            </div>
+          </details>
+          <details class="control-drawer lan-panel">
+            <summary class="control-drawer-summary">
+              <div class="drawer-title">
+                <p class="panel-label" id="lanLabel">局域网</p>
+                <h2 id="lanTitle">局域网对战</h2>
+              </div>
+              <span class="lan-badge" id="lanStatus">未连接</span>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="drawer-content">
+              <div class="lan-controls">
+                <input class="lan-room-input" id="lanRoomInput" type="text" maxlength="24" autocomplete="off" placeholder="房间号" />
+                <button class="action-button primary" id="lanConnectBtn" type="button">
+                  <span class="button-icon">LAN</span>
+                  连接
+                </button>
+              </div>
+              <div class="lan-actions">
+                <button class="action-button" id="lanCreateBtn" type="button">
+                  <span class="button-icon">+</span>
+                  创建房间
+                </button>
+                <button class="action-button" id="lanCopyLinkBtn" type="button">
+                  <span class="button-icon">↗</span>
+                  复制连接
+                </button>
+                <button class="action-button" id="lanCheckBtn" type="button">
+                  <span class="button-icon">✓</span>
+                  检测状态
+                </button>
+                <button class="action-button" id="lanDisconnectBtn" type="button" hidden>
+                  <span class="button-icon">×</span>
+                  断开
+                </button>
+              </div>
+              <p class="lan-detail" id="lanDetail">同一 Wi‑Fi 下运行局域网启动器，然后输入相同房间号。</p>
+              <article class="lan-check-card" id="lanCheckCard" hidden>
+                <div class="lan-check-top">
+                  <div>
+                    <p class="lan-check-label" id="lanCheckLabel">联机状态</p>
+                    <h3 id="lanCheckTitle">检测结果</h3>
+                  </div>
+                  <span class="lan-check-pill" id="lanCheckPill">待检测</span>
+                </div>
+                <dl class="lan-check-list" id="lanCheckList"></dl>
+              </article>
+              <p class="lan-share" id="lanShareLine" hidden>
+                <span id="lanShareLabel">邀请链接</span>
+                <a id="lanShareLink" href="#"></a>
+              </p>
+              <article class="lan-invite-card" id="lanInviteCard" hidden>
+                <div class="lan-invite-top">
+                  <div>
+                    <p class="lan-invite-label" id="lanInviteLabel">邀请朋友</p>
+                    <h3 id="lanInviteTitle">房间已准备好</h3>
+                  </div>
+                  <button class="icon-button lan-invite-close" id="lanInviteCloseBtn" type="button" aria-label="关闭邀请提示">
+                    ×
+                  </button>
+                </div>
+                <p class="lan-invite-text" id="lanInviteText">把这个链接发给同一 Wi‑Fi 的朋友。</p>
+                <p class="lan-invite-room" id="lanInviteRoom">房间号</p>
+                <div class="lan-invite-qr" id="lanInviteQr" aria-label="邀请二维码"></div>
+                <a class="lan-invite-link" id="lanInviteLink" href="#"></a>
+              </article>
+            </div>
+          </details>
+          <details class="control-drawer board-theme-panel">
+            <summary class="control-drawer-summary">
+              <div class="drawer-title">
+                <p class="panel-label">棋盤外觀</p>
+                <h2>更換棋盤</h2>
+              </div>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="drawer-content">
+              <div class="theme-grid" role="group" aria-label="棋盤樣式選擇">
+                <button class="theme-button is-active" type="button" data-board-theme="forest" aria-pressed="true">
+                  <span class="theme-swatch" style="--swatch-light: #e8eddc; --swatch-dark: #5f7f5b"></span>
+                  <span class="theme-label">森林</span>
+                </button>
+                <button class="theme-button" type="button" data-board-theme="ocean" aria-pressed="false">
+                  <span class="theme-swatch" style="--swatch-light: #dceef3; --swatch-dark: #3f7890"></span>
+                  <span class="theme-label">海岸</span>
+                </button>
+                <button class="theme-button" type="button" data-board-theme="walnut" aria-pressed="false">
+                  <span class="theme-swatch" style="--swatch-light: #f0d2a8; --swatch-dark: #8b5a35"></span>
+                  <span class="theme-label">胡桃</span>
+                </button>
+                <button class="theme-button" type="button" data-board-theme="slate" aria-pressed="false">
+                  <span class="theme-swatch" style="--swatch-light: #d9dee7; --swatch-dark: #566176"></span>
+                  <span class="theme-label">石板</span>
+                </button>
+                <button class="theme-button" type="button" data-board-theme="rose" aria-pressed="false">
+                  <span class="theme-swatch" style="--swatch-light: #f4ded8; --swatch-dark: #a45d66"></span>
+                  <span class="theme-label">玫瑰</span>
+                </button>
+              </div>
+            </div>
+          </details>
+          <details class="control-drawer match-score-panel">
+            <summary class="control-drawer-summary">
+              <div class="drawer-title">
+                <p class="panel-label">對局比分</p>
+                <h2>勝負記錄</h2>
+              </div>
+              <span class="drawer-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="drawer-content">
+              <article class="friend-mode-card">
+                <p class="panel-label" id="friendModeLabel">家庭 / 朋友模式</p>
+                <div class="friend-name-grid">
+                  <label class="friend-name-field">
+                    <span id="friendWhiteLabel">白方玩家</span>
+                    <input id="friendWhiteName" type="text" maxlength="18" autocomplete="off" />
+                  </label>
+                  <label class="friend-name-field">
+                    <span id="friendBlackLabel">黑方玩家</span>
+                    <input id="friendBlackName" type="text" maxlength="18" autocomplete="off" />
+                  </label>
+                </div>
+                <p class="friend-record" id="friendRecordText">朋友记录会保存在这台设备。</p>
+              </article>
+              <button class="action-button" id="resetScoreBtn" type="button" aria-label="清零比分">
+                清零
+              </button>
+              <div class="match-score-grid">
+                <div class="score-box">
+                  <span>白方</span>
+                  <strong id="whiteWins">0</strong>
+                </div>
+                <div class="score-box">
+                  <span>和棋</span>
+                  <strong id="draws">0</strong>
+                </div>
+                <div class="score-box">
+                  <span>黑方</span>
+                  <strong id="blackWins">0</strong>
+                </div>
+              </div>
+              <p class="material-lead" id="materialLead">本局子力：平衡</p>
+            </div>
+          </details>
+        </section>
+
+        <section class="panel captured-panel">
+          <div class="captured-group">
+            <div class="captured-heading">
+              <span>白方已吃</span>
+              <strong id="whiteScore">0</strong>
+            </div>
+            <div class="captured-row" id="whiteCaptured"></div>
+          </div>
+          <div class="captured-group">
+            <div class="captured-heading">
+              <span>黑方已吃</span>
+              <strong id="blackScore">0</strong>
+            </div>
+            <div class="captured-row" id="blackCaptured"></div>
+          </div>
+        </section>
+
+        <section class="panel fen-panel" hidden aria-hidden="true">
+          <div class="panel-header">
+            <div>
+              <p class="panel-label">FEN</p>
+              <h2>局面代码</h2>
+            </div>
+            <button class="icon-button" id="copyFenBtn" type="button" aria-label="复制 FEN">
+              复制
+            </button>
+          </div>
+          <label class="sr-only" for="fenInput">FEN</label>
+          <textarea id="fenInput" rows="3" spellcheck="false"></textarea>
+          <button class="action-button import-button" id="loadFenBtn" type="button">
+            <span class="button-icon">↧</span>
+            载入局面
+          </button>
+        </section>
+      </aside>
+    </main>
+
+    <div class="profile-dialog" id="profileDialog" hidden>
+      <div class="profile-card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+        <div class="profile-top">
+          <div>
+            <p class="panel-label" id="profileLabel">玩家档案</p>
+            <h2 id="profileTitle">游客档案</h2>
+          </div>
+          <button class="icon-button" id="closeProfileBtn" type="button" aria-label="关闭玩家档案">
+            ×
+          </button>
+        </div>
+
+        <section class="profile-hero">
+          <div class="profile-avatar" id="profileAvatar" aria-hidden="true">♙</div>
+          <div class="profile-identity">
+            <strong id="profileName">游客</strong>
+            <p id="profileStatus">登录后会单独保存你的比分、段位和成就。</p>
+            <p id="profileMeta">本地档案</p>
+          </div>
+        </section>
+
+        <section class="profile-stats" aria-label="玩家档案统计">
+          <article class="profile-stat-card">
+            <span id="profileRankLabel">段位</span>
+            <strong id="profileRankValue">入门棋手 · 0 分</strong>
+            <div class="profile-progress" aria-hidden="true">
+              <span id="profileRankProgress"></span>
+            </div>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileAchievementLabel">成就</span>
+            <strong id="profileAchievementValue">0/15 · ◇</strong>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileScoreLabel">比分</span>
+            <strong id="profileScoreValue">白 0 · 和 0 · 黑 0</strong>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileMaterialLabel">本局子力</span>
+            <strong id="profileMaterialValue">平衡</strong>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileGamesLabel">完成局数</span>
+            <strong id="profileGamesValue">0</strong>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileWinRateLabel">胜率</span>
+            <strong id="profileWinRateValue">0%</strong>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileFavoritePieceLabel">常用棋子</span>
+            <strong id="profileFavoritePieceValue">暂无</strong>
+          </article>
+          <article class="profile-stat-card">
+            <span id="profileLastSavedLabel">最后保存</span>
+            <strong id="profileLastSavedValue">暂无</strong>
+          </article>
+        </section>
+
+        <section class="daily-panel" aria-label="每日任务">
+          <div class="daily-top">
+            <div>
+              <p class="panel-label" id="dailyLabel">每日任务</p>
+              <h3 id="dailyTitle">今日训练</h3>
+            </div>
+            <div class="daily-stats">
+              <span class="daily-streak" id="dailyStreak">连续 0 天</span>
+              <span class="daily-stars" id="dailyStars">0 ★</span>
+            </div>
+          </div>
+          <div class="daily-list" id="dailyList"></div>
+        </section>
+
+        <div class="profile-actions">
+          <button class="action-button primary" id="profileAuthBtn" type="button">
+            <span class="button-icon">ID</span>
+            登录 / 注册
+          </button>
+          <button class="action-button" id="profileLogoutBtn" type="button" hidden>
+            <span class="button-icon">×</span>
+            退出登录
+          </button>
+          <button class="action-button" id="profileAchievementBtn" type="button">
+            <span class="button-icon">◇</span>
+            查看成就
+          </button>
+          <button class="action-button" id="profileRankBtn" type="button">
+            <span class="button-icon">I</span>
+            查看段位
+          </button>
+          <button class="action-button" id="profileLeaderboardBtn" type="button">
+            <span class="button-icon">♕</span>
+            查看榜单
+          </button>
+          <button class="action-button" id="profileExportBtn" type="button">
+            <span class="button-icon">⇩</span>
+            导出档案
+          </button>
+          <button class="action-button" id="profileImportBtn" type="button">
+            <span class="button-icon">⇧</span>
+            导入档案
+          </button>
+          <input id="profileImportInput" type="file" accept="application/json,.json" hidden />
+        </div>
+        <article class="profile-import-preview" id="profileImportPreview" hidden>
+          <strong id="profileImportPreviewTitle">导入前确认</strong>
+          <p id="profileImportPreviewText">将恢复档案内容。</p>
+          <div class="profile-import-actions">
+            <button class="action-button primary" id="profileImportConfirmBtn" type="button">
+              确认导入
+            </button>
+            <button class="action-button" id="profileImportCancelBtn" type="button">
+              取消
+            </button>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="auth-dialog" id="authDialog" hidden>
+      <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <div class="auth-top">
+          <h2 id="authTitle">登录账号</h2>
+          <button class="icon-button" id="closeAuthBtn" type="button" aria-label="关闭登录窗口">
+            ×
+          </button>
+        </div>
+        <div class="auth-tabs" role="group" aria-label="登录或注册">
+          <button class="auth-mode-button is-active" type="button" data-auth-mode="login" aria-pressed="true">
+            登录
+          </button>
+          <button class="auth-mode-button" type="button" data-auth-mode="register" aria-pressed="false">
+            注册
+          </button>
+        </div>
+        <form class="auth-form" id="authForm">
+          <label class="form-field" for="authUsername">
+            <span id="authUsernameLabel">用户名</span>
+            <input id="authUsername" name="username" type="text" autocomplete="username" maxlength="24" />
+          </label>
+          <label class="form-field" for="authPassword">
+            <span id="authPasswordLabel">密码</span>
+            <input id="authPassword" name="password" type="password" autocomplete="current-password" maxlength="40" />
+          </label>
+          <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+          <div class="auth-actions">
+            <button class="action-button" id="cancelAuthBtn" type="button">
+              取消
+            </button>
+            <button class="action-button primary" id="submitAuthBtn" type="submit">
+              登录
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="feedback-dialog" id="feedbackDialog" hidden>
+      <div class="feedback-card" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+        <div class="feedback-top">
+          <div>
+            <p class="panel-label" id="feedbackLabel">玩家反馈</p>
+            <h2 id="feedbackTitle">告诉我们你的想法</h2>
+          </div>
+          <button class="icon-button" id="closeFeedbackBtn" type="button" aria-label="关闭反馈窗口">
+            ×
+          </button>
+        </div>
+        <form class="feedback-form" id="feedbackForm" name="player-feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="hidden" name="form-name" value="player-feedback" />
+          <input type="hidden" name="subject" value="Jeffery Chess 玩家反馈" />
+          <input type="hidden" name="kind" id="feedbackKindInput" value="bug" />
+          <input type="hidden" name="feedbackId" id="feedbackIdInput" value="" />
+          <input type="hidden" name="kindLabel" id="feedbackKindLabelInput" value="问题" />
+          <input type="hidden" name="account" id="feedbackAccountInput" value="游客" />
+          <input type="hidden" name="language" id="feedbackLanguageInput" value="zh" />
+          <input type="hidden" name="fen" id="feedbackFenInput" value="" />
+          <input type="hidden" name="pgn" id="feedbackPgnInput" value="" />
+          <input type="hidden" name="page" id="feedbackPageInput" value="" />
+          <input type="hidden" name="createdAt" id="feedbackCreatedAtInput" value="" />
+          <p class="sr-only">
+            <label>不要填写这个字段：<input name="bot-field" /></label>
+          </p>
+          <div class="feedback-kind" role="group" aria-label="反馈类型">
+            <button class="feedback-kind-button is-active" type="button" data-feedback-kind="bug" aria-pressed="true">
+              问题
+            </button>
+            <button class="feedback-kind-button" type="button" data-feedback-kind="idea" aria-pressed="false">
+              建议
+            </button>
+            <button class="feedback-kind-button" type="button" data-feedback-kind="praise" aria-pressed="false">
+              喜欢
+            </button>
+          </div>
+          <label class="form-field" for="feedbackText">
+            <span id="feedbackTextLabel">反馈内容</span>
+            <textarea id="feedbackText" name="message" rows="5" maxlength="600" spellcheck="true"></textarea>
+          </label>
+          <p class="feedback-mailbox" id="feedbackMailbox">虚拟邮箱：feedback@jeffery-chess.local</p>
+          <p class="feedback-count" id="feedbackCount">已保存 0 条反馈</p>
+          <details class="feedback-inbox" hidden aria-hidden="true">
+            <summary id="feedbackInboxSummary">虚拟邮箱收件箱</summary>
+            <div class="feedback-inbox-list" id="feedbackInboxList"></div>
+          </details>
+          <p class="feedback-message" id="feedbackMessage" role="status" aria-live="polite"></p>
+          <div class="feedback-actions">
+            <button class="action-button" id="cancelFeedbackBtn" type="button">
+              取消
+            </button>
+            <button class="action-button primary" id="submitFeedbackBtn" type="submit">
+              提交反馈
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="achievement-dialog" id="achievementDialog" hidden>
+      <div class="achievement-card" role="dialog" aria-modal="true" aria-labelledby="achievementTitle">
+        <div class="achievement-top">
+          <div>
+            <p class="panel-label" id="achievementLabel">玩家成就</p>
+            <h2 id="achievementTitle">特殊徽章</h2>
+          </div>
+          <button class="icon-button" id="closeAchievementBtn" type="button" aria-label="关闭成就">
+            ×
+          </button>
+        </div>
+        <p class="achievement-summary" id="achievementSummary">已解锁 0 / 16 个成就</p>
+        <div class="achievement-list" id="achievementList"></div>
+        <button class="action-button primary achievement-done" id="achievementDoneBtn" type="button">
+          完成
+        </button>
+      </div>
+    </div>
+
+    <div class="leaderboard-dialog" id="leaderboardDialog" hidden>
+      <div class="leaderboard-card" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+        <div class="leaderboard-top">
+          <div>
+            <p class="panel-label" id="leaderboardLabel">玩家排行榜</p>
+            <h2 id="leaderboardTitle">排行榜</h2>
+          </div>
+          <button class="icon-button" id="closeLeaderboardBtn" type="button" aria-label="关闭排行榜">
+            ×
+          </button>
+        </div>
+        <p class="leaderboard-summary" id="leaderboardSummary">登录或注册玩家会出现在榜单中。</p>
+        <p class="leaderboard-season" id="leaderboardSeason">本周赛季</p>
+        <p class="leaderboard-my-rank" id="leaderboardMyRank">我的排名：暂无</p>
+        <p class="leaderboard-reward" id="leaderboardReward">赛季奖励：参与职业联赛即可争夺徽章。</p>
+        <div class="leaderboard-grid" id="leaderboardGrid"></div>
+      </div>
+    </div>
+
+    <div class="promotion-dialog" id="promotionDialog" hidden>
+      <div class="promotion-card" role="dialog" aria-modal="true" aria-labelledby="promotionTitle">
+        <div class="promotion-top">
+          <h2 id="promotionTitle">选择升变</h2>
+          <button class="icon-button" id="cancelPromotionBtn" type="button" aria-label="取消升变">
+            ×
+          </button>
+        </div>
+        <div class="promotion-choices" id="promotionChoices"></div>
+      </div>
+    </div>
+
+    <div class="tutorial-dialog" id="tutorialDialog" hidden>
+      <div class="tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+        <div class="tutorial-top">
+          <div>
+            <p class="panel-label" id="tutorialStepLabel">第 1 / 7 步</p>
+            <h2 id="tutorialTitle">新手教程</h2>
+          </div>
+          <button class="icon-button" id="closeTutorialBtn" type="button" aria-label="关闭新手教程">
+            ×
+          </button>
+        </div>
+        <p class="tutorial-text" id="tutorialText"></p>
+        <p class="tutorial-stars" id="tutorialStars">☆☆☆</p>
+        <ul class="tutorial-tips" id="tutorialTips"></ul>
+        <div class="tutorial-progress" aria-hidden="true">
+          <span id="tutorialProgress"></span>
+        </div>
+        <div class="tutorial-actions">
+          <button class="action-button" id="tutorialPrevBtn" type="button">
+            <span class="button-icon">←</span>
+            上一步
+          </button>
+          <button class="action-button primary" id="tutorialNextBtn" type="button">
+            下一步
+            <span class="button-icon">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="release-dialog" id="releaseDialog" hidden>
+      <div class="release-card" role="dialog" aria-modal="true" aria-labelledby="releaseTitle">
+        <div class="release-top">
+          <div>
+            <p class="panel-label" id="releaseLabel">版本</p>
+            <h2 id="releaseTitle">更新日志</h2>
+          </div>
+          <button class="icon-button" id="closeReleaseBtn" type="button" aria-label="关闭更新日志">
+            ×
+          </button>
+        </div>
+        <p class="release-version" id="releaseVersionText">v1.0.23</p>
+        <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
+        <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
+        <article class="release-live-card" id="releaseLiveCard">
+          <div>
+            <strong id="releaseLiveTitle">当前线上状态</strong>
+            <p id="releaseLiveText">打开版本中心后会自动检查线上版本。</p>
+            <a id="releaseBackupLink" href="https://jefferyhw2025-cpu.github.io/" target="_blank" rel="noopener noreferrer">备用网址：GitHub Pages</a>
+          </div>
+          <span id="releaseLivePill">待检测</span>
+        </article>
+        <article class="release-status-card" id="releaseStatusCard">
+          <div class="release-status-top">
+            <strong id="releaseStatusTitle">发布状态面板</strong>
+            <span id="releaseStatusPill">待检测</span>
+          </div>
+          <dl class="release-status-list" id="releaseStatusList"></dl>
+          <p class="release-status-hint" id="releaseStatusHint">如果 GitHub Pages 还未开启，这里会提示下一步。</p>
+        </article>
+        <article class="release-install-card" id="releaseInstallCard">
+          <div class="release-install-top">
+            <strong id="releaseInstallTitle">安装到桌面</strong>
+            <span id="releaseInstallPill">可选</span>
+          </div>
+          <p id="releaseInstallText">把游戏添加到桌面或主屏幕，之后可更像 App 一样打开。</p>
+          <button class="action-button" id="installPwaBtn" type="button">
+            ⤓ 安装 / 添加到主屏幕
+          </button>
+        </article>
+        <div class="release-actions">
+          <button class="action-button" id="checkUpdateBtn" type="button">
+            ↻ 检查更新
+          </button>
+          <button class="action-button" id="checkHealthBtn" type="button">
+            ✓ 小检查
+          </button>
+          <button class="action-button" id="onlineSelfCheckBtn" type="button">
+            ◉ 线上自检
+          </button>
+          <button class="action-button primary" id="applyUpdateBtn" type="button" hidden>
+            ↓ 更新资源
+          </button>
+          <button class="action-button" id="restoreBackupBtn" type="button" hidden>
+            ↺ 恢复旧档案
+          </button>
+        </div>
+        <article class="release-backup-card" id="releaseBackupCard" hidden>
+          <strong id="releaseBackupTitle">检测到旧档案</strong>
+          <p id="releaseBackupText">可恢复更新前档案。</p>
+          <div class="release-backup-actions">
+            <button class="action-button" id="restoreRankBackupBtn" type="button">
+              只恢复段位
+            </button>
+            <button class="action-button" id="restoreAchievementsBackupBtn" type="button">
+              只恢复成就
+            </button>
+            <button class="action-button" id="restoreGameBackupBtn" type="button">
+              只恢复棋局
+            </button>
+          </div>
+        </article>
+        <article class="release-health-card" id="releaseHealthCard">
+          <div class="release-health-top">
+            <strong id="releaseHealthTitle">版本健康检查</strong>
+            <span id="releaseHealthPill">待检测</span>
+          </div>
+          <dl class="release-health-list" id="releaseHealthList"></dl>
+        </article>
+        <div class="release-history">
+          <strong id="releaseHistoryTitle">版本历史</strong>
+          <div class="release-history-list" id="releaseHistoryList"></div>
+        </div>
+        <ul class="release-list" id="releaseList"></ul>
+      </div>
+    </div>
+
+    <div class="daily-reward-toast" id="dailyRewardToast" role="status" aria-live="polite" hidden>
+      <span class="daily-reward-badge" id="dailyRewardBadge">★</span>
+      <span id="dailyRewardText">每日任务完成</span>
+    </div>
+
+    <script src="./vendor/chess-global.js"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.23"></script>
+    <script src="./app.js?v=1.0.23"></script>
+  </body>
+</html>
