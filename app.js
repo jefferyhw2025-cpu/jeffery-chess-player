@@ -1,10 +1,11 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.25";
+const appVersion = "1.0.26";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const releaseNotes = {
   zh: [
+    "v1.0.26：备用线路会提示云端功能限制，版本中心新增分享给朋友链接和二维码。",
     "v1.0.25：README、公开玩家仓库说明和一键同步脚本已更新，版本中心会更清楚显示备用线路状态。",
     "v1.0.24：备用网址改为独立公开玩家仓库，私有主仓库继续保持私有。",
     "v1.0.23：版本中心新增 GitHub Pages 下一步提示、PWA 安装提示、上线自检，以及档案导入前预览确认。",
@@ -45,6 +46,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.26: backup route now explains cloud-feature limits, and the version center can share the public link with a QR code.",
     "v1.0.25: updated README files, public player repo notes, one-click public sync, and clearer backup-site status.",
     "v1.0.24: moved the backup site to the separate public player repository while keeping the main repository private.",
     "v1.0.23: added GitHub Pages next-step hints, PWA install guidance, online self-check, and profile import preview.",
@@ -589,6 +591,8 @@ const i18n = {
     releaseLiveAhead: "线上版本 v{version} 比本地更新。",
     releaseLiveUnavailable: "暂时无法读取线上版本。Netlify 额度或 CORS 可能阻止检测。",
     releaseLiveOpen: "备用网址：GitHub Pages",
+    releaseLimitTitle: "备用线路提示",
+    releaseLimitText: "当前为备用线路，部分云端功能可能使用本地模式，例如线上反馈、线上段位和职业联赛云端榜单。",
     releaseStatusTitle: "发布状态面板",
     releaseStatusIdle: "打开版本中心后会检查本地、Netlify、GitHub Pages 和共享包版本。",
     releaseStatusChecking: "正在检查发布状态...",
@@ -607,6 +611,12 @@ const i18n = {
     releaseStatusHintIdle: "这里会提示 Netlify 和 GitHub Pages 是否同步。",
     releaseStatusHintPages: "GitHub Pages 未开启时，请到 GitHub 仓库 Settings -> Pages，把 Source 设为 GitHub Actions。",
     releaseStatusHintReady: "备用线路已上线，玩家可从 GitHub Pages 继续进入游戏。",
+    releaseShareTitle: "分享给朋友",
+    releaseSharePill: "公开链接",
+    releaseShareText: "把这个玩家版链接发给朋友，或让朋友扫码打开。",
+    releaseShareCopy: "复制公开链接",
+    releaseShareCopied: "已复制公开玩家版链接。",
+    releaseShareQrAria: "公开玩家版二维码",
     pwaInstallTitle: "安装到桌面",
     pwaInstallReady: "此浏览器可直接安装游戏。",
     pwaInstallManual: "Chrome 可点地址栏安装图标；Safari 可用分享按钮添加到主屏幕。",
@@ -1133,6 +1143,8 @@ const i18n = {
     releaseLiveAhead: "Live site v{version} is newer than this local build.",
     releaseLiveUnavailable: "Could not read the live version. Netlify credits or CORS may block the check.",
     releaseLiveOpen: "Backup site: GitHub Pages",
+    releaseLimitTitle: "Backup Route Notice",
+    releaseLimitText: "You are on the backup route. Some cloud features may use local mode, including online feedback, official rank sync, and Pro League cloud boards.",
     releaseStatusTitle: "Release Status",
     releaseStatusIdle: "The version center checks local, Netlify, GitHub Pages, and share package versions.",
     releaseStatusChecking: "Checking release status...",
@@ -1151,6 +1163,12 @@ const i18n = {
     releaseStatusHintIdle: "This shows whether Netlify and GitHub Pages are synced.",
     releaseStatusHintPages: "If GitHub Pages is unavailable, open GitHub Settings -> Pages and set Source to GitHub Actions.",
     releaseStatusHintReady: "The backup route is online, so players can keep playing from GitHub Pages.",
+    releaseShareTitle: "Share With Friends",
+    releaseSharePill: "Public Link",
+    releaseShareText: "Send this player link to a friend, or let them scan the QR code.",
+    releaseShareCopy: "Copy Public Link",
+    releaseShareCopied: "Public player link copied.",
+    releaseShareQrAria: "Public player QR code",
     pwaInstallTitle: "Install to Desktop",
     pwaInstallReady: "This browser can install the game directly.",
     pwaInstallManual: "In Chrome, use the install icon in the address bar. In Safari, use Share and Add to Home Screen.",
@@ -1962,6 +1980,9 @@ const els = {
   releaseLiveText: document.querySelector("#releaseLiveText"),
   releaseLivePill: document.querySelector("#releaseLivePill"),
   releaseBackupLink: document.querySelector("#releaseBackupLink"),
+  releaseLimitCard: document.querySelector("#releaseLimitCard"),
+  releaseLimitTitle: document.querySelector("#releaseLimitTitle"),
+  releaseLimitText: document.querySelector("#releaseLimitText"),
   releaseStatusTitle: document.querySelector("#releaseStatusTitle"),
   releaseStatusPill: document.querySelector("#releaseStatusPill"),
   releaseStatusList: document.querySelector("#releaseStatusList"),
@@ -1971,6 +1992,13 @@ const els = {
   releaseInstallPill: document.querySelector("#releaseInstallPill"),
   releaseInstallText: document.querySelector("#releaseInstallText"),
   installPwaBtn: document.querySelector("#installPwaBtn"),
+  releaseShareCard: document.querySelector("#releaseShareCard"),
+  releaseShareTitle: document.querySelector("#releaseShareTitle"),
+  releaseSharePill: document.querySelector("#releaseSharePill"),
+  releaseShareText: document.querySelector("#releaseShareText"),
+  releaseShareQr: document.querySelector("#releaseShareQr"),
+  releaseShareLink: document.querySelector("#releaseShareLink"),
+  sharePublicSiteBtn: document.querySelector("#sharePublicSiteBtn"),
   checkUpdateBtn: document.querySelector("#checkUpdateBtn"),
   checkHealthBtn: document.querySelector("#checkHealthBtn"),
   onlineSelfCheckBtn: document.querySelector("#onlineSelfCheckBtn"),
@@ -4276,6 +4304,7 @@ function renderReleaseInfo() {
   els.releaseHistoryTitle.textContent = t("releaseHistoryTitle");
   els.releaseUpdateStatus.textContent = releaseUpdateStatusText();
   renderReleaseLiveStatus();
+  renderReleaseLimitNotice();
   setButtonContent(els.checkUpdateBtn, "↻", t("checkUpdate"));
   setButtonContent(els.checkHealthBtn, "✓", t("checkHealth"));
   setButtonContent(els.onlineSelfCheckBtn, "◉", t("onlineSelfCheck"));
@@ -4287,6 +4316,7 @@ function renderReleaseInfo() {
   els.applyUpdateBtn.hidden = updateCheckState !== "ready";
   els.applyUpdateBtn.disabled = updateCheckState === "reloading";
   renderPwaInstall();
+  renderReleaseShare();
   renderReleaseBackup();
   renderReleaseHealth();
   renderReleaseStatus();
@@ -4414,10 +4444,13 @@ function liveVersionUrl() {
   return isProductionHost ? `./version.json?live=${Date.now()}` : `${productionSiteUrl}/version.json?live=${Date.now()}`;
 }
 
+function isBackupSiteHost() {
+  const backup = new URL(backupSiteUrl);
+  return window.location.hostname === backup.hostname && window.location.pathname.startsWith(backup.pathname);
+}
+
 function pagesVersionUrl() {
-  const pagesHost = new URL(backupSiteUrl).hostname;
-  const isPagesHost = window.location.hostname === pagesHost;
-  return isPagesHost ? `./version.json?pages=${Date.now()}` : `${backupSiteUrl.replace(/\/$/, "")}/version.json?pages=${Date.now()}`;
+  return isBackupSiteHost() ? `./version.json?pages=${Date.now()}` : `${backupSiteUrl.replace(/\/$/, "")}/version.json?pages=${Date.now()}`;
 }
 
 function canReadVersionUrl(url) {
@@ -4578,6 +4611,58 @@ function renderPwaInstall() {
   els.releaseInstallPill.textContent = status.ok ? t("releaseHealthOk") : t("releaseHealthWarning", { label: t("releaseHealthPwa") });
   els.releaseInstallPill.classList.toggle("is-online", status.ok);
   setButtonContent(els.installPwaBtn, "⤓", t("pwaInstallButton"));
+}
+
+function renderReleaseLimitNotice() {
+  if (!els.releaseLimitCard) {
+    return;
+  }
+  const showLimit = isBackupSiteHost();
+  els.releaseLimitCard.hidden = !showLimit;
+  els.releaseLimitTitle.textContent = t("releaseLimitTitle");
+  els.releaseLimitText.textContent = t("releaseLimitText");
+}
+
+function renderReleaseShareQr() {
+  if (!els.releaseShareQr) {
+    return;
+  }
+  els.releaseShareQr.innerHTML = "";
+  els.releaseShareQr.setAttribute("aria-label", t("releaseShareQrAria"));
+  if (typeof window.qrcode !== "function") {
+    return;
+  }
+  try {
+    const qr = window.qrcode(0, "M");
+    qr.addData(backupSiteUrl);
+    qr.make();
+    els.releaseShareQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, title: t("releaseShareQrAria") });
+  } catch (error) {
+    els.releaseShareQr.innerHTML = "";
+  }
+}
+
+function renderReleaseShare() {
+  if (!els.releaseShareCard) {
+    return;
+  }
+  els.releaseShareTitle.textContent = t("releaseShareTitle");
+  els.releaseSharePill.textContent = t("releaseSharePill");
+  els.releaseShareText.textContent = t("releaseShareText");
+  els.releaseSharePill.classList.add("is-online");
+  els.releaseShareLink.href = backupSiteUrl;
+  els.releaseShareLink.textContent = backupSiteUrl;
+  setButtonContent(els.sharePublicSiteBtn, "⧉", t("releaseShareCopy"));
+  renderReleaseShareQr();
+}
+
+async function copyPublicPlayerLink() {
+  try {
+    await navigator.clipboard.writeText(backupSiteUrl);
+    setNotice(t("releaseShareCopied"));
+  } catch (error) {
+    setNotice(t("copyBlocked"));
+  }
 }
 
 async function installPwaApp() {
@@ -8829,6 +8914,7 @@ els.checkUpdateBtn.addEventListener("click", checkForUpdates);
 els.checkHealthBtn.addEventListener("click", checkVersionHealth);
 els.onlineSelfCheckBtn.addEventListener("click", runOnlineSelfCheck);
 els.installPwaBtn.addEventListener("click", installPwaApp);
+els.sharePublicSiteBtn.addEventListener("click", copyPublicPlayerLink);
 els.applyUpdateBtn.addEventListener("click", applyAvailableUpdate);
 els.restoreBackupBtn.addEventListener("click", restoreProfileBackup);
 els.restoreRankBackupBtn.addEventListener("click", () => restoreProfileBackupPart("rank"));

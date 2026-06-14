@@ -1,7 +1,12 @@
 {
-  "version": "1.0.25",
+  "version": "1.0.26",
   "releasedAt": "2026-06-14",
   "history": [
+    {
+      "version": "1.0.26",
+      "releasedAt": "2026-06-14",
+      "summary": "Backup-route cloud feature notice plus public player sharing link and QR code."
+    },
     {
       "version": "1.0.25",
       "releasedAt": "2026-06-14",
