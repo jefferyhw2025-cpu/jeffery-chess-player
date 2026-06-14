@@ -1,10 +1,12 @@
 const { Chess } = window.ChessLib;
 
-const appVersion = "1.0.28";
+const appVersion = "1.0.29";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
+const lanProtocolVersion = 1;
 const releaseNotes = {
   zh: [
+    "v1.0.29：确认局域网协议向后兼容，不同游戏版本也可通过房间号或二维码对战。",
     "v1.0.28：局域网新增扫码双人对战卡片，可一键生成房间二维码让朋友加入。",
     "v1.0.27：反馈窗口新增备用发送方案，可复制反馈内容或用邮箱发送，并补充版本中心分享自动测试。",
     "v1.0.26：备用线路会提示云端功能限制，版本中心新增分享给朋友链接和二维码。",
@@ -48,6 +50,7 @@ const releaseNotes = {
     "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
   ],
   en: [
+    "v1.0.29: confirmed LAN protocol compatibility so different game versions can still duel by room code or QR.",
     "v1.0.28: LAN play now has a scan-to-duel QR card so friends can join a room faster.",
     "v1.0.27: added backup feedback options for copying or emailing feedback, plus automated checks for version-center sharing.",
     "v1.0.26: backup route now explains cloud-feature limits, and the version center can share the public link with a QR code.",
@@ -783,6 +786,8 @@ const i18n = {
     lanCheckServerOn: "已开启",
     lanCheckServerOff: "未检测到，请先运行“本地局域网启动器”。",
     lanCheckRoom: "房间",
+    lanCheckVersion: "版本兼容",
+    lanCheckVersionCompatible: "可兼容：本机 v{version}，协议 v{protocol}。不同游戏版本也可对战。",
     lanCheckRoomConnected: "已连接：{room}",
     lanCheckRoomPending: "未连接：{room}",
     lanCheckRoomEmpty: "未输入房间号",
@@ -1351,6 +1356,8 @@ const i18n = {
     lanCheckServerOn: "Running",
     lanCheckServerOff: "Not found. Run the LAN launcher first.",
     lanCheckRoom: "Room",
+    lanCheckVersion: "Version compatibility",
+    lanCheckVersionCompatible: "Compatible: this device v{version}, protocol v{protocol}. Different game versions can still duel.",
     lanCheckRoomConnected: "Connected: {room}",
     lanCheckRoomPending: "Not connected: {room}",
     lanCheckRoomEmpty: "No room code",
@@ -2186,6 +2193,8 @@ let lanState = {
   room: "",
   color: null,
   clients: 0,
+  versions: [],
+  protocolVersion: lanProtocolVersion,
 };
 let lastLanCheck = null;
 let releaseHealthState = { status: "idle", rows: [] };
@@ -8501,6 +8510,7 @@ function renderLanCheckResult(check = lastLanCheck) {
 
   appendLanCheckRow(t("lanCheckServer"), check.ok ? t("lanCheckServerOn") : t("lanCheckServerOff"));
   appendLanCheckRow(t("lanCheckRoom"), lanRoomCheckText());
+  appendLanCheckRow(t("lanCheckVersion"), t("lanCheckVersionCompatible", { version: appVersion, protocol: lanProtocolVersion }));
   appendLanCheckRow(t("lanCheckOpponent"), lanOpponentCheckText());
   if (!check.ok) {
     appendLanCheckRow(t("releaseHealthWarning", { label: t("lanCheck") }), t("releaseHealthLanGuide"));
@@ -8678,7 +8688,12 @@ function sendLan(payload) {
   if (!isLanConnected()) {
     return;
   }
-  lanState.socket.send(JSON.stringify({ room: lanState.room, ...payload }));
+  lanState.socket.send(JSON.stringify({
+    room: lanState.room,
+    clientVersion: appVersion,
+    protocolVersion: lanProtocolVersion,
+    ...payload,
+  }));
 }
 
 function sendLanMove(result) {
@@ -8735,6 +8750,8 @@ function handleLanMessage(payload) {
     lanState.room = payload.room;
     lanState.color = payload.color;
     lanState.clients = payload.clients || 1;
+    lanState.versions = Array.isArray(payload.versions) ? payload.versions : [];
+    lanState.protocolVersion = Number(payload.protocolVersion) || lanProtocolVersion;
     aiEnabled = false;
     rankedModeEnabled = false;
     professionalLeagueModeEnabled = false;
@@ -8754,6 +8771,8 @@ function handleLanMessage(payload) {
 
   if (payload.type === "presence") {
     lanState.clients = payload.clients || lanState.clients;
+    lanState.versions = Array.isArray(payload.versions) ? payload.versions : lanState.versions;
+    lanState.protocolVersion = Number(payload.protocolVersion) || lanState.protocolVersion || lanProtocolVersion;
     renderLanPanel();
     return;
   }
@@ -8792,6 +8811,8 @@ async function connectLan() {
     room,
     color: null,
     clients: 0,
+    versions: [appVersion],
+    protocolVersion: lanProtocolVersion,
   };
   renderLanPanel();
 
@@ -8799,7 +8820,12 @@ async function connectLan() {
     const socket = new WebSocket(await lanWebSocketUrl());
     lanState.socket = socket;
     socket.addEventListener("open", () => {
-      socket.send(JSON.stringify({ type: "join", room }));
+      socket.send(JSON.stringify({
+        type: "join",
+        room,
+        clientVersion: appVersion,
+        protocolVersion: lanProtocolVersion,
+      }));
     });
     socket.addEventListener("message", (event) => {
       try {
@@ -8816,6 +8842,8 @@ async function connectLan() {
       lanState.socket = null;
       lanState.color = null;
       lanState.clients = 0;
+      lanState.versions = [];
+      lanState.protocolVersion = lanProtocolVersion;
       renderLanPanel();
     });
     socket.addEventListener("error", () => {
@@ -8826,6 +8854,8 @@ async function connectLan() {
     });
   } catch (error) {
     lanState.status = "disconnected";
+    lanState.versions = [];
+    lanState.protocolVersion = lanProtocolVersion;
     renderLanPanel();
     setNotice(t("lanConnectError"));
   }
@@ -8839,6 +8869,8 @@ function disconnectLan({ silent = false } = {}) {
   lanState.status = "disconnected";
   lanState.color = null;
   lanState.clients = 0;
+  lanState.versions = [];
+  lanState.protocolVersion = lanProtocolVersion;
   renderLanPanel();
   if (!silent) {
     setNotice(t("lanDisconnectedNotice"));
