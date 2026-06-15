@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.33";
+const appVersion = "1.0.34";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.34：版本中心新增安全档案导出提醒，默认导出不包含登录密码哈希、反馈内容或私人临时资料。",
 "v1.0.33：公开玩家包新增压缩处理和公开仓库安全历史审计，降低源码直读风险并防止私有文件误发布。",
 "v1.0.32：新增本地终端虚拟双客户端 LAN 测试，并修复快速重连后玩家颜色可能变成观战者的问题。",
 "v1.0.31：局域网新增自动重连、重新连接按钮、对方版本显示、二维码有效期提示和真实 LAN 自动化测试。",
@@ -56,6 +57,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.34: added a safe profile export reminder in the version center; exports do not include login password hashes, feedback content, or private temporary data.",
 "v1.0.33: added public player asset minification and public-repository history auditing to reduce source readability and prevent private files from being published.",
 "v1.0.32: added a local terminal dual-client LAN test and fixed fast reconnects so players reclaim their original color.",
 "v1.0.31: added LAN auto-reconnect, reconnect button, peer version display, QR lifetime hints, and a real LAN automation test.",
@@ -148,7 +150,6 @@ const accountStorageKey = "local-chess-accounts-v1";
 const currentAccountStorageKey = "local-chess-current-account";
 const feedbackStorageKey = "local-chess-feedback-v1";
 const feedbackMailboxAddress = "feedback@jeffery-chess.local";
-const feedbackDeveloperEmail = "wuhuangjunzhe@icloud.com";
 const onlineRankPlayerStorageKey = "local-chess-online-rank-player-v1";
 const officialRankProfileStorageKey = "local-chess-official-rank-profile-v1";
 const languageStorageKey = "local-chess-language";
@@ -164,6 +165,7 @@ const dailyStarsStorageKey = "local-chess-daily-stars-v1";
 const dailyStreakStorageKey = "local-chess-daily-streak-v1";
 const tutorialLessonStorageKey = "local-chess-tutorial-lessons-v1";
 const profileBackupStorageKey = "local-chess-profile-backup-v1";
+const profileExportReminderStorageKey = "local-chess-profile-export-reminder-v1";
 const onlineRankMigrationStorageKey = "local-chess-online-rank-migration-v1";
 const volumeSettingsStorageKey = "local-chess-volume-settings-v1";
 const leagueSeasonRewardStorageKey = "local-chess-league-season-rewards-v1";
@@ -536,10 +538,10 @@ feedbackSavedLocal: "反馈已在本机保存；线上发送暂时失败",
 feedbackSavedLocalWithId: "反馈已在本机保存，编号：{id}；线上发送暂时失败",
 feedbackSaveFailed: "暂时无法保存反馈",
 feedbackBackupTitle: "备用发送",
-feedbackBackupText: "如果当前线路无法发送，可复制反馈内容，或用邮箱发给开发者。",
+feedbackBackupText: "如果当前线路无法发送，可复制反馈内容，或打开邮箱自行选择收件人发送。",
 feedbackBackupCopy: "复制反馈内容",
 feedbackBackupMail: "用邮箱发送",
-feedbackBackupCopied: "反馈内容已复制，可直接发给开发者。",
+feedbackBackupCopied: "反馈内容已复制，可粘贴到邮箱或聊天工具发送。",
 feedbackBackupSubject: "Jeffery Chess 玩家反馈",
 playerProfileButton: "档案",
 playerProfileButtonAria: "打开玩家档案",
@@ -642,6 +644,13 @@ releaseShareText: "把这个玩家版链接发给朋友，或让朋友扫码打�
 releaseShareCopy: "复制公开链接",
 releaseShareCopied: "已复制公开玩家版链接。",
 releaseShareQrAria: "公开玩家版二维码",
+releaseProfileBackupTitle: "保护玩家档案",
+releaseProfileBackupPill: "本地安全",
+releaseProfileBackupText: "更新或换设备前，建议导出一次安全档案。导出文件只保存游戏进度，不包含登录密码哈希、反馈内容或私人临时资料。",
+releaseProfileBackupButton: "导出安全档案",
+releaseProfileBackupDone: "安全档案已导出，请妥善保存 JSON 文件。",
+releaseProfileBackupDismiss: "稍后提醒",
+releaseProfileBackupDismissed: "已关闭本次档案导出提醒。",
 pwaInstallTitle: "安装到桌面",
 pwaInstallReady: "此浏览器可直接安装游戏。",
 pwaInstallManual: "Chrome 可点地址栏安装图标；Safari 可用分享按钮添加到主屏幕。",
@@ -1143,10 +1152,10 @@ feedbackSavedLocal: "Feedback was saved locally; online sending failed for now."
 feedbackSavedLocalWithId: "Feedback saved locally. ID: {id}; online sending failed for now.",
 feedbackSaveFailed: "Feedback could not be saved right now",
 feedbackBackupTitle: "Backup Send",
-feedbackBackupText: "If this route cannot send, copy the feedback or email it to the developer.",
+feedbackBackupText: "If this route cannot send, copy the feedback or open mail and choose the recipient yourself.",
 feedbackBackupCopy: "Copy Feedback",
 feedbackBackupMail: "Send by Email",
-feedbackBackupCopied: "Feedback copied. You can send it to the developer.",
+feedbackBackupCopied: "Feedback copied. You can paste it into mail or chat.",
 feedbackBackupSubject: "Jeffery Chess Player Feedback",
 playerProfileButton: "Profile",
 playerProfileButtonAria: "Open player profile",
@@ -1249,6 +1258,13 @@ releaseShareText: "Send this player link to a friend, or let them scan the QR co
 releaseShareCopy: "Copy Public Link",
 releaseShareCopied: "Public player link copied.",
 releaseShareQrAria: "Public player QR code",
+releaseProfileBackupTitle: "Protect Player Profile",
+releaseProfileBackupPill: "Local Safe",
+releaseProfileBackupText: "Before updating or changing devices, export a safe profile. The file keeps game progress only; it does not include login password hashes, feedback text, or private temporary data.",
+releaseProfileBackupButton: "Export Safe Profile",
+releaseProfileBackupDone: "Safe profile exported. Keep the JSON file somewhere safe.",
+releaseProfileBackupDismiss: "Remind Later",
+releaseProfileBackupDismissed: "Profile export reminder dismissed for now.",
 pwaInstallTitle: "Install to Desktop",
 pwaInstallReady: "This browser can install the game directly.",
 pwaInstallManual: "In Chrome, use the install icon in the address bar. In Safari, use Share and Add to Home Screen.",
@@ -2156,6 +2172,12 @@ releaseShareText: document.querySelector("#releaseShareText"),
 releaseShareQr: document.querySelector("#releaseShareQr"),
 releaseShareLink: document.querySelector("#releaseShareLink"),
 sharePublicSiteBtn: document.querySelector("#sharePublicSiteBtn"),
+releaseProfileBackupCard: document.querySelector("#releaseProfileBackupCard"),
+releaseProfileBackupTitle: document.querySelector("#releaseProfileBackupTitle"),
+releaseProfileBackupPill: document.querySelector("#releaseProfileBackupPill"),
+releaseProfileBackupText: document.querySelector("#releaseProfileBackupText"),
+releaseProfileExportBtn: document.querySelector("#releaseProfileExportBtn"),
+releaseProfileDismissBtn: document.querySelector("#releaseProfileDismissBtn"),
 checkUpdateBtn: document.querySelector("#checkUpdateBtn"),
 checkHealthBtn: document.querySelector("#checkHealthBtn"),
 onlineSelfCheckBtn: document.querySelector("#onlineSelfCheckBtn"),
@@ -3050,7 +3072,7 @@ setButtonContent(els.copyFeedbackBackupBtn, "⧉", t("feedbackBackupCopy"));
 els.mailFeedbackBackupBtn.textContent = t("feedbackBackupMail");
 const subject = encodeURIComponent(t("feedbackBackupSubject"));
 const body = encodeURIComponent(feedbackBackupBody());
-els.mailFeedbackBackupBtn.href = `mailto:${feedbackDeveloperEmail}?subject=${subject}&body=${body}`;
+els.mailFeedbackBackupBtn.href = `mailto:?subject=${subject}&body=${body}`;
 }
 async function copyFeedbackBackup() {
 if (!els.feedbackText.value.trim()) {
@@ -4032,8 +4054,52 @@ exportedAt: new Date().toISOString(),
 data,
 };
 }
-function exportPlayerProfile() {
-const payload = collectProfileExportData();
+function safeProfileExportStorageKeys() {
+return [
+languageStorageKey,
+boardThemeStorageKey,
+volumeSettingsStorageKey,
+savedGameStorageKey,
+achievementStorageId(),
+aiChallengeStorageId(),
+profileActivityStorageId(),
+rankedModeStorageId(),
+professionalLeagueModeStorageId(),
+dailyStarsStorageId(),
+dailyTaskStorageId(),
+dailyStreakStorageId(),
+tutorialLessonStorageId(),
+];
+}
+function copyStoredValue(data, key) {
+try {
+const value = window.localStorage.getItem(key);
+if (value !== null) {
+data[key] = value;
+}
+} catch (error) {
+}
+}
+function collectSafeProfileExportData() {
+const data = {
+[scoreStorageKey]: JSON.stringify(normalizeScore(matchScore)),
+[rankStorageKey]: String(Math.max(0, Math.floor(Number(rankPoints)) || 0)),
+};
+for (const key of safeProfileExportStorageKeys()) {
+copyStoredValue(data, key);
+}
+return {
+type: "jeffery-chess-profile",
+version: 2,
+exportKind: "safe-player-profile",
+appVersion,
+exportedAt: new Date().toISOString(),
+data,
+};
+}
+function exportPlayerProfile(options = {}) {
+const safe = options?.safe !== false;
+const payload = safe ? collectSafeProfileExportData() : collectProfileExportData();
 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
 const url = URL.createObjectURL(blob);
 const link = document.createElement("a");
@@ -4043,7 +4109,15 @@ document.body.append(link);
 link.click();
 link.remove();
 URL.revokeObjectURL(url);
-setNotice(t("profileExportDone"));
+setNotice(safe ? t("releaseProfileBackupDone") : t("profileExportDone"));
+}
+function exportSafeProfileFromRelease() {
+exportPlayerProfile({ safe: true });
+try {
+window.localStorage.setItem(profileExportReminderStorageKey, appVersion);
+} catch (error) {
+}
+renderReleaseProfileBackup();
 }
 function importPlayerProfilePayload(payload) {
 if (
@@ -4296,6 +4370,7 @@ els.applyUpdateBtn.hidden = updateCheckState !== "ready";
 els.applyUpdateBtn.disabled = updateCheckState === "reloading";
 renderPwaInstall();
 renderReleaseShare();
+renderReleaseProfileBackup();
 renderReleaseBackup();
 renderReleaseHealth();
 renderReleaseStatus();
@@ -4611,6 +4686,36 @@ els.releaseShareLink.href = backupSiteUrl;
 els.releaseShareLink.textContent = backupSiteUrl;
 setButtonContent(els.sharePublicSiteBtn, "⧉", t("releaseShareCopy"));
 renderReleaseShareQr();
+}
+function profileExportReminderDismissed() {
+try {
+return window.localStorage.getItem(profileExportReminderStorageKey) === appVersion;
+} catch (error) {
+return false;
+}
+}
+function renderReleaseProfileBackup() {
+if (!els.releaseProfileBackupCard) {
+return;
+}
+els.releaseProfileBackupCard.hidden = profileExportReminderDismissed();
+if (els.releaseProfileBackupCard.hidden) {
+return;
+}
+els.releaseProfileBackupTitle.textContent = t("releaseProfileBackupTitle");
+els.releaseProfileBackupPill.textContent = t("releaseProfileBackupPill");
+els.releaseProfileBackupPill.classList.add("is-online");
+els.releaseProfileBackupText.textContent = t("releaseProfileBackupText");
+setButtonContent(els.releaseProfileExportBtn, "⇩", t("releaseProfileBackupButton"));
+setButtonContent(els.releaseProfileDismissBtn, "×", t("releaseProfileBackupDismiss"));
+}
+function dismissProfileExportReminder() {
+try {
+window.localStorage.setItem(profileExportReminderStorageKey, appVersion);
+} catch (error) {
+}
+renderReleaseProfileBackup();
+setNotice(t("releaseProfileBackupDismissed"));
 }
 async function copyPublicPlayerLink() {
 try {
@@ -8859,6 +8964,8 @@ els.checkHealthBtn.addEventListener("click", checkVersionHealth);
 els.onlineSelfCheckBtn.addEventListener("click", runOnlineSelfCheck);
 els.installPwaBtn.addEventListener("click", installPwaApp);
 els.sharePublicSiteBtn.addEventListener("click", copyPublicPlayerLink);
+els.releaseProfileExportBtn.addEventListener("click", exportSafeProfileFromRelease);
+els.releaseProfileDismissBtn.addEventListener("click", dismissProfileExportReminder);
 els.applyUpdateBtn.addEventListener("click", applyAvailableUpdate);
 els.restoreBackupBtn.addEventListener("click", restoreProfileBackup);
 els.restoreRankBackupBtn.addEventListener("click", () => restoreProfileBackupPart("rank"));

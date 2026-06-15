@@ -824,12 +824,12 @@
           </details>
           <article class="feedback-backup" id="feedbackBackupCard">
             <strong id="feedbackBackupTitle">备用发送</strong>
-            <p id="feedbackBackupText">如果当前线路无法发送，可复制反馈内容，或用邮箱发给开发者。</p>
+            <p id="feedbackBackupText">如果当前线路无法发送，可复制反馈内容，或打开邮箱自行选择收件人发送。</p>
             <div class="feedback-backup-actions">
               <button class="action-button" id="copyFeedbackBackupBtn" type="button">
                 复制反馈内容
               </button>
-              <a class="action-button" id="mailFeedbackBackupBtn" href="mailto:wuhuangjunzhe@icloud.com">
+              <a class="action-button" id="mailFeedbackBackupBtn" href="mailto:">
                 用邮箱发送
               </a>
             </div>
@@ -938,7 +938,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.33</p>
+        <p class="release-version" id="releaseVersionText">v1.0.34</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -982,6 +982,21 @@
           <button class="action-button" id="sharePublicSiteBtn" type="button">
             ⧉ 复制公开链接
           </button>
+        </article>
+        <article class="release-profile-backup-card" id="releaseProfileBackupCard">
+          <div class="release-profile-backup-top">
+            <strong id="releaseProfileBackupTitle">保护玩家档案</strong>
+            <span id="releaseProfileBackupPill">本地安全</span>
+          </div>
+          <p id="releaseProfileBackupText">更新或换设备前，建议导出一次安全档案。</p>
+          <div class="release-profile-backup-actions">
+            <button class="action-button primary" id="releaseProfileExportBtn" type="button">
+              ⇩ 导出安全档案
+            </button>
+            <button class="action-button" id="releaseProfileDismissBtn" type="button">
+              稍后提醒
+            </button>
+          </div>
         </article>
         <div class="release-actions">
           <button class="action-button" id="checkUpdateBtn" type="button">
@@ -1060,7 +1075,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.33"></script>
-    <script src="./app.js?v=1.0.33"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.34"></script>
+    <script src="./app.js?v=1.0.34"></script>
   </body>
 </html>
