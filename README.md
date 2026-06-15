@@ -18,4 +18,4 @@ The game files are static HTML, CSS, JavaScript, manifest, service worker, and p
 
 The private source repository stays private. This repository is only the publishable player package generated from `deploy/netlify-public`.
 
-GitHub Pages is the static backup route. The game opens normally here, while cloud features that need Netlify Functions may use local/offline behavior until the Netlify production site is redeployed.
+GitHub Pages is the static backup route. The game opens normally here, while server-side cloud features may use local/offline behavior until the Netlify production site is redeployed.

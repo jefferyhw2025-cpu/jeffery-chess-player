@@ -1,18 +1,1 @@
-{
-  "name": "Jeffery Chess",
-  "short_name": "Jeffery Chess",
-  "description": "A friendly chess trainer with AI, ranks, achievements, LAN play, and offline support.",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#f4f8f1",
-  "theme_color": "#245039",
-  "icons": [
-    {
-      "src": "./assets/pieces.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
-  ]
-}
+{"name":"Jeffery Chess","short_name":"Jeffery Chess","description":"A friendly chess trainer with AI, ranks, achievements, LAN play, and offline support.","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#f4f8f1","theme_color":"#245039","icons":[{"src":"./assets/pieces.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
