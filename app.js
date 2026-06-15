@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.34";
+const appVersion = "1.0.35";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.35：局域网连接前会自动检查房间号、服务器和当前网页来源；GitHub 备用页会明确提示改用 192.168 局域网地址或二维码。",
 "v1.0.34：版本中心新增安全档案导出提醒，默认导出不包含登录密码哈希、反馈内容或私人临时资料。",
 "v1.0.33：公开玩家包新增压缩处理和公开仓库安全历史审计，降低源码直读风险并防止私有文件误发布。",
 "v1.0.32：新增本地终端虚拟双客户端 LAN 测试，并修复快速重连后玩家颜色可能变成观战者的问题。",
@@ -57,6 +58,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.35: LAN connect now checks the room code, server, and current page first; the GitHub backup page clearly tells players to use the 192.168 LAN URL or QR code.",
 "v1.0.34: added a safe profile export reminder in the version center; exports do not include login password hashes, feedback content, or private temporary data.",
 "v1.0.33: added public player asset minification and public-repository history auditing to reduce source readability and prevent private files from being published.",
 "v1.0.32: added a local terminal dual-client LAN test and fixed fast reconnects so players reclaim their original color.",
@@ -793,7 +795,7 @@ lanDuelText: "创建房间后，朋友扫描二维码即可进入同一房间。
 lanDuelRoomEmpty: "房间号：—",
 lanDuelRoom: "房间号：{room}",
 lanDuelQrAria: "双人对战二维码",
-lanDuelNote: "扫码对战仅限同一 Wi‑Fi / 同一局域网服务器。二维码只在本次局域网服务器开启期间有效。",
+lanDuelNote: "仅同一 Wi‑Fi 可用：扫码设备必须连接同一个局域网服务器。二维码只在本次局域网服务器开启期间有效。",
 lanDuelNotReady: "未生成",
 lanDuelReady: "可扫码",
 lanDuelGenerate: "生成对战二维码",
@@ -813,6 +815,11 @@ lanCheckChecking: "检测中",
 lanCheckServer: "服务器",
 lanCheckServerOn: "已开启",
 lanCheckServerOff: "未检测到，请先运行“本地局域网启动器”。",
+lanCheckPage: "当前页面",
+lanCheckPageLan: "局域网页面，可连接",
+lanCheckPageBackup: "GitHub 备用网页版，不能直接开 LAN",
+lanCheckPageFile: "本地文件页面，请改用局域网启动器地址",
+lanCheckPageStatic: "普通网页，不能直接开 LAN",
 lanCheckRoom: "房间",
 lanCheckVersion: "版本兼容",
 lanCheckVersionCompatible: "本机版本 v{version} / LAN 协议 v{protocol} / 可与旧版兼容",
@@ -866,6 +873,10 @@ lanDetailSpectator: "房间已满，你正在观战，棋盘会跟随对局更�
 lanDetailPeerReady: "对手已连接。你执{side}。",
 lanNeedRoom: "请输入房间号",
 lanConnectError: "无法连接局域网服务器，请先运行“本地局域网启动器”。",
+lanConnectChecking: "正在检查局域网服务器...",
+lanBackupSiteBlocked: "网页版备用站不能直接开 LAN，请让房主启动局域网服务器并使用 192.168 开头的网址或二维码。",
+lanFileSiteBlocked: "本地文件页面不能稳定连接 LAN，请先运行“本地局域网启动器”，再打开 127.0.0.1 或 192.168 开头的网址。",
+lanStaticSiteBlocked: "当前网页不能直接开 LAN，请让房主启动局域网服务器并使用 192.168 开头的网址或二维码。",
 lanConnectedNotice: "已连接局域网房间：{room}",
 lanReconnectedNotice: "已重新连接房间：{room}",
 lanReconnectNotice: "连接断开，正在自动重连 {attempt}/{max}...",
@@ -1407,7 +1418,7 @@ lanDuelText: "Create a room, then your friend can scan the QR code to join the s
 lanDuelRoomEmpty: "Room code: —",
 lanDuelRoom: "Room code: {room}",
 lanDuelQrAria: "Two-player duel QR code",
-lanDuelNote: "Scan duels only work on the same Wi-Fi / same LAN server. This QR only works while the current LAN server stays open.",
+lanDuelNote: "Same Wi-Fi only: the scanning device must use the same LAN server. This QR only works while the current LAN server stays open.",
 lanDuelNotReady: "Not ready",
 lanDuelReady: "Scan ready",
 lanDuelGenerate: "Generate Duel QR",
@@ -1427,6 +1438,11 @@ lanCheckChecking: "Checking",
 lanCheckServer: "Server",
 lanCheckServerOn: "Running",
 lanCheckServerOff: "Not found. Run the LAN launcher first.",
+lanCheckPage: "Current page",
+lanCheckPageLan: "LAN page, ready to connect",
+lanCheckPageBackup: "GitHub backup page cannot start LAN directly",
+lanCheckPageFile: "Local file page; use the LAN launcher URL",
+lanCheckPageStatic: "Static web page cannot start LAN directly",
 lanCheckRoom: "Room",
 lanCheckVersion: "Version compatibility",
 lanCheckVersionCompatible: "This device v{version} / LAN protocol v{protocol} / compatible with older versions",
@@ -1480,6 +1496,10 @@ lanDetailSpectator: "The room is full. You are spectating; the board follows the
 lanDetailPeerReady: "Opponent connected. You play {side}.",
 lanNeedRoom: "Enter a room code",
 lanConnectError: "Could not connect to the LAN server. Run the LAN launcher first.",
+lanConnectChecking: "Checking the LAN server...",
+lanBackupSiteBlocked: "The web backup site cannot start LAN directly. Ask the host to run the LAN server and use the 192.168 LAN URL or QR code.",
+lanFileSiteBlocked: "Local file pages cannot connect to LAN reliably. Run the LAN launcher, then open the 127.0.0.1 or 192.168 URL.",
+lanStaticSiteBlocked: "This web page cannot start LAN directly. Ask the host to run the LAN server and use the 192.168 LAN URL or QR code.",
 lanConnectedNotice: "Connected to LAN room: {room}",
 lanReconnectedNotice: "Reconnected to room: {room}",
 lanReconnectNotice: "Connection dropped. Reconnecting {attempt}/{max}...",
@@ -8022,6 +8042,38 @@ renderMusicButton();
 function isLocalHostname(hostname = window.location.hostname) {
 return hostname === "127.0.0.1" || hostname === "localhost" || hostname === "::1";
 }
+function isPrivateLanHostname(hostname = window.location.hostname) {
+return /^192\.168\./.test(hostname)
+|| /^10\./.test(hostname)
+|| /^172\.(1[6-9]|2\d|3[01])\./.test(hostname);
+}
+function isLanPlayablePage() {
+return window.location.protocol !== "file:" && (isLocalHostname() || isPrivateLanHostname());
+}
+function lanBlockedPageMessageKey() {
+if (isBackupSiteHost()) {
+return "lanBackupSiteBlocked";
+}
+if (window.location.protocol === "file:") {
+return "lanFileSiteBlocked";
+}
+if (!isLanPlayablePage()) {
+return "lanStaticSiteBlocked";
+}
+return "";
+}
+function lanCurrentPageCheckText() {
+if (isBackupSiteHost()) {
+return t("lanCheckPageBackup");
+}
+if (window.location.protocol === "file:") {
+return t("lanCheckPageFile");
+}
+if (isLanPlayablePage()) {
+return t("lanCheckPageLan");
+}
+return t("lanCheckPageStatic");
+}
 function lanWebSocketUrlFromBase(baseUrl) {
 const url = new URL(baseUrl);
 const protocol = url.protocol === "https:" ? "wss" : "ws";
@@ -8182,6 +8234,7 @@ els.lanCheckPill.classList.toggle("is-online", check.ok);
 els.lanCheckPill.classList.toggle("is-offline", !check.ok);
 els.lanCheckList.innerHTML = "";
 appendLanCheckRow(t("lanCheckServer"), check.ok ? t("lanCheckServerOn") : t("lanCheckServerOff"));
+appendLanCheckRow(t("lanCheckPage"), lanCurrentPageCheckText());
 appendLanCheckRow(t("lanCheckRoom"), lanRoomCheckText());
 appendLanCheckRow(t("lanCheckVersion"), lanProtocolCompatibilityText());
 appendLanCheckRow(t("lanCheckPeerVersion"), lanPeerVersionText());
@@ -8206,6 +8259,7 @@ setNotice(check.ok ? t("lanCheckNoticeOk") : t("lanCheckNoticeBad"));
 function lanDiagnosticRows(check = lastLanCheck) {
 return [
 [t("lanCheckServer"), check?.ok ? t("lanCheckServerOn") : t("lanCheckServerOff")],
+[t("lanCheckPage"), lanCurrentPageCheckText()],
 [t("lanCheckRoom"), lanRoomCheckText()],
 [t("lanDiagnosticColor"), lanColorText()],
 [t("lanCheckOpponent"), lanOpponentCheckText()],
@@ -8637,11 +8691,51 @@ resetGame({ byLan: true });
 setNotice(t("lanResetNotice"));
 }
 }
-async function connectLan({ reconnect = false } = {}) {
-const room = normalizeLanRoom(els.lanRoomInput.value);
+function showLanPreflightIssue(messageKey) {
+lastLanCheck = { ok: false, base: "", info: null };
+renderLanCheckResult(lastLanCheck);
+const message = t(messageKey);
+els.lanDetail.textContent = message;
+setNotice(message);
+}
+function ensureLanSharePage() {
+const blockedPageKey = lanBlockedPageMessageKey();
+if (!blockedPageKey) {
+return true;
+}
+showLanPreflightIssue(blockedPageKey);
+return false;
+}
+async function preflightLanConnection(room) {
 if (!room) {
 setNotice(t("lanNeedRoom"));
-return;
+return false;
+}
+const blockedPageKey = lanBlockedPageMessageKey();
+if (blockedPageKey) {
+showLanPreflightIssue(blockedPageKey);
+return false;
+}
+els.lanCheckCard.hidden = false;
+els.lanCheckPill.textContent = t("lanCheckChecking");
+els.lanCheckPill.classList.remove("is-online", "is-offline");
+els.lanCheckList.innerHTML = "";
+appendLanCheckRow(t("lanCheckServer"), t("lanConnectChecking"));
+appendLanCheckRow(t("lanCheckPage"), lanCurrentPageCheckText());
+const check = await fetchLanInfoStatus();
+lastLanCheck = check;
+renderLanCheckResult(check);
+if (!check.ok) {
+els.lanDetail.textContent = t("lanConnectError");
+setNotice(t("lanConnectError"));
+return false;
+}
+return true;
+}
+async function connectLan({ reconnect = false } = {}) {
+const room = normalizeLanRoom(els.lanRoomInput.value);
+if (!await preflightLanConnection(room)) {
+return false;
 }
 els.lanRoomInput.value = room;
 const reconnectAttempts = reconnect ? lanState.reconnectAttempts : 0;
@@ -8698,14 +8792,16 @@ return;
 }
 setNotice(t("lanConnectError"));
 });
+return true;
 } catch (error) {
 if (reconnect && lanState.reconnectAttempts < lanReconnectMaxAttempts) {
 lanState.socket = { readyState: WebSocket.CLOSED };
 scheduleLanReconnect(lanState.socket);
-return;
+return false;
 }
 markLanDisconnected();
 setNotice(reconnect ? t("lanReconnectFailed") : t("lanConnectError"));
+return false;
 }
 }
 function disconnectLan({ silent = false, manual = true } = {}) {
@@ -8732,7 +8828,10 @@ async function createLanRoom() {
 const room = createLanRoomCode();
 els.lanRoomInput.value = room;
 renderLanPanel();
-connectLan();
+const started = await connectLan();
+if (!started) {
+return;
+}
 try {
 const shareUrl = await showLanShareLink(room);
 showLanInviteCard(room, shareUrl);
@@ -8750,6 +8849,9 @@ if (!room) {
 setNotice(t("lanNeedRoom"));
 return;
 }
+if (!ensureLanSharePage()) {
+return;
+}
 els.lanRoomInput.value = room;
 try {
 const shareUrl = await showLanShareLink(room);
@@ -8764,6 +8866,9 @@ setNotice(t("lanCopyFailed"));
 }
 async function generateLanDuelQr() {
 let room = normalizeLanRoom(els.lanRoomInput.value);
+if (!ensureLanSharePage()) {
+return;
+}
 if (!room) {
 room = createLanRoomCode();
 els.lanRoomInput.value = room;
