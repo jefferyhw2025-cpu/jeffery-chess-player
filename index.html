@@ -720,8 +720,17 @@
             <span class="button-icon">⇧</span>
             导入档案
           </button>
+          <button class="action-button" id="profileCloudBackupBtn" type="button">
+            <span class="button-icon">☁</span>
+            同步云端
+          </button>
+          <button class="action-button" id="profileCloudRestoreBtn" type="button">
+            <span class="button-icon">☁</span>
+            恢复云端
+          </button>
           <input id="profileImportInput" type="file" accept="application/json,.json" hidden />
         </div>
+        <p class="profile-cloud-status" id="profileCloudStatus">登录后可把安全档案同步到云端。</p>
         <article class="profile-import-preview" id="profileImportPreview" hidden>
           <strong id="profileImportPreviewTitle">导入前确认</strong>
           <p id="profileImportPreviewText">将恢复档案内容。</p>
@@ -938,7 +947,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.37</p>
+        <p class="release-version" id="releaseVersionText">v1.0.40</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1078,7 +1087,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.37"></script>
-    <script src="./app.js?v=1.0.37"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.40"></script>
+    <script src="./app.js?v=1.0.40"></script>
   </body>
 </html>

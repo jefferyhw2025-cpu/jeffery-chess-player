@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.37";
+const appVersion = "1.0.40";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,9 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.40：修复本机专属入口在发布状态面板中的可见性判断，玩家版仍保持隐藏。",
+"v1.0.39：修复发布状态面板在本机入口检测完成后不会刷新的问题，并刷新缓存版本。",
+"v1.0.38：发布状态面板新增内部入口状态；玩家档案新增安全云端备份基础版。",
 "v1.0.37：收紧内部恢复工具入口，普通玩家页保持干净。",
 "v1.0.36：LAN 失败时会自动弹出诊断并突出“复制诊断信息”；版本中心新增安全档案导入入口，并整理 App Store 最终提交资料。",
 "v1.0.35：局域网连接前会自动检查房间号、服务器和当前网页来源；GitHub 备用页会明确提示改用 192.168 局域网地址或二维码。",
@@ -60,6 +63,9 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.40: fixed local owner-entry visibility detection in the release status panel while keeping the player build hidden.",
+"v1.0.39: fixed release-status refresh after the local owner-entry check and refreshed the cache version.",
+"v1.0.38: release status now shows internal-entry exposure, and player profiles gain a safe cloud-backup foundation.",
 "v1.0.37: tightened internal recovery controls so normal player pages stay clean.",
 "v1.0.36: LAN failures now open diagnostics with a prominent copy button; the version center adds safe profile import, and App Store submission materials are refreshed.",
 "v1.0.35: LAN connect now checks the room code, server, and current page first; the GitHub backup page clearly tells players to use the 192.168 LAN URL or QR code.",
@@ -590,6 +596,17 @@ profileOpenAchievements: "查看成就",
 profileOpenRank: "查看段位",
 profileExport: "导出档案",
 profileImport: "导入档案",
+profileCloudBackup: "同步云端",
+profileCloudRestore: "恢复云端",
+profileCloudIdle: "登录后可把安全档案同步到云端。",
+profileCloudReady: "云端备份使用安全档案，不包含密码、反馈或私人临时资料。",
+profileCloudNeedAccount: "请先登录或注册，再使用云端备份。",
+profileCloudSaving: "正在同步安全档案到云端...",
+profileCloudSaved: "云端备份已保存。",
+profileCloudLoading: "正在读取云端备份...",
+profileCloudEmpty: "还没有找到云端备份。",
+profileCloudPreview: "已读取云端备份，请在导入预览里确认。",
+profileCloudUnavailable: "云端备份暂时不可用，可能需要 Netlify 主站部署。",
 profileExportDone: "玩家档案已导出。",
 profileImportDone: "玩家档案已导入，正在重新载入。",
 profileImportBad: "这个档案文件无法导入。",
@@ -637,6 +654,10 @@ releaseStatusBackupLine: "备用线路",
 releaseStatusBackupOnline: "已上线：GitHub Pages",
 releaseStatusPublicVersion: "公开玩家版",
 releaseStatusShare: "共享包",
+releaseStatusAdminEntry: "内部入口",
+releaseStatusAdminClean: "玩家版未外露",
+releaseStatusAdminLocal: "仅本机专属入口",
+releaseStatusAdminWarning: "当前页面可见，请勿发给玩家",
 releaseStatusVersion: "v{version}",
 releaseStatusUnavailable: "无法访问",
 releaseStatusOld: "旧版 v{version}",
@@ -1217,6 +1238,17 @@ profileOpenAchievements: "View Achievements",
 profileOpenRank: "View Rank",
 profileExport: "Export Profile",
 profileImport: "Import Profile",
+profileCloudBackup: "Cloud Backup",
+profileCloudRestore: "Restore Cloud",
+profileCloudIdle: "Log in to sync a safe profile backup to the cloud.",
+profileCloudReady: "Cloud backup uses the safe profile only; no passwords, feedback, or private temporary data.",
+profileCloudNeedAccount: "Log in or register before using cloud backup.",
+profileCloudSaving: "Syncing safe profile to the cloud...",
+profileCloudSaved: "Cloud backup saved.",
+profileCloudLoading: "Loading cloud backup...",
+profileCloudEmpty: "No cloud backup found yet.",
+profileCloudPreview: "Cloud backup loaded. Confirm it in the import preview.",
+profileCloudUnavailable: "Cloud backup is unavailable right now; the Netlify main site may need deployment.",
 profileExportDone: "Player profile exported.",
 profileImportDone: "Player profile imported. Reloading.",
 profileImportBad: "This profile file cannot be imported.",
@@ -1264,6 +1296,10 @@ releaseStatusBackupLine: "Backup Route",
 releaseStatusBackupOnline: "Online: GitHub Pages",
 releaseStatusPublicVersion: "Public Player Build",
 releaseStatusShare: "Share Package",
+releaseStatusAdminEntry: "Internal Entry",
+releaseStatusAdminClean: "Hidden from player build",
+releaseStatusAdminLocal: "Local owner only",
+releaseStatusAdminWarning: "Visible here; do not share this page",
 releaseStatusVersion: "v{version}",
 releaseStatusUnavailable: "Unavailable",
 releaseStatusOld: "Old v{version}",
@@ -2024,6 +2060,9 @@ profileRankBtn: document.querySelector("#profileRankBtn"),
 profileLeaderboardBtn: document.querySelector("#profileLeaderboardBtn"),
 profileExportBtn: document.querySelector("#profileExportBtn"),
 profileImportBtn: document.querySelector("#profileImportBtn"),
+profileCloudBackupBtn: document.querySelector("#profileCloudBackupBtn"),
+profileCloudRestoreBtn: document.querySelector("#profileCloudRestoreBtn"),
+profileCloudStatus: document.querySelector("#profileCloudStatus"),
 profileImportInput: document.querySelector("#profileImportInput"),
 profileImportPreview: document.querySelector("#profileImportPreview"),
 profileImportPreviewTitle: document.querySelector("#profileImportPreviewTitle"),
@@ -4059,6 +4098,13 @@ setButtonContent(els.profileRankBtn, rankState.rank.medal, t("profileOpenRank"))
 setButtonContent(els.profileLeaderboardBtn, "♕", t("leaderboardButton"));
 setButtonContent(els.profileExportBtn, "⇩", t("profileExport"));
 setButtonContent(els.profileImportBtn, "⇧", t("profileImport"));
+setButtonContent(els.profileCloudBackupBtn, "☁", t("profileCloudBackup"));
+setButtonContent(els.profileCloudRestoreBtn, "☁", t("profileCloudRestore"));
+els.profileCloudBackupBtn.disabled = !isLoggedIn;
+els.profileCloudRestoreBtn.disabled = !isLoggedIn;
+if (els.profileCloudStatus) {
+els.profileCloudStatus.textContent = isLoggedIn ? t("profileCloudReady") : t("profileCloudIdle");
+}
 renderProfileImportPreview();
 renderLeaderboard();
 renderDailyTasks();
@@ -4267,6 +4313,75 @@ window.setTimeout(() => window.location.reload(), 700);
 } catch (error) {
 clearProfileImportPreview();
 setNotice(t("profileImportBad"));
+}
+}
+function setProfileCloudStatus(key, values = {}) {
+const message = t(key, values);
+if (els.profileCloudStatus) {
+els.profileCloudStatus.textContent = message;
+}
+setNotice(message);
+}
+function requireCloudBackupAccount() {
+const account = currentAccount();
+if (!account) {
+setProfileCloudStatus("profileCloudNeedAccount");
+return null;
+}
+return account;
+}
+async function syncProfileCloudBackup() {
+const account = requireCloudBackupAccount();
+if (!account) {
+return;
+}
+setProfileCloudStatus("profileCloudSaving");
+try {
+const response = await fetch("/api/profile-backup", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+playerId: getOnlinePlayerId(),
+displayName: cleanPlayerDisplayName(account.name),
+profile: collectSafeProfileExportData(),
+}),
+});
+const result = await response.json();
+if (!response.ok || !result.ok) {
+throw new Error(result.reason || "profile-cloud-save-failed");
+}
+setProfileCloudStatus("profileCloudSaved");
+} catch (error) {
+setProfileCloudStatus("profileCloudUnavailable");
+}
+}
+async function restoreProfileCloudBackup() {
+const account = requireCloudBackupAccount();
+if (!account) {
+return;
+}
+setProfileCloudStatus("profileCloudLoading");
+try {
+const params = new URLSearchParams({
+playerId: getOnlinePlayerId(),
+displayName: cleanPlayerDisplayName(account.name),
+ts: String(Date.now()),
+});
+const response = await fetch(`/api/profile-backup?${params.toString()}`, { cache: "no-store" });
+const result = await response.json();
+if (response.status === 404 || result.reason === "missing") {
+setProfileCloudStatus("profileCloudEmpty");
+return;
+}
+if (!response.ok || !result.ok || !result.profile) {
+throw new Error(result.reason || "profile-cloud-load-failed");
+}
+pendingProfileImportSummary = profileImportSummary(result.profile);
+pendingProfileImportPayload = result.profile;
+renderProfileImportPreview();
+setProfileCloudStatus("profileCloudPreview");
+} catch (error) {
+setProfileCloudStatus("profileCloudUnavailable");
 }
 }
 function handleProfileImportFile(event) {
@@ -4615,6 +4730,27 @@ detail.textContent = value;
 row.append(term, detail);
 els.releaseStatusList.append(row);
 }
+function currentAdminEntryStatus() {
+const isElementVisible = (node) => {
+if (!node) {
+return false;
+}
+const style = window.getComputedStyle(node);
+const rect = node.getBoundingClientRect();
+return !node.hidden && style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0;
+};
+const ownerEntryKey = ["admin", "StarBtn"].join("");
+const ownerEntry = els[ownerEntryKey];
+const adminVisible = isElementVisible(ownerEntry);
+const restoreVisible = isElementVisible(els.developerRankRestoreBtn);
+if (!adminVisible && !restoreVisible) {
+return { label: t("releaseStatusAdminClean"), ok: true };
+}
+if (adminVisible && isLocalAdminPage() && !restoreVisible) {
+return { label: t("releaseStatusAdminLocal"), ok: true };
+}
+return { label: t("releaseStatusAdminWarning"), ok: false };
+}
 function renderReleaseStatus() {
 if (!els.releaseStatusTitle || !els.releaseStatusPill || !els.releaseStatusList) {
 return;
@@ -4656,6 +4792,8 @@ t("releaseStatusPublicVersion"),
 pagesVersionState.version ? t("releaseStatusVersion", { version: pagesVersionState.version }) : t("releaseStatusUnavailable"),
 pagesVersionState.status === "synced",
 );
+const adminEntry = currentAdminEntryStatus();
+appendReleaseStatusRow(t("releaseStatusAdminEntry"), adminEntry.label, adminEntry.ok);
 appendReleaseStatusRow(t("releaseStatusShare"), t("releaseStatusVersion", { version: appVersion }), true);
 if (els.releaseStatusHint) {
 els.releaseStatusHint.textContent =
@@ -9100,6 +9238,8 @@ els.profileRankBtn.addEventListener("click", openProfileRank);
 els.profileLeaderboardBtn.addEventListener("click", openLeaderboardDialog);
 els.profileExportBtn.addEventListener("click", exportPlayerProfile);
 els.profileImportBtn.addEventListener("click", () => els.profileImportInput.click());
+els.profileCloudBackupBtn.addEventListener("click", syncProfileCloudBackup);
+els.profileCloudRestoreBtn.addEventListener("click", restoreProfileCloudBackup);
 els.profileImportInput.addEventListener("change", handleProfileImportFile);
 els.profileImportConfirmBtn.addEventListener("click", confirmProfileImport);
 els.profileImportCancelBtn.addEventListener("click", () => {
