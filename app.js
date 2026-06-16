@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.40";
+const appVersion = "1.0.41";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.41：新增首次打开引导、每日残局、一步将死训练、账号删除，并在 iOS/备用版隐藏不可用的云端备份入口。",
 "v1.0.40：修复本机专属入口在发布状态面板中的可见性判断，玩家版仍保持隐藏。",
 "v1.0.39：修复发布状态面板在本机入口检测完成后不会刷新的问题，并刷新缓存版本。",
 "v1.0.38：发布状态面板新增内部入口状态；玩家档案新增安全云端备份基础版。",
@@ -63,6 +64,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.41: added first-run onboarding, daily endgame, mate-in-one training, account deletion, and hid unavailable cloud backup in iOS/backup builds.",
 "v1.0.40: fixed local owner-entry visibility detection in the release status panel while keeping the player build hidden.",
 "v1.0.39: fixed release-status refresh after the local owner-entry check and refreshed the cache version.",
 "v1.0.38: release status now shows internal-entry exposure, and player profiles gain a safe cloud-backup foundation.",
@@ -184,6 +186,7 @@ const leagueSeasonRewardStorageKey = "local-chess-league-season-rewards-v1";
 const friendModeStorageKey = "local-chess-friend-mode-v1";
 const continuePromptStorageKey = "local-chess-continue-dismissed-v1";
 const lanClientIdStorageKey = "local-chess-lan-client-id-v1";
+const onboardingStorageKey = "local-chess-onboarding-v1";
 const localLanServerBases = ["http://127.0.0.1:5173", "http://127.0.0.1:5174"];
 let liveVersionState = { status: "idle", version: "", url: productionSiteUrl };
 let pagesVersionState = { status: "idle", version: "", url: backupSiteUrl };
@@ -276,6 +279,8 @@ zh: { title: "无提示胜利", detail: "不使用提示赢 1 局 AI。" },
 en: { title: "No-Hint Win", detail: "Win 1 AI game without using a hint." },
 },
 ];
+const dailyEndgameFen = "8/8/8/3k4/3P4/3K4/8/8 w - - 0 1";
+const mateInOneFen = "6k1/7p/6KQ/8/8/8/8/8 w - - 0 1";
 const rankThresholds = [0, 3, 6, 10, 15, 21, 28, 36, 45, 55];
 const achievementCatalog = [
 {
@@ -607,6 +612,11 @@ profileCloudLoading: "正在读取云端备份...",
 profileCloudEmpty: "还没有找到云端备份。",
 profileCloudPreview: "已读取云端备份，请在导入预览里确认。",
 profileCloudUnavailable: "云端备份暂时不可用，可能需要 Netlify 主站部署。",
+profileCloudHiddenIos: "当前 App/备用网页版暂不显示云端备份，请使用导出/导入档案保护进度。",
+deleteAccount: "删除账号",
+deleteAccountConfirm: "删除账号会清除这个账号的段位、成就、每日任务和本机登录资料。请输入 {name} 确认。",
+deleteAccountDone: "账号已删除，本机资料已清除。",
+deleteAccountCancelled: "账号删除已取消。",
 profileExportDone: "玩家档案已导出。",
 profileImportDone: "玩家档案已导入，正在重新载入。",
 profileImportBad: "这个档案文件无法导入。",
@@ -780,6 +790,7 @@ accountGuestDetail: "登录后会单独保存你的比分和段位。",
 accountLoggedDetail: "{name} 的比分和段位正在单独保存。",
 loginRegister: "登录 / 注册",
 logout: "退出登录",
+accountDelete: "删除账号",
 authLoginTitle: "登录账号",
 authRegisterTitle: "注册账号",
 authCloseAria: "关闭登录窗口",
@@ -833,6 +844,19 @@ lanQrCopied: "二维码图片已复制",
 lanQrDownloaded: "二维码图片已下载",
 lanQrCopyFallback: "无法直接复制图片，已改为下载二维码",
 lanQrMissing: "请先生成二维码",
+dailyEndgame: "每日残局",
+mateOneTraining: "一步将死",
+dailyEndgameStarted: "每日残局已载入：用王保护兵，尝试把兵安全送到底线。",
+mateOneStarted: "一步将死训练已载入：白方一步将死。",
+trainingNoRank: "训练局不会计算段位分。",
+onboardingLabel: "欢迎",
+onboardingTitle: "开始你的第一局",
+onboardingText: "先完成新手教程，或直接挑战 AI。你的段位、成就和每日训练都会保存在本机。",
+onboardingFeatureAi: "AI 对手",
+onboardingFeatureTraining: "新手训练",
+onboardingFeatureOffline: "离线可玩",
+onboardingSkip: "先自己玩",
+onboardingTutorial: "打开新手教程",
 lanCheckLabel: "联机状态",
 lanCheckTitle: "检测结果",
 lanCheckIdle: "待检测",
@@ -1249,6 +1273,11 @@ profileCloudLoading: "Loading cloud backup...",
 profileCloudEmpty: "No cloud backup found yet.",
 profileCloudPreview: "Cloud backup loaded. Confirm it in the import preview.",
 profileCloudUnavailable: "Cloud backup is unavailable right now; the Netlify main site may need deployment.",
+profileCloudHiddenIos: "Cloud backup is hidden in this App Store or backup build. Use export/import to protect progress.",
+deleteAccount: "Delete Account",
+deleteAccountConfirm: "Deleting this account clears its rank, achievements, daily tasks, and local login data. Type {name} to confirm.",
+deleteAccountDone: "Account deleted. Local profile data was cleared.",
+deleteAccountCancelled: "Account deletion cancelled.",
 profileExportDone: "Player profile exported.",
 profileImportDone: "Player profile imported. Reloading.",
 profileImportBad: "This profile file cannot be imported.",
@@ -1422,6 +1451,7 @@ accountGuestDetail: "Log in to save your score and rank separately.",
 accountLoggedDetail: "{name}'s score and rank are being saved separately.",
 loginRegister: "Log In / Register",
 logout: "Log Out",
+accountDelete: "Delete Account",
 authLoginTitle: "Log In",
 authRegisterTitle: "Create Account",
 authCloseAria: "Close login window",
@@ -1475,6 +1505,19 @@ lanQrCopied: "QR image copied",
 lanQrDownloaded: "QR image downloaded",
 lanQrCopyFallback: "Could not copy the image, so the QR was downloaded instead.",
 lanQrMissing: "Generate a QR code first",
+dailyEndgame: "Daily Endgame",
+mateOneTraining: "Mate in One",
+dailyEndgameStarted: "Daily endgame loaded: protect the pawn with your king and try to promote safely.",
+mateOneStarted: "Mate-in-one loaded: White can checkmate in one move.",
+trainingNoRank: "Training positions do not count for rank.",
+onboardingLabel: "Welcome",
+onboardingTitle: "Start Your First Game",
+onboardingText: "Open the beginner tutorial first, or challenge the AI right away. Rank, achievements, and daily training are saved locally.",
+onboardingFeatureAi: "AI Opponents",
+onboardingFeatureTraining: "Training Levels",
+onboardingFeatureOffline: "Offline Play",
+onboardingSkip: "Play Now",
+onboardingTutorial: "Open Tutorial",
 lanCheckLabel: "Connection Status",
 lanCheckTitle: "Check Result",
 lanCheckIdle: "Not checked",
@@ -2055,6 +2098,7 @@ dailyRewardBadge: document.querySelector("#dailyRewardBadge"),
 dailyRewardText: document.querySelector("#dailyRewardText"),
 profileAuthBtn: document.querySelector("#profileAuthBtn"),
 profileLogoutBtn: document.querySelector("#profileLogoutBtn"),
+profileDeleteAccountBtn: document.querySelector("#profileDeleteAccountBtn"),
 profileAchievementBtn: document.querySelector("#profileAchievementBtn"),
 profileRankBtn: document.querySelector("#profileRankBtn"),
 profileLeaderboardBtn: document.querySelector("#profileLeaderboardBtn"),
@@ -2075,6 +2119,8 @@ viewControlsLabel: document.querySelector("#viewControlsLabel"),
 newGameBtn: document.querySelector("#newGameBtn"),
 tipBtn: document.querySelector("#tipBtn"),
 tutorialBtn: document.querySelector("#tutorialBtn"),
+dailyEndgameBtn: document.querySelector("#dailyEndgameBtn"),
+mateOneBtn: document.querySelector("#mateOneBtn"),
 undoBtn: document.querySelector("#undoBtn"),
 flipBtn: document.querySelector("#flipBtn"),
 musicBtn: document.querySelector("#musicBtn"),
@@ -2149,6 +2195,7 @@ accountTitle: document.querySelector("#accountTitle"),
 accountDetail: document.querySelector("#accountDetail"),
 authOpenBtn: document.querySelector("#authOpenBtn"),
 logoutBtn: document.querySelector("#logoutBtn"),
+deleteAccountBtn: document.querySelector("#deleteAccountBtn"),
 authDialog: document.querySelector("#authDialog"),
 authTitle: document.querySelector("#authTitle"),
 authModeButtons: [...document.querySelectorAll("[data-auth-mode]")],
@@ -2341,6 +2388,13 @@ tutorialProgress: document.querySelector("#tutorialProgress"),
 tutorialPrevBtn: document.querySelector("#tutorialPrevBtn"),
 tutorialNextBtn: document.querySelector("#tutorialNextBtn"),
 closeTutorialBtn: document.querySelector("#closeTutorialBtn"),
+onboardingDialog: document.querySelector("#onboardingDialog"),
+onboardingLabel: document.querySelector("#onboardingLabel"),
+onboardingTitle: document.querySelector("#onboardingTitle"),
+onboardingText: document.querySelector("#onboardingText"),
+onboardingList: document.querySelector("#onboardingList"),
+onboardingSkipBtn: document.querySelector("#onboardingSkipBtn"),
+onboardingTutorialBtn: document.querySelector("#onboardingTutorialBtn"),
 };
 let orientation = "w";
 let selectedSquare = null;
@@ -2606,6 +2660,35 @@ window.localStorage.removeItem(currentAccountStorageKey);
 }
 function currentAccount() {
 return currentAccountId ? accounts[currentAccountId] : null;
+}
+function accountScopedStoragePrefixes(accountId) {
+return [
+`${achievementStorageKey}:${accountId}`,
+`${aiChallengeStorageKey}:${accountId}`,
+`${onlineRankPlayerStorageKey}:${accountId}`,
+`${officialRankProfileStorageKey}:${accountId}`,
+`${profileActivityStorageKey}:${accountId}`,
+`${rankedModeStorageKey}:${accountId}`,
+`${professionalLeagueModeStorageKey}:${accountId}`,
+`${dailyStarsStorageKey}:${accountId}`,
+`${dailyTaskStorageKey}:${accountId}`,
+`${dailyStreakStorageKey}:${accountId}`,
+`${tutorialLessonStorageKey}:${accountId}`,
+`${onlineRankMigrationStorageKey}:${accountId}`,
+`${leagueSeasonRewardStorageKey}:${accountId}:`,
+];
+}
+function removeStoredProfileForAccount(accountId) {
+const prefixes = accountScopedStoragePrefixes(accountId);
+try {
+for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+const key = window.localStorage.key(index);
+if (key && prefixes.some((prefix) => key === prefix || key.startsWith(prefix))) {
+window.localStorage.removeItem(key);
+}
+}
+} catch (error) {
+}
 }
 function onlineRankStorageId() {
 return `${onlineRankPlayerStorageKey}:${currentAccountId || "guest"}`;
@@ -3162,6 +3245,9 @@ setNotice(t("copyBlocked"));
 }
 function isNetlifyHost() {
 return window.location.hostname.endsWith(".netlify.app") || window.location.hostname === "jeffery-chess-game.netlify.app";
+}
+function isProfileCloudBackupAvailable() {
+return window.location.protocol === "https:" && isNetlifyHost();
 }
 async function submitFeedbackOnline(entry) {
 if (!isNetlifyHost()) {
@@ -4091,19 +4177,26 @@ els.profileLastSavedValue.textContent = profileActivity.updatedAt
 : t("profileEmptyStat");
 els.profileAuthBtn.hidden = isLoggedIn;
 els.profileLogoutBtn.hidden = !isLoggedIn;
+els.profileDeleteAccountBtn.hidden = !isLoggedIn;
 setButtonContent(els.profileAuthBtn, "ID", t("loginRegister"));
 setButtonContent(els.profileLogoutBtn, "×", t("logout"));
+setButtonContent(els.profileDeleteAccountBtn, "!", t("deleteAccount"));
 setButtonContent(els.profileAchievementBtn, badge, t("profileOpenAchievements"));
 setButtonContent(els.profileRankBtn, rankState.rank.medal, t("profileOpenRank"));
 setButtonContent(els.profileLeaderboardBtn, "♕", t("leaderboardButton"));
 setButtonContent(els.profileExportBtn, "⇩", t("profileExport"));
 setButtonContent(els.profileImportBtn, "⇧", t("profileImport"));
+const cloudBackupAvailable = isProfileCloudBackupAvailable();
 setButtonContent(els.profileCloudBackupBtn, "☁", t("profileCloudBackup"));
 setButtonContent(els.profileCloudRestoreBtn, "☁", t("profileCloudRestore"));
-els.profileCloudBackupBtn.disabled = !isLoggedIn;
-els.profileCloudRestoreBtn.disabled = !isLoggedIn;
+els.profileCloudBackupBtn.hidden = !cloudBackupAvailable;
+els.profileCloudRestoreBtn.hidden = !cloudBackupAvailable;
+els.profileCloudBackupBtn.disabled = !cloudBackupAvailable || !isLoggedIn;
+els.profileCloudRestoreBtn.disabled = !cloudBackupAvailable || !isLoggedIn;
 if (els.profileCloudStatus) {
-els.profileCloudStatus.textContent = isLoggedIn ? t("profileCloudReady") : t("profileCloudIdle");
+els.profileCloudStatus.textContent = cloudBackupAvailable
+? isLoggedIn ? t("profileCloudReady") : t("profileCloudIdle")
+: t("profileCloudHiddenIos");
 }
 renderProfileImportPreview();
 renderLeaderboard();
@@ -4331,6 +4424,10 @@ return null;
 return account;
 }
 async function syncProfileCloudBackup() {
+if (!isProfileCloudBackupAvailable()) {
+setProfileCloudStatus("profileCloudHiddenIos");
+return;
+}
 const account = requireCloudBackupAccount();
 if (!account) {
 return;
@@ -4356,6 +4453,10 @@ setProfileCloudStatus("profileCloudUnavailable");
 }
 }
 async function restoreProfileCloudBackup() {
+if (!isProfileCloudBackupAvailable()) {
+setProfileCloudStatus("profileCloudHiddenIos");
+return;
+}
 const account = requireCloudBackupAccount();
 if (!account) {
 return;
@@ -4404,6 +4505,56 @@ setNotice(t("profileImportBad"));
 });
 reader.addEventListener("error", () => setNotice(t("profileImportBad")));
 reader.readAsText(file);
+}
+function renderOnboarding() {
+if (!els.onboardingDialog) {
+return;
+}
+els.onboardingLabel.textContent = t("onboardingLabel");
+els.onboardingTitle.textContent = t("onboardingTitle");
+els.onboardingText.textContent = t("onboardingText");
+els.onboardingList.innerHTML = "";
+for (const key of ["onboardingFeatureAi", "onboardingFeatureTraining", "onboardingFeatureOffline"]) {
+const item = document.createElement("span");
+item.textContent = t(key);
+els.onboardingList.append(item);
+}
+els.onboardingSkipBtn.textContent = t("onboardingSkip");
+els.onboardingTutorialBtn.textContent = t("onboardingTutorial");
+}
+function hasSeenOnboarding() {
+try {
+return window.localStorage.getItem(onboardingStorageKey) === "1";
+} catch (error) {
+return true;
+}
+}
+function markOnboardingSeen() {
+try {
+window.localStorage.setItem(onboardingStorageKey, "1");
+} catch (error) {
+}
+}
+function closeOnboarding() {
+if (!els.onboardingDialog) {
+return;
+}
+markOnboardingSeen();
+els.onboardingDialog.hidden = true;
+}
+function openOnboardingIfNeeded() {
+if (!els.onboardingDialog || hasSeenOnboarding() || requestedLanRoom) {
+return;
+}
+renderOnboarding();
+window.setTimeout(() => {
+els.onboardingDialog.hidden = false;
+els.onboardingTutorialBtn.focus();
+}, 350);
+}
+function startOnboardingTutorial() {
+closeOnboarding();
+openTutorial();
 }
 function renderDailyTasks() {
 if (!els.dailyList) {
@@ -4470,6 +4621,8 @@ els.accountDetail.textContent = isLoggedIn
 : t("accountGuestDetail");
 els.authOpenBtn.hidden = isLoggedIn;
 els.logoutBtn.hidden = !isLoggedIn;
+els.deleteAccountBtn.hidden = !isLoggedIn;
+setButtonContent(els.deleteAccountBtn, "!", t("accountDelete"));
 renderProfile();
 }
 function renderAuthMode() {
@@ -5435,6 +5588,8 @@ els.viewControlsLabel.textContent = t("viewControls");
 setButtonContent(els.newGameBtn, "+", t("newGame"));
 setButtonContent(els.tipBtn, "?", t("tip"));
 setButtonContent(els.tutorialBtn, "i", t("tutorial"));
+setButtonContent(els.dailyEndgameBtn, "♔", t("dailyEndgame"));
+setButtonContent(els.mateOneBtn, "#", t("mateOneTraining"));
 setButtonContent(els.undoBtn, "↶", t("undo"));
 setButtonContent(els.flipBtn, "⇄", t("flip"));
 renderAchievements();
@@ -5554,6 +5709,7 @@ document.querySelector("#promotionTitle").textContent = t("promotionTitle");
 els.cancelPromotionBtn.setAttribute("aria-label", t("cancelPromotionAria"));
 els.closeTutorialBtn.setAttribute("aria-label", t("closeTutorialAria"));
 setButtonContent(els.tutorialPrevBtn, "←", t("previous"));
+renderOnboarding();
 }
 function saveMatchScore() {
 const account = currentAccount();
@@ -7076,7 +7232,7 @@ function moveDragGhost(event) {
 if (!dragGhost) {
 return;
 }
-dragGhost.style.transform = `translate(${event.clientX}px, ${event.clientY}px) translate(-50%, -50%)`;
+dragGhost.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0) translate(-50%, -50%)`;
 }
 function setDragTarget(square) {
 if (square === dragTargetSquare) {
@@ -7118,6 +7274,7 @@ dragMoveState = { from: square, pointerId: event.pointerId };
 els.board.classList.add("is-dragging");
 createDragGhost(square, event);
 selectSquare(square);
+nativeHaptic("move");
 event.currentTarget.setPointerCapture?.(event.pointerId);
 setNotice(t("dragReady"));
 event.preventDefault();
@@ -7857,6 +8014,46 @@ scheduleAiMove();
 setNotice(t("badFen"));
 }
 }
+function loadTrainingPosition(fen, noticeKey) {
+stopAiThinking();
+try {
+game.load(fen);
+} catch (error) {
+setNotice(t("badFen"));
+return;
+}
+aiEnabled = false;
+rankedModeEnabled = false;
+professionalLeagueModeEnabled = false;
+saveRankedMode();
+saveProfessionalLeagueMode();
+currentGameUsedTip = false;
+restoredSavedGameAvailable = false;
+continuePromptDismissed = true;
+clearSelection();
+lastMove = null;
+recordedResult = null;
+recordedProfileOutcome = null;
+recordedRankDelta = 0;
+clearRecordedLeagueResult();
+postGameReview = null;
+lastRankedSettlement = null;
+clearRankedGameEligibility();
+clearProfessionalLeagueGameEligibility();
+closePromotion();
+nativeHaptic("success");
+setNotice(`${t(noticeKey)} ${t("trainingNoRank")}`);
+render();
+saveCurrentGame();
+playPositionSound();
+startBackgroundMusic();
+}
+function startDailyEndgame() {
+loadTrainingPosition(dailyEndgameFen, "dailyEndgameStarted");
+}
+function startMateInOneTraining() {
+loadTrainingPosition(mateInOneFen, "mateOneStarted");
+}
 function toggleAi() {
 if (isLanConnected()) {
 setNotice(t("lanAiBlocked"));
@@ -8175,6 +8372,58 @@ enforceProfessionalAiAccess();
 closeProfile();
 closeMoreMenu();
 resetGameForAccountSwitch(t("accountLogoutSuccess"));
+fetchOfficialRankProfile();
+}
+function resetGuestProgressAfterAccountDelete() {
+matchScore = createEmptyScore();
+rankPoints = 0;
+officialRankProfile = null;
+officialRankStatus = "idle";
+masterNoHintWinStreak = 0;
+profileActivity = createEmptyProfileActivity();
+dailyStars = 0;
+dailyProgress = createDailyProgress();
+dailyStreak = createDailyStreak();
+completedTutorialLessons = new Set();
+unlockedAchievements = new Set();
+rankedModeEnabled = false;
+professionalLeagueModeEnabled = false;
+clearRankedGameEligibility();
+clearProfessionalLeagueGameEligibility();
+clearRecordedLeagueResult();
+saveMatchScore();
+saveRankPoints();
+saveAchievements();
+saveMasterNoHintWinStreak();
+saveProfileActivity();
+saveDailyStars();
+saveDailyProgress();
+saveDailyStreak();
+saveTutorialLessons();
+saveRankedMode();
+saveProfessionalLeagueMode();
+}
+function deleteCurrentAccount() {
+const account = currentAccount();
+if (!account) {
+return;
+}
+const typed = window.prompt(t("deleteAccountConfirm", { name: account.name }), "");
+if (typed === null || (typed.trim() !== account.name && normalizeAccountId(typed) !== account.id)) {
+setNotice(t("deleteAccountCancelled"));
+return;
+}
+const deletedAccountId = account.id;
+removeStoredProfileForAccount(deletedAccountId);
+delete accounts[deletedAccountId];
+currentAccountId = null;
+saveAccounts();
+saveCurrentAccountId();
+resetGuestProgressAfterAccountDelete();
+enforceProfessionalAiAccess();
+closeProfile();
+closeMoreMenu();
+resetGameForAccountSwitch(t("deleteAccountDone"));
 fetchOfficialRankProfile();
 }
 function setLanguage(language) {
@@ -9219,6 +9468,8 @@ els.newGameBtn.addEventListener("click", resetGame);
 els.continueGameBtn.addEventListener("click", dismissContinuePrompt);
 els.tipBtn.addEventListener("click", showTip);
 els.tutorialBtn.addEventListener("click", openTutorial);
+els.dailyEndgameBtn.addEventListener("click", startDailyEndgame);
+els.mateOneBtn.addEventListener("click", startMateInOneTraining);
 els.reviewPracticeBtn.addEventListener("click", practicePostGameMistake);
 els.undoBtn.addEventListener("click", undoMove);
 els.flipBtn.addEventListener("click", flipBoard);
@@ -9233,6 +9484,7 @@ els.profileBtn.addEventListener("click", openProfile);
 els.closeProfileBtn.addEventListener("click", closeProfile);
 els.profileAuthBtn.addEventListener("click", () => openAuth("login"));
 els.profileLogoutBtn.addEventListener("click", logoutAccount);
+els.profileDeleteAccountBtn.addEventListener("click", deleteCurrentAccount);
 els.profileAchievementBtn.addEventListener("click", openProfileAchievements);
 els.profileRankBtn.addEventListener("click", openProfileRank);
 els.profileLeaderboardBtn.addEventListener("click", openLeaderboardDialog);
@@ -9310,6 +9562,7 @@ event.stopPropagation();
 });
 els.authOpenBtn.addEventListener("click", () => openAuth("login"));
 els.logoutBtn.addEventListener("click", logoutAccount);
+els.deleteAccountBtn.addEventListener("click", deleteCurrentAccount);
 els.closeAuthBtn.addEventListener("click", closeAuth);
 els.cancelAuthBtn.addEventListener("click", closeAuth);
 els.authForm.addEventListener("submit", handleAuthSubmit);
@@ -9354,6 +9607,8 @@ renderBoard();
 els.closeTutorialBtn.addEventListener("click", () => closeTutorial());
 els.tutorialPrevBtn.addEventListener("click", showPreviousTutorialStep);
 els.tutorialNextBtn.addEventListener("click", showNextTutorialStep);
+els.onboardingSkipBtn.addEventListener("click", closeOnboarding);
+els.onboardingTutorialBtn.addEventListener("click", startOnboardingTutorial);
 els.authDialog.addEventListener("click", (event) => {
 if (event.target === els.authDialog) {
 closeAuth();
@@ -9403,6 +9658,7 @@ closeLeaderboardDialog();
 closeFeedback();
 closeReleaseDialog();
 closeLanDiagnostic();
+closeOnboarding();
 }
 });
 els.promotionDialog.addEventListener("click", (event) => {
@@ -9414,6 +9670,11 @@ renderBoard();
 els.tutorialDialog.addEventListener("click", (event) => {
 if (event.target === els.tutorialDialog) {
 closeTutorial();
+}
+});
+els.onboardingDialog.addEventListener("click", (event) => {
+if (event.target === els.onboardingDialog) {
+closeOnboarding();
 }
 });
 window.addEventListener("keydown", (event) => {
@@ -9460,6 +9721,7 @@ registerOfflineApp();
 applyBoardTheme(boardTheme);
 restoreSavedGame();
 render();
+openOnboardingIfNeeded();
 showUpdateCompleteNotice();
 checkForUpdates({ silent: true });
 fetchOfficialRankProfile();

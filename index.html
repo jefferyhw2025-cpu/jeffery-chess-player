@@ -163,6 +163,10 @@
                 <span class="button-icon">×</span>
                 退出登录
               </button>
+              <button class="action-button danger" id="deleteAccountBtn" type="button" hidden>
+                <span class="button-icon">!</span>
+                删除账号
+              </button>
             </div>
           </section>
 
@@ -281,6 +285,14 @@
               <button class="action-button" id="tutorialBtn" type="button">
                 <span class="button-icon">i</span>
                 新手教程
+              </button>
+              <button class="action-button" id="dailyEndgameBtn" type="button">
+                <span class="button-icon">♔</span>
+                每日残局
+              </button>
+              <button class="action-button" id="mateOneBtn" type="button">
+                <span class="button-icon">#</span>
+                一步将死
               </button>
             </div>
           </details>
@@ -700,6 +712,10 @@
             <span class="button-icon">×</span>
             退出登录
           </button>
+          <button class="action-button danger" id="profileDeleteAccountBtn" type="button" hidden>
+            <span class="button-icon">!</span>
+            删除账号
+          </button>
           <button class="action-button" id="profileAchievementBtn" type="button">
             <span class="button-icon">◇</span>
             查看成就
@@ -947,7 +963,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.40</p>
+        <p class="release-version" id="releaseVersionText">v1.0.41</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1086,8 +1102,25 @@
       <span id="dailyRewardText">每日任务完成</span>
     </div>
 
+    <div class="onboarding-dialog" id="onboardingDialog" hidden>
+      <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+        <p class="panel-label" id="onboardingLabel">欢迎</p>
+        <h2 id="onboardingTitle">开始你的第一局</h2>
+        <p id="onboardingText">先完成新手教程，或直接挑战 AI。你的段位、成就和每日训练都会保存在本机。</p>
+        <div class="onboarding-list" id="onboardingList">
+          <span>AI 对手</span>
+          <span>新手训练</span>
+          <span>离线可玩</span>
+        </div>
+        <div class="onboarding-actions">
+          <button class="action-button" id="onboardingSkipBtn" type="button">先自己玩</button>
+          <button class="action-button primary" id="onboardingTutorialBtn" type="button">打开新手教程</button>
+        </div>
+      </div>
+    </div>
+
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.40"></script>
-    <script src="./app.js?v=1.0.40"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.41"></script>
+    <script src="./app.js?v=1.0.41"></script>
   </body>
 </html>
