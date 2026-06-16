@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.36";
+const appVersion = "1.0.37";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.37：收紧内部恢复工具入口，普通玩家页保持干净。",
 "v1.0.36：LAN 失败时会自动弹出诊断并突出“复制诊断信息”；版本中心新增安全档案导入入口，并整理 App Store 最终提交资料。",
 "v1.0.35：局域网连接前会自动检查房间号、服务器和当前网页来源；GitHub 备用页会明确提示改用 192.168 局域网地址或二维码。",
 "v1.0.34：版本中心新增安全档案导出提醒，默认导出不包含登录密码哈希、反馈内容或私人临时资料。",
@@ -59,6 +60,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.37: tightened internal recovery controls so normal player pages stay clean.",
 "v1.0.36: LAN failures now open diagnostics with a prominent copy button; the version center adds safe profile import, and App Store submission materials are refreshed.",
 "v1.0.35: LAN connect now checks the room code, server, and current page first; the GitHub backup page clearly tells players to use the 192.168 LAN URL or QR code.",
 "v1.0.34: added a safe profile export reminder in the version center; exports do not include login password hashes, feedback content, or private temporary data.",
