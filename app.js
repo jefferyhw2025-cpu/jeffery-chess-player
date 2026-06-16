@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.35";
+const appVersion = "1.0.36";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.36：LAN 失败时会自动弹出诊断并突出“复制诊断信息”；版本中心新增安全档案导入入口，并整理 App Store 最终提交资料。",
 "v1.0.35：局域网连接前会自动检查房间号、服务器和当前网页来源；GitHub 备用页会明确提示改用 192.168 局域网地址或二维码。",
 "v1.0.34：版本中心新增安全档案导出提醒，默认导出不包含登录密码哈希、反馈内容或私人临时资料。",
 "v1.0.33：公开玩家包新增压缩处理和公开仓库安全历史审计，降低源码直读风险并防止私有文件误发布。",
@@ -58,6 +59,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.36: LAN failures now open diagnostics with a prominent copy button; the version center adds safe profile import, and App Store submission materials are refreshed.",
 "v1.0.35: LAN connect now checks the room code, server, and current page first; the GitHub backup page clearly tells players to use the 192.168 LAN URL or QR code.",
 "v1.0.34: added a safe profile export reminder in the version center; exports do not include login password hashes, feedback content, or private temporary data.",
 "v1.0.33: added public player asset minification and public-repository history auditing to reduce source readability and prevent private files from being published.",
@@ -647,9 +649,11 @@ releaseShareCopy: "复制公开链接",
 releaseShareCopied: "已复制公开玩家版链接。",
 releaseShareQrAria: "公开玩家版二维码",
 releaseProfileBackupTitle: "保护玩家档案",
-releaseProfileBackupPill: "本地安全",
-releaseProfileBackupText: "更新或换设备前，建议导出一次安全档案。导出文件只保存游戏进度，不包含登录密码哈希、反馈内容或私人临时资料。",
+releaseProfileBackupPill: "云端准备",
+releaseProfileBackupText: "更新、换设备或以后同步云端前，建议导出一次安全档案。导出文件只保存游戏进度，不包含登录密码哈希、反馈内容或私人临时资料。",
 releaseProfileBackupButton: "导出安全档案",
+releaseProfileImportButton: "导入安全档案",
+releaseProfileImportPrompt: "请选择之前导出的安全档案 JSON 文件。",
 releaseProfileBackupDone: "安全档案已导出，请妥善保存 JSON 文件。",
 releaseProfileBackupDismiss: "稍后提醒",
 releaseProfileBackupDismissed: "已关闭本次档案导出提醒。",
@@ -849,6 +853,8 @@ lanDiagnosticIdle: "点击后会检查服务器、房间、对手和局域网地
 lanDiagnosticChecking: "正在检查联机状态...",
 lanDiagnosticReady: "诊断完成。把这些信息发给朋友或开发者，就能更快排查 LAN 问题。",
 lanDiagnosticCopy: "复制诊断结果",
+lanDiagnosticCopyNow: "复制诊断信息",
+lanDiagnosticCopyPrompt: "连接失败。建议先复制诊断信息，发给房主或开发者排查。",
 lanDiagnosticCopied: "诊断结果已复制",
 lanDiagnosticDone: "完成",
 lanDiagnosticAddress: "局域网地址",
@@ -1270,9 +1276,11 @@ releaseShareCopy: "Copy Public Link",
 releaseShareCopied: "Public player link copied.",
 releaseShareQrAria: "Public player QR code",
 releaseProfileBackupTitle: "Protect Player Profile",
-releaseProfileBackupPill: "Local Safe",
-releaseProfileBackupText: "Before updating or changing devices, export a safe profile. The file keeps game progress only; it does not include login password hashes, feedback text, or private temporary data.",
+releaseProfileBackupPill: "Cloud Ready",
+releaseProfileBackupText: "Before updating, changing devices, or future cloud sync, export a safe profile. The file keeps game progress only; it does not include login password hashes, feedback text, or private temporary data.",
 releaseProfileBackupButton: "Export Safe Profile",
+releaseProfileImportButton: "Import Safe Profile",
+releaseProfileImportPrompt: "Choose a previously exported safe profile JSON file.",
 releaseProfileBackupDone: "Safe profile exported. Keep the JSON file somewhere safe.",
 releaseProfileBackupDismiss: "Remind Later",
 releaseProfileBackupDismissed: "Profile export reminder dismissed for now.",
@@ -1472,6 +1480,8 @@ lanDiagnosticIdle: "This checks the server, room, opponent, and LAN address.",
 lanDiagnosticChecking: "Checking LAN status...",
 lanDiagnosticReady: "Diagnosis complete. Share these details with a friend or developer to debug faster.",
 lanDiagnosticCopy: "Copy diagnosis",
+lanDiagnosticCopyNow: "Copy Diagnostic Info",
+lanDiagnosticCopyPrompt: "Connection failed. Copy the diagnostic info and send it to the host or developer.",
 lanDiagnosticCopied: "Diagnosis copied",
 lanDiagnosticDone: "Done",
 lanDiagnosticAddress: "LAN address",
@@ -2197,6 +2207,7 @@ releaseProfileBackupTitle: document.querySelector("#releaseProfileBackupTitle"),
 releaseProfileBackupPill: document.querySelector("#releaseProfileBackupPill"),
 releaseProfileBackupText: document.querySelector("#releaseProfileBackupText"),
 releaseProfileExportBtn: document.querySelector("#releaseProfileExportBtn"),
+releaseProfileImportBtn: document.querySelector("#releaseProfileImportBtn"),
 releaseProfileDismissBtn: document.querySelector("#releaseProfileDismissBtn"),
 checkUpdateBtn: document.querySelector("#checkUpdateBtn"),
 checkHealthBtn: document.querySelector("#checkHealthBtn"),
@@ -4114,6 +4125,15 @@ version: 2,
 exportKind: "safe-player-profile",
 appVersion,
 exportedAt: new Date().toISOString(),
+summary: {
+rankPoints: Math.max(0, Math.floor(Number(rankPoints)) || 0),
+achievements: unlockedAchievements.size,
+dailyStars: Math.max(0, Math.floor(Number(dailyStars)) || 0),
+completedGames: Math.max(0, Math.floor(Number(profileActivity.completedGames)) || 0),
+wins: Math.max(0, Math.floor(Number(profileActivity.wins)) || 0),
+hasSavedGame: Boolean(data[savedGameStorageKey]),
+cloudBackupReady: true,
+},
 data,
 };
 }
@@ -4138,6 +4158,10 @@ window.localStorage.setItem(profileExportReminderStorageKey, appVersion);
 } catch (error) {
 }
 renderReleaseProfileBackup();
+}
+function importSafeProfileFromRelease() {
+setNotice(t("releaseProfileImportPrompt"));
+els.profileImportInput.click();
 }
 function importPlayerProfilePayload(payload) {
 if (
@@ -4178,6 +4202,15 @@ payload.type !== "jeffery-chess-profile" ||
 typeof payload.data !== "object"
 ) {
 throw new Error("bad-profile-payload");
+}
+if (payload.summary && typeof payload.summary === "object") {
+return {
+rank: Math.max(0, Math.floor(Number(payload.summary.rankPoints)) || 0),
+achievements: Math.max(0, Math.floor(Number(payload.summary.achievements)) || 0),
+league: Math.max(0, Math.floor(Number(payload.summary.leaguePoints)) || 0),
+accounts: 0,
+game: payload.summary.hasSavedGame ? t("profileImportHasGame") : t("profileImportNoGame"),
+};
 }
 const data = payload.data;
 const rank = Math.max(0, Math.floor(Number(data[rankStorageKey])) || 0);
@@ -4727,6 +4760,7 @@ els.releaseProfileBackupPill.textContent = t("releaseProfileBackupPill");
 els.releaseProfileBackupPill.classList.add("is-online");
 els.releaseProfileBackupText.textContent = t("releaseProfileBackupText");
 setButtonContent(els.releaseProfileExportBtn, "⇩", t("releaseProfileBackupButton"));
+setButtonContent(els.releaseProfileImportBtn, "⇧", t("releaseProfileImportButton"));
 setButtonContent(els.releaseProfileDismissBtn, "×", t("releaseProfileBackupDismiss"));
 }
 function dismissProfileExportReminder() {
@@ -8255,6 +8289,9 @@ lastLanCheck = check;
 renderLanCheckResult(check);
 els.lanCheckBtn.disabled = false;
 setNotice(check.ok ? t("lanCheckNoticeOk") : t("lanCheckNoticeBad"));
+if (!check.ok) {
+openLanDiagnosticFromStatus(check, { urgent: true });
+}
 }
 function lanDiagnosticRows(check = lastLanCheck) {
 return [
@@ -8271,6 +8308,9 @@ return [
 function renderLanDiagnostic(check = lastLanCheck) {
 const rows = lanDiagnosticRows(check);
 els.lanDiagnosticStatus.textContent = check ? t("lanDiagnosticReady") : t("lanDiagnosticIdle");
+els.lanDiagnosticDialog.classList.remove("is-urgent");
+els.copyLanDiagnosticBtn.classList.remove("primary");
+setButtonContent(els.copyLanDiagnosticBtn, "⧉", t("lanDiagnosticCopy"));
 els.lanDiagnosticList.innerHTML = "";
 rows.forEach(([label, value]) => {
 const row = document.createElement("div");
@@ -8283,6 +8323,17 @@ row.append(term, detail);
 els.lanDiagnosticList.append(row);
 });
 }
+function openLanDiagnosticFromStatus(check = lastLanCheck, { urgent = false } = {}) {
+els.lanDiagnosticDialog.hidden = false;
+renderLanDiagnostic(check);
+if (urgent) {
+els.lanDiagnosticDialog.classList.add("is-urgent");
+els.copyLanDiagnosticBtn.classList.add("primary");
+els.lanDiagnosticStatus.textContent = t("lanDiagnosticCopyPrompt");
+setButtonContent(els.copyLanDiagnosticBtn, "⧉", t("lanDiagnosticCopyNow"));
+}
+window.setTimeout(() => (urgent ? els.copyLanDiagnosticBtn : els.closeLanDiagnosticBtn).focus(), 0);
+}
 async function openLanDiagnostic() {
 els.lanDiagnosticDialog.hidden = false;
 els.lanDiagnosticStatus.textContent = t("lanDiagnosticChecking");
@@ -8291,12 +8342,13 @@ els.lanDiagnosticBtn.disabled = true;
 const check = await fetchLanInfoStatus();
 lastLanCheck = check;
 renderLanCheckResult(check);
-renderLanDiagnostic(check);
+openLanDiagnosticFromStatus(check, { urgent: !check.ok });
 els.lanDiagnosticBtn.disabled = false;
-window.setTimeout(() => els.closeLanDiagnosticBtn.focus(), 0);
 }
 function closeLanDiagnostic() {
 els.lanDiagnosticDialog.hidden = true;
+els.lanDiagnosticDialog.classList.remove("is-urgent");
+els.copyLanDiagnosticBtn.classList.remove("primary");
 }
 async function copyLanDiagnostic() {
 const text = lanDiagnosticRows(lastLanCheck)
@@ -8697,6 +8749,7 @@ renderLanCheckResult(lastLanCheck);
 const message = t(messageKey);
 els.lanDetail.textContent = message;
 setNotice(message);
+openLanDiagnosticFromStatus(lastLanCheck, { urgent: true });
 }
 function ensureLanSharePage() {
 const blockedPageKey = lanBlockedPageMessageKey();
@@ -8728,6 +8781,7 @@ renderLanCheckResult(check);
 if (!check.ok) {
 els.lanDetail.textContent = t("lanConnectError");
 setNotice(t("lanConnectError"));
+openLanDiagnosticFromStatus(check, { urgent: true });
 return false;
 }
 return true;
@@ -9070,6 +9124,7 @@ els.onlineSelfCheckBtn.addEventListener("click", runOnlineSelfCheck);
 els.installPwaBtn.addEventListener("click", installPwaApp);
 els.sharePublicSiteBtn.addEventListener("click", copyPublicPlayerLink);
 els.releaseProfileExportBtn.addEventListener("click", exportSafeProfileFromRelease);
+els.releaseProfileImportBtn.addEventListener("click", importSafeProfileFromRelease);
 els.releaseProfileDismissBtn.addEventListener("click", dismissProfileExportReminder);
 els.applyUpdateBtn.addEventListener("click", applyAvailableUpdate);
 els.restoreBackupBtn.addEventListener("click", restoreProfileBackup);
