@@ -8,7 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
-"v1.0.44：GitHub 备用版新增局域网跳转助手，输入房主 192.168 地址即可带着房间号打开可联机页面。",
+"v1.0.44：LAN 页面新增可复制的房主 192.168 地址；GitHub 备用版新增局域网跳转助手，输入房主地址即可带着房间号打开可联机页面。",
 "v1.0.43：修复 LAN 页面会误触发内部检测导致局域网连接测试失败的问题，普通玩家页保持干净。",
 "v1.0.42：新增错题本、真实棋盘练习入口，并整理 TestFlight、Game Center 和 App Store 推广资料。",
 "v1.0.41：新增首次打开引导、每日残局、一步将死训练、账号删除，并在 iOS/备用版隐藏不可用的云端备份入口。",
@@ -67,7 +67,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
-"v1.0.44: added a LAN jump helper on the GitHub backup build so players can enter the host 192.168 address and open the playable LAN page with the room code.",
+"v1.0.44: added a copyable host 192.168 address on LAN pages and a LAN jump helper on the GitHub backup build.",
 "v1.0.43: fixed LAN pages triggering internal checks during normal play, preventing connection-test failures and keeping player pages clean.",
 "v1.0.42: added a mistake book, real-board practice entry, and TestFlight/Game Center/App Store marketing prep.",
 "v1.0.41: added first-run onboarding, daily endgame, mate-in-one training, account deletion, and hid unavailable cloud backup in iOS/backup builds.",
