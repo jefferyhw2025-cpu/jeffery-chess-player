@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.42";
+const appVersion = "1.0.43";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.43：修复 LAN 页面会误触发内部检测导致局域网连接测试失败的问题，普通玩家页保持干净。",
 "v1.0.42：新增错题本、真实棋盘练习入口，并整理 TestFlight、Game Center 和 App Store 推广资料。",
 "v1.0.41：新增首次打开引导、每日残局、一步将死训练、账号删除，并在 iOS/备用版隐藏不可用的云端备份入口。",
 "v1.0.40：修复本机专属入口在发布状态面板中的可见性判断，玩家版仍保持隐藏。",
@@ -65,6 +66,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.43: fixed LAN pages triggering internal checks during normal play, preventing connection-test failures and keeping player pages clean.",
 "v1.0.42: added a mistake book, real-board practice entry, and TestFlight/Game Center/App Store marketing prep.",
 "v1.0.41: added first-run onboarding, daily endgame, mate-in-one training, account deletion, and hid unavailable cloud backup in iOS/backup builds.",
 "v1.0.40: fixed local owner-entry visibility detection in the release status panel while keeping the player build hidden.",
@@ -8724,10 +8726,10 @@ function currentLanRoom() {
 return normalizeLanRoom(els.lanRoomInput.value || lanState.room || "");
 }
 function uniqueLanInfoBases() {
-const bases = [];
 if (isLanPlayablePage() && window.location.origin) {
-bases.push(window.location.origin);
+return [window.location.origin];
 }
+const bases = [];
 bases.push(...localLanServerBases);
 return [...new Set(bases.filter(Boolean))];
 }
