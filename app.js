@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.43";
+const appVersion = "1.0.44";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.44：GitHub 备用版新增局域网跳转助手，输入房主 192.168 地址即可带着房间号打开可联机页面。",
 "v1.0.43：修复 LAN 页面会误触发内部检测导致局域网连接测试失败的问题，普通玩家页保持干净。",
 "v1.0.42：新增错题本、真实棋盘练习入口，并整理 TestFlight、Game Center 和 App Store 推广资料。",
 "v1.0.41：新增首次打开引导、每日残局、一步将死训练、账号删除，并在 iOS/备用版隐藏不可用的云端备份入口。",
@@ -66,6 +67,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.44: added a LAN jump helper on the GitHub backup build so players can enter the host 192.168 address and open the playable LAN page with the room code.",
 "v1.0.43: fixed LAN pages triggering internal checks during normal play, preventing connection-test failures and keeping player pages clean.",
 "v1.0.42: added a mistake book, real-board practice entry, and TestFlight/Game Center/App Store marketing prep.",
 "v1.0.41: added first-run onboarding, daily endgame, mate-in-one training, account deletion, and hid unavailable cloud backup in iOS/backup builds.",
@@ -953,6 +955,14 @@ lanConnectChecking: "正在检查局域网服务器...",
 lanBackupSiteBlocked: "网页版备用站不能直接开 LAN，请让房主启动局域网服务器并使用 192.168 开头的网址或二维码。",
 lanFileSiteBlocked: "本地文件页面不能稳定连接 LAN，请先运行“本地局域网启动器”，再打开 127.0.0.1 或 192.168 开头的网址。",
 lanStaticSiteBlocked: "当前网页不能直接开 LAN，请让房主启动局域网服务器并使用 192.168 开头的网址或二维码。",
+lanJumpLabel: "备用网页版联机",
+lanJumpTitle: "打开房主局域网地址",
+lanJumpText: "GitHub 版不能自己启动 LAN。请让房主运行局域网启动器，再输入房主的 192.168 地址。",
+lanJumpPlaceholder: "192.168.x.x:5173",
+lanJumpOpen: "打开",
+lanJumpNeedHost: "请输入房主的 192.168 局域网地址。",
+lanJumpBadHost: "地址格式不正确，请输入类似 192.168.50.220:5173 的地址。",
+lanJumpOpening: "正在打开房主局域网页面...",
 lanConnectedNotice: "已连接局域网房间：{room}",
 lanReconnectedNotice: "已重新连接房间：{room}",
 lanReconnectNotice: "连接断开，正在自动重连 {attempt}/{max}...",
@@ -1632,6 +1642,14 @@ lanConnectChecking: "Checking the LAN server...",
 lanBackupSiteBlocked: "The web backup site cannot start LAN directly. Ask the host to run the LAN server and use the 192.168 LAN URL or QR code.",
 lanFileSiteBlocked: "Local file pages cannot connect to LAN reliably. Run the LAN launcher, then open the 127.0.0.1 or 192.168 URL.",
 lanStaticSiteBlocked: "This web page cannot start LAN directly. Ask the host to run the LAN server and use the 192.168 LAN URL or QR code.",
+lanJumpLabel: "Backup Web LAN",
+lanJumpTitle: "Open the Host LAN Address",
+lanJumpText: "The GitHub build cannot start LAN by itself. Ask the host to run the LAN launcher, then enter the host 192.168 address.",
+lanJumpPlaceholder: "192.168.x.x:5173",
+lanJumpOpen: "Open",
+lanJumpNeedHost: "Enter the host 192.168 LAN address.",
+lanJumpBadHost: "Address format is not valid. Use something like 192.168.50.220:5173.",
+lanJumpOpening: "Opening the host LAN page...",
 lanConnectedNotice: "Connected to LAN room: {room}",
 lanReconnectedNotice: "Reconnected to room: {room}",
 lanReconnectNotice: "Connection dropped. Reconnecting {attempt}/{max}...",
@@ -2275,6 +2293,12 @@ lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
 lanDetail: document.querySelector("#lanDetail"),
 lanCheckBtn: document.querySelector("#lanCheckBtn"),
 lanDiagnosticBtn: document.querySelector("#lanDiagnosticBtn"),
+lanJumpCard: document.querySelector("#lanJumpCard"),
+lanJumpLabel: document.querySelector("#lanJumpLabel"),
+lanJumpTitle: document.querySelector("#lanJumpTitle"),
+lanJumpText: document.querySelector("#lanJumpText"),
+lanHostInput: document.querySelector("#lanHostInput"),
+lanOpenHostBtn: document.querySelector("#lanOpenHostBtn"),
 lanCheckCard: document.querySelector("#lanCheckCard"),
 lanCheckLabel: document.querySelector("#lanCheckLabel"),
 lanCheckTitle: document.querySelector("#lanCheckTitle"),
@@ -5767,6 +5791,7 @@ els.lanDetail.textContent = lanState.color === "w" ? t("lanDetailWhite") : t("la
 if (!room) {
 hideLanInviteCard();
 }
+renderLanJumpCard();
 const existingDuelHref = els.lanDuelLink.getAttribute("href") || "";
 const existingDuelShare = existingDuelHref && existingDuelHref !== "#" ? els.lanDuelLink.href : "";
 showLanDuelCard(room, room ? existingDuelShare : "");
@@ -5835,6 +5860,7 @@ setButtonContent(els.lanDisconnectBtn, "×", t("lanDisconnect"));
 setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
 setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
 setButtonContent(els.lanDiagnosticBtn, "?", t("lanDiagnostic"));
+renderLanJumpCard();
 els.lanShareLabel.textContent = t("lanShareLabel");
 const duelRoom = normalizeLanRoom(els.lanRoomInput.value || els.lanDuelCard.dataset.room || "");
 const duelHref = els.lanDuelLink.getAttribute("href") || "";
@@ -8706,6 +8732,60 @@ const url = new URL(baseUrl);
 const protocol = url.protocol === "https:" ? "wss" : "ws";
 return `${protocol}://${url.host}/lan`;
 }
+function shouldShowLanJumpCard() {
+return !isLanPlayablePage() && window.location.protocol !== "file:";
+}
+function renderLanJumpCard() {
+if (!els.lanJumpCard) {
+return;
+}
+const show = shouldShowLanJumpCard();
+els.lanJumpCard.hidden = !show;
+if (!show) {
+return;
+}
+els.lanJumpLabel.textContent = t("lanJumpLabel");
+els.lanJumpTitle.textContent = t("lanJumpTitle");
+els.lanJumpText.textContent = t("lanJumpText");
+els.lanHostInput.placeholder = t("lanJumpPlaceholder");
+setButtonContent(els.lanOpenHostBtn, "↗", t("lanJumpOpen"));
+}
+function normalizeLanHostUrl(value) {
+const raw = String(value || "").trim();
+if (!raw) {
+return null;
+}
+const withProtocol = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+try {
+const url = new URL(withProtocol);
+if (!isLocalHostname(url.hostname) && !isPrivateLanHostname(url.hostname)) {
+return null;
+}
+if (!url.port) {
+url.port = "5173";
+}
+if (!url.pathname || url.pathname === "/") {
+url.pathname = "/index.html";
+}
+url.protocol = "http:";
+return url;
+} catch (error) {
+return null;
+}
+}
+function openLanHostPage() {
+const url = normalizeLanHostUrl(els.lanHostInput.value);
+if (!url) {
+setNotice(els.lanHostInput.value.trim() ? t("lanJumpBadHost") : t("lanJumpNeedHost"));
+return;
+}
+const room = currentLanRoom();
+if (room) {
+url.searchParams.set("lanRoom", room);
+}
+setNotice(t("lanJumpOpening"));
+window.location.href = url.toString();
+}
 async function discoverLanServerBase() {
 const bases = uniqueLanInfoBases();
 for (const base of bases) {
@@ -9748,6 +9828,12 @@ els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
 els.lanDiagnosticBtn.addEventListener("click", openLanDiagnostic);
+els.lanOpenHostBtn.addEventListener("click", openLanHostPage);
+els.lanHostInput.addEventListener("keydown", (event) => {
+if (event.key === "Enter") {
+openLanHostPage();
+}
+});
 els.lanCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanDuelQr, els.lanDuelCard.dataset.room || currentLanRoom()));
 els.lanDownloadQrBtn.addEventListener("click", () => downloadLanQr(els.lanDuelQr, els.lanDuelCard.dataset.room || currentLanRoom()));
 els.lanInviteCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanInviteQr, els.lanInviteCard.dataset.room || currentLanRoom()));

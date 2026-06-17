@@ -450,6 +450,20 @@
                 </button>
               </div>
               <p class="lan-detail" id="lanDetail">同一 Wi‑Fi 下运行局域网启动器，然后输入相同房间号。</p>
+              <article class="lan-jump-card" id="lanJumpCard" hidden>
+                <div>
+                  <p class="lan-duel-label" id="lanJumpLabel">备用网页版联机</p>
+                  <h3 id="lanJumpTitle">打开房主局域网地址</h3>
+                  <p id="lanJumpText">请让房主先运行局域网启动器，然后输入房主的 192.168 地址。</p>
+                </div>
+                <div class="lan-jump-row">
+                  <input class="lan-room-input" id="lanHostInput" type="text" autocomplete="off" placeholder="192.168.x.x:5173" />
+                  <button class="action-button primary" id="lanOpenHostBtn" type="button">
+                    <span class="button-icon">↗</span>
+                    打开
+                  </button>
+                </div>
+              </article>
               <article class="lan-duel-card" id="lanDuelCard">
                 <div class="lan-duel-top">
                   <div>
@@ -996,7 +1010,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.43</p>
+        <p class="release-version" id="releaseVersionText">v1.0.44</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1153,7 +1167,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.43"></script>
-    <script src="./app.js?v=1.0.43"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.44"></script>
+    <script src="./app.js?v=1.0.44"></script>
   </body>
 </html>
