@@ -736,6 +736,14 @@
             <span class="button-icon">⇧</span>
             导入档案
           </button>
+          <button class="action-button" id="profileMistakeBookBtn" type="button">
+            <span class="button-icon">!</span>
+            错题本
+          </button>
+          <button class="action-button" id="profileRealBoardBtn" type="button">
+            <span class="button-icon">♙</span>
+            真实棋盘
+          </button>
           <button class="action-button" id="profileCloudBackupBtn" type="button">
             <span class="button-icon">☁</span>
             同步云端
@@ -747,6 +755,31 @@
           <input id="profileImportInput" type="file" accept="application/json,.json" hidden />
         </div>
         <p class="profile-cloud-status" id="profileCloudStatus">登录后可把安全档案同步到云端。</p>
+        <article class="profile-import-preview" id="mistakeBookPanel" hidden>
+          <strong id="mistakeBookTitle">错题本</strong>
+          <p id="mistakeBookSummary">自动保存最近的赛后复盘重点。</p>
+          <div class="mistake-book-list" id="mistakeBookList"></div>
+          <div class="profile-import-actions">
+            <button class="action-button primary" id="mistakeBookPracticeBtn" type="button">
+              练习
+            </button>
+            <button class="action-button" id="mistakeBookClearBtn" type="button">
+              清空错题
+            </button>
+          </div>
+        </article>
+        <article class="profile-import-preview" id="realBoardPanel" hidden>
+          <strong id="realBoardTitle">真实棋盘练习</strong>
+          <p id="realBoardText">把当前局面摆到真实棋盘上练 3 分钟。</p>
+          <div class="profile-import-actions">
+            <button class="action-button primary" id="realBoardCopyBtn" type="button">
+              复制练习局面
+            </button>
+            <button class="action-button" id="realBoardCloseBtn" type="button">
+              取消
+            </button>
+          </div>
+        </article>
         <article class="profile-import-preview" id="profileImportPreview" hidden>
           <strong id="profileImportPreviewTitle">导入前确认</strong>
           <p id="profileImportPreviewText">将恢复档案内容。</p>
@@ -963,7 +996,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.41</p>
+        <p class="release-version" id="releaseVersionText">v1.0.42</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1120,7 +1153,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.41"></script>
-    <script src="./app.js?v=1.0.41"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.42"></script>
+    <script src="./app.js?v=1.0.42"></script>
   </body>
 </html>

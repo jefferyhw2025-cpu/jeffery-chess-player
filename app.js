@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.41";
+const appVersion = "1.0.42";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.42：新增错题本、真实棋盘练习入口，并整理 TestFlight、Game Center 和 App Store 推广资料。",
 "v1.0.41：新增首次打开引导、每日残局、一步将死训练、账号删除，并在 iOS/备用版隐藏不可用的云端备份入口。",
 "v1.0.40：修复本机专属入口在发布状态面板中的可见性判断，玩家版仍保持隐藏。",
 "v1.0.39：修复发布状态面板在本机入口检测完成后不会刷新的问题，并刷新缓存版本。",
@@ -64,6 +65,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.42: added a mistake book, real-board practice entry, and TestFlight/Game Center/App Store marketing prep.",
 "v1.0.41: added first-run onboarding, daily endgame, mate-in-one training, account deletion, and hid unavailable cloud backup in iOS/backup builds.",
 "v1.0.40: fixed local owner-entry visibility detection in the release status panel while keeping the player build hidden.",
 "v1.0.39: fixed release-status refresh after the local owner-entry check and refreshed the cache version.",
@@ -187,6 +189,7 @@ const friendModeStorageKey = "local-chess-friend-mode-v1";
 const continuePromptStorageKey = "local-chess-continue-dismissed-v1";
 const lanClientIdStorageKey = "local-chess-lan-client-id-v1";
 const onboardingStorageKey = "local-chess-onboarding-v1";
+const mistakeBookStorageKey = "local-chess-mistake-book-v1";
 const localLanServerBases = ["http://127.0.0.1:5173", "http://127.0.0.1:5174"];
 let liveVersionState = { status: "idle", version: "", url: productionSiteUrl };
 let pagesVersionState = { status: "idle", version: "", url: backupSiteUrl };
@@ -601,6 +604,8 @@ profileOpenAchievements: "查看成就",
 profileOpenRank: "查看段位",
 profileExport: "导出档案",
 profileImport: "导入档案",
+profileMistakeBook: "错题本",
+profileRealBoard: "真实棋盘",
 profileCloudBackup: "同步云端",
 profileCloudRestore: "恢复云端",
 profileCloudIdle: "登录后可把安全档案同步到云端。",
@@ -627,6 +632,22 @@ profileImportNoGame: "没有棋局",
 profileImportConfirm: "确认导入",
 profileImportCancel: "取消",
 profileImportCancelled: "已取消导入档案。",
+mistakeBookTitle: "错题本",
+mistakeBookSummary: "自动保存最近 {count} 个赛后复盘重点，方便下次继续练。",
+mistakeBookEmpty: "还没有错题。完成一局对局后，这里会保存失误和练习方向。",
+mistakeBookItem: "{date} · {result} · {mistake}",
+mistakeBookResultWin: "胜利复盘",
+mistakeBookResultLoss: "失利错题",
+mistakeBookResultDraw: "和棋复盘",
+mistakeBookPractice: "练习",
+mistakeBookClear: "清空错题",
+mistakeBookCleared: "错题本已清空。",
+mistakeBookOpened: "已打开错题本。",
+realBoardTitle: "真实棋盘练习",
+realBoardText: "把当前局面摆到真实棋盘上练 3 分钟。建议先找王是否安全，再找能吃子、将军和威胁。",
+realBoardCopy: "复制练习局面",
+realBoardCopied: "练习局面已复制，可在自己的棋谱工具或真实棋盘练习中使用。",
+realBoardOpened: "已打开真实棋盘练习。",
 releaseButtonAria: "查看版本更新",
 releaseLabel: "版本",
 releaseTitle: "更新日志",
@@ -1262,6 +1283,8 @@ profileOpenAchievements: "View Achievements",
 profileOpenRank: "View Rank",
 profileExport: "Export Profile",
 profileImport: "Import Profile",
+profileMistakeBook: "Mistake Book",
+profileRealBoard: "Real Board",
 profileCloudBackup: "Cloud Backup",
 profileCloudRestore: "Restore Cloud",
 profileCloudIdle: "Log in to sync a safe profile backup to the cloud.",
@@ -1288,6 +1311,22 @@ profileImportNoGame: "no saved game",
 profileImportConfirm: "Import These",
 profileImportCancel: "Cancel",
 profileImportCancelled: "Profile import cancelled.",
+mistakeBookTitle: "Mistake Book",
+mistakeBookSummary: "The latest {count} review notes are saved locally so you can train them next time.",
+mistakeBookEmpty: "No mistakes yet. Finish a game and this will save the key mistake and practice direction.",
+mistakeBookItem: "{date} · {result} · {mistake}",
+mistakeBookResultWin: "Win review",
+mistakeBookResultLoss: "Loss mistake",
+mistakeBookResultDraw: "Draw review",
+mistakeBookPractice: "Practice",
+mistakeBookClear: "Clear Mistakes",
+mistakeBookCleared: "Mistake book cleared.",
+mistakeBookOpened: "Mistake book opened.",
+realBoardTitle: "Real Board Practice",
+realBoardText: "Set up the current position on a real chess board for 3 minutes. First check king safety, then captures, checks, and threats.",
+realBoardCopy: "Copy Practice Position",
+realBoardCopied: "Practice position copied for your own chess tools or real-board setup.",
+realBoardOpened: "Real board practice opened.",
 releaseButtonAria: "View version notes",
 releaseLabel: "Version",
 releaseTitle: "Changelog",
@@ -2104,9 +2143,22 @@ profileRankBtn: document.querySelector("#profileRankBtn"),
 profileLeaderboardBtn: document.querySelector("#profileLeaderboardBtn"),
 profileExportBtn: document.querySelector("#profileExportBtn"),
 profileImportBtn: document.querySelector("#profileImportBtn"),
+profileMistakeBookBtn: document.querySelector("#profileMistakeBookBtn"),
+profileRealBoardBtn: document.querySelector("#profileRealBoardBtn"),
 profileCloudBackupBtn: document.querySelector("#profileCloudBackupBtn"),
 profileCloudRestoreBtn: document.querySelector("#profileCloudRestoreBtn"),
 profileCloudStatus: document.querySelector("#profileCloudStatus"),
+mistakeBookPanel: document.querySelector("#mistakeBookPanel"),
+mistakeBookTitle: document.querySelector("#mistakeBookTitle"),
+mistakeBookSummary: document.querySelector("#mistakeBookSummary"),
+mistakeBookList: document.querySelector("#mistakeBookList"),
+mistakeBookPracticeBtn: document.querySelector("#mistakeBookPracticeBtn"),
+mistakeBookClearBtn: document.querySelector("#mistakeBookClearBtn"),
+realBoardPanel: document.querySelector("#realBoardPanel"),
+realBoardTitle: document.querySelector("#realBoardTitle"),
+realBoardText: document.querySelector("#realBoardText"),
+realBoardCopyBtn: document.querySelector("#realBoardCopyBtn"),
+realBoardCloseBtn: document.querySelector("#realBoardCloseBtn"),
 profileImportInput: document.querySelector("#profileImportInput"),
 profileImportPreview: document.querySelector("#profileImportPreview"),
 profileImportPreviewTitle: document.querySelector("#profileImportPreviewTitle"),
@@ -2674,6 +2726,7 @@ return [
 `${dailyTaskStorageKey}:${accountId}`,
 `${dailyStreakStorageKey}:${accountId}`,
 `${tutorialLessonStorageKey}:${accountId}`,
+`${mistakeBookStorageKey}:${accountId}`,
 `${onlineRankMigrationStorageKey}:${accountId}`,
 `${leagueSeasonRewardStorageKey}:${accountId}:`,
 ];
@@ -2876,6 +2929,9 @@ renderProfile();
 }
 function profileActivityStorageId() {
 return `${profileActivityStorageKey}:${currentAccountId || "guest"}`;
+}
+function mistakeBookStorageId() {
+return `${mistakeBookStorageKey}:${currentAccountId || "guest"}`;
 }
 function emptyPieceUsage() {
 return { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 };
@@ -3155,6 +3211,146 @@ function favoriteProfilePiece() {
 const entries = Object.entries(profileActivity.pieceUsage).filter(([type]) => type in pieceValues);
 const [type, count] = entries.sort((a, b) => b[1] - a[1])[0] ?? ["", 0];
 return count > 0 ? { type, count } : null;
+}
+function normalizeMistakeBookEntry(entry) {
+if (!entry || typeof entry !== "object") {
+return null;
+}
+const outcome = ["win", "loss", "draw"].includes(entry.outcome) ? entry.outcome : "draw";
+return {
+id: String(entry.id || `mistake-${Date.now()}`),
+createdAt: String(entry.createdAt || new Date().toISOString()),
+outcome,
+mistake: String(entry.mistake || t("reviewNoMistake")),
+better: String(entry.better || t("reviewNoMistake")),
+reason: String(entry.reason || ""),
+practiceIndex: Math.max(0, Math.min(currentTutorialSteps().length - 1, Math.floor(Number(entry.practiceIndex)) || 0)),
+};
+}
+function loadMistakeBookEntries() {
+try {
+const saved = JSON.parse(window.localStorage.getItem(mistakeBookStorageId()) ?? "[]");
+return Array.isArray(saved) ? saved.map(normalizeMistakeBookEntry).filter(Boolean).slice(0, 12) : [];
+} catch (error) {
+return [];
+}
+}
+function saveMistakeBookEntries(entries) {
+try {
+window.localStorage.setItem(mistakeBookStorageId(), JSON.stringify(entries.slice(0, 12)));
+} catch (error) {
+}
+}
+function reviewItemDetail(review, titleKey) {
+const title = t(titleKey);
+return review?.items?.find((item) => item.title === title)?.detail || "";
+}
+function mistakeBookResultName(outcome) {
+if (outcome === "win") {
+return t("mistakeBookResultWin");
+}
+if (outcome === "loss") {
+return t("mistakeBookResultLoss");
+}
+return t("mistakeBookResultDraw");
+}
+function savePostGameMistakeEntry(resultColor, review) {
+if (!review || !game.isGameOver()) {
+return;
+}
+const outcome = humanResultOutcome(resultColor);
+const mistake = reviewItemDetail(review, "reviewMistake");
+const reason = reviewItemDetail(review, "reviewMistakeReason");
+const better = reviewItemDetail(review, "reviewBetterMove");
+const entry = normalizeMistakeBookEntry({
+id: `mistake-${Date.now()}`,
+createdAt: new Date().toISOString(),
+outcome,
+mistake: mistake || t("reviewNoMistake"),
+better: better || t("reviewNoMistake"),
+reason,
+practiceIndex: review.practiceIndex ?? 4,
+});
+const entries = loadMistakeBookEntries().filter((item) => item.mistake !== entry.mistake || item.outcome !== entry.outcome);
+saveMistakeBookEntries([entry, ...entries]);
+renderMistakeBookPanel();
+}
+function renderMistakeBookPanel() {
+if (!els.mistakeBookPanel) {
+return;
+}
+const entries = loadMistakeBookEntries();
+els.mistakeBookTitle.textContent = t("mistakeBookTitle");
+els.mistakeBookSummary.textContent = t("mistakeBookSummary", { count: entries.length });
+els.mistakeBookList.innerHTML = "";
+if (!entries.length) {
+const empty = document.createElement("p");
+empty.textContent = t("mistakeBookEmpty");
+els.mistakeBookList.append(empty);
+} else {
+for (const entry of entries.slice(0, 5)) {
+const item = document.createElement("article");
+item.className = "mistake-book-item";
+const title = document.createElement("strong");
+title.textContent = t("mistakeBookItem", {
+date: formatProfileDate(entry.createdAt),
+result: mistakeBookResultName(entry.outcome),
+mistake: entry.mistake,
+});
+const detail = document.createElement("p");
+detail.textContent = entry.reason || entry.better;
+item.append(title, detail);
+els.mistakeBookList.append(item);
+}
+}
+setButtonContent(els.mistakeBookPracticeBtn, "i", t("mistakeBookPractice"));
+setButtonContent(els.mistakeBookClearBtn, "×", t("mistakeBookClear"));
+}
+function toggleMistakeBookPanel() {
+const isOpening = els.mistakeBookPanel.hidden;
+els.mistakeBookPanel.hidden = !isOpening;
+els.realBoardPanel.hidden = true;
+renderMistakeBookPanel();
+if (isOpening) {
+setNotice(t("mistakeBookOpened"));
+}
+}
+function practiceLatestMistake() {
+const latest = loadMistakeBookEntries()[0];
+openTutorialAt(latest?.practiceIndex ?? postGameReview?.practiceIndex ?? 4);
+setNotice(t("reviewPracticeNotice"));
+}
+function clearMistakeBook() {
+saveMistakeBookEntries([]);
+renderMistakeBookPanel();
+setNotice(t("mistakeBookCleared"));
+}
+function renderRealBoardPanel() {
+if (!els.realBoardPanel) {
+return;
+}
+els.realBoardTitle.textContent = t("realBoardTitle");
+els.realBoardText.textContent = t("realBoardText");
+setButtonContent(els.realBoardCopyBtn, "♙", t("realBoardCopy"));
+setButtonContent(els.realBoardCloseBtn, "×", t("cancel"));
+}
+function toggleRealBoardPanel() {
+const isOpening = els.realBoardPanel.hidden;
+els.realBoardPanel.hidden = !isOpening;
+els.mistakeBookPanel.hidden = true;
+renderRealBoardPanel();
+if (isOpening) {
+setNotice(t("realBoardOpened"));
+}
+}
+async function copyRealBoardPosition() {
+const payload = `Jeffery Chess real-board practice\n${game.fen()}`;
+try {
+await navigator.clipboard.writeText(payload);
+setNotice(t("realBoardCopied"));
+} catch (error) {
+setNotice(t("copyBlocked"));
+}
 }
 function loadFeedbackEntries() {
 try {
@@ -4186,6 +4382,8 @@ setButtonContent(els.profileRankBtn, rankState.rank.medal, t("profileOpenRank"))
 setButtonContent(els.profileLeaderboardBtn, "♕", t("leaderboardButton"));
 setButtonContent(els.profileExportBtn, "⇩", t("profileExport"));
 setButtonContent(els.profileImportBtn, "⇧", t("profileImport"));
+setButtonContent(els.profileMistakeBookBtn, "!", t("profileMistakeBook"));
+setButtonContent(els.profileRealBoardBtn, "♙", t("profileRealBoard"));
 const cloudBackupAvailable = isProfileCloudBackupAvailable();
 setButtonContent(els.profileCloudBackupBtn, "☁", t("profileCloudBackup"));
 setButtonContent(els.profileCloudRestoreBtn, "☁", t("profileCloudRestore"));
@@ -4199,6 +4397,8 @@ els.profileCloudStatus.textContent = cloudBackupAvailable
 : t("profileCloudHiddenIos");
 }
 renderProfileImportPreview();
+renderMistakeBookPanel();
+renderRealBoardPanel();
 renderLeaderboard();
 renderDailyTasks();
 }
@@ -4241,6 +4441,7 @@ dailyStarsStorageId(),
 dailyTaskStorageId(),
 dailyStreakStorageId(),
 tutorialLessonStorageId(),
+mistakeBookStorageId(),
 ];
 }
 function copyStoredValue(data, key) {
@@ -7057,6 +7258,7 @@ const rankedVerificationPgn = rankedVerificationPayload?.pgn;
 recordedProfileOutcome = profileOutcomeForResult(recordedResult, { byLan });
 updateProfileGameResult(recordedProfileOutcome, 1);
 postGameReview = buildPostGameReview(recordedResult);
+savePostGameMistakeEntry(recordedResult, postGameReview);
 if (rankedScored) {
 updateDailyTask("ranked-complete", 1);
 }
@@ -8503,7 +8705,8 @@ const protocol = url.protocol === "https:" ? "wss" : "ws";
 return `${protocol}://${url.host}/lan`;
 }
 async function discoverLanServerBase() {
-for (const base of localLanServerBases) {
+const bases = uniqueLanInfoBases();
+for (const base of bases) {
 try {
 const response = await fetch(`${base}/lan-info`, { cache: "no-store" });
 if (!response.ok) {
@@ -8522,8 +8725,7 @@ return normalizeLanRoom(els.lanRoomInput.value || lanState.room || "");
 }
 function uniqueLanInfoBases() {
 const bases = [];
-const isKnownLanPort = window.location.port === "5173" || window.location.port === "5174";
-if (window.location.protocol !== "file:" && window.location.origin && isKnownLanPort) {
+if (isLanPlayablePage() && window.location.origin) {
 bases.push(window.location.origin);
 }
 bases.push(...localLanServerBases);
@@ -9490,8 +9692,16 @@ els.profileRankBtn.addEventListener("click", openProfileRank);
 els.profileLeaderboardBtn.addEventListener("click", openLeaderboardDialog);
 els.profileExportBtn.addEventListener("click", exportPlayerProfile);
 els.profileImportBtn.addEventListener("click", () => els.profileImportInput.click());
+els.profileMistakeBookBtn.addEventListener("click", toggleMistakeBookPanel);
+els.profileRealBoardBtn.addEventListener("click", toggleRealBoardPanel);
 els.profileCloudBackupBtn.addEventListener("click", syncProfileCloudBackup);
 els.profileCloudRestoreBtn.addEventListener("click", restoreProfileCloudBackup);
+els.mistakeBookPracticeBtn.addEventListener("click", practiceLatestMistake);
+els.mistakeBookClearBtn.addEventListener("click", clearMistakeBook);
+els.realBoardCopyBtn.addEventListener("click", copyRealBoardPosition);
+els.realBoardCloseBtn.addEventListener("click", () => {
+els.realBoardPanel.hidden = true;
+});
 els.profileImportInput.addEventListener("change", handleProfileImportFile);
 els.profileImportConfirmBtn.addEventListener("click", confirmProfileImport);
 els.profileImportCancelBtn.addEventListener("click", () => {
