@@ -943,6 +943,13 @@ lanInviteCloseAria: "关闭邀请提示",
 lanInviteText: "把这个链接发给同一 Wi‑Fi 的朋友。",
 lanInviteRoom: "房间号：{room}",
 lanInviteQrAria: "局域网邀请二维码",
+lanHostLabel: "房主地址",
+lanHostTitle: "复制给同一 Wi‑Fi 的朋友",
+lanHostText: "房主运行局域网启动器后，把这个地址发给朋友。朋友也可以在 GitHub 备用版输入它。",
+lanHostChecking: "正在检测房主局域网地址...",
+lanHostUnavailable: "未检测到 192.168 地址，请确认局域网启动器正在运行。",
+lanHostCopy: "复制房主地址",
+lanHostCopied: "房主地址已复制",
 lanDetailIdle: "同一 Wi‑Fi 下运行局域网启动器，然后输入相同房间号。",
 lanDetailConnecting: "正在连接局域网房间 {room}...",
 lanDetailWhite: "你执白方。等待黑方加入后即可对战。",
@@ -957,7 +964,7 @@ lanFileSiteBlocked: "本地文件页面不能稳定连接 LAN，请先运行“�
 lanStaticSiteBlocked: "当前网页不能直接开 LAN，请让房主启动局域网服务器并使用 192.168 开头的网址或二维码。",
 lanJumpLabel: "备用网页版联机",
 lanJumpTitle: "打开房主局域网地址",
-lanJumpText: "GitHub 版不能自己启动 LAN。请让房主运行局域网启动器，再输入房主的 192.168 地址。",
+lanJumpText: "GitHub 版不能直接开局域网。请让房主启动局域网服务器，并在这里输入房主的 192.168 地址进入对战。",
 lanJumpPlaceholder: "192.168.x.x:5173",
 lanJumpOpen: "打开",
 lanJumpNeedHost: "请输入房主的 192.168 局域网地址。",
@@ -1630,6 +1637,13 @@ lanInviteCloseAria: "Close invite tip",
 lanInviteText: "Send this link to a friend on the same Wi-Fi.",
 lanInviteRoom: "Room code: {room}",
 lanInviteQrAria: "LAN invite QR code",
+lanHostLabel: "Host Address",
+lanHostTitle: "Copy for a Friend on the Same Wi-Fi",
+lanHostText: "After the host runs the LAN launcher, send this address to a friend. They can also enter it on the GitHub backup build.",
+lanHostChecking: "Checking the host LAN address...",
+lanHostUnavailable: "No 192.168 address detected. Make sure the LAN launcher is running.",
+lanHostCopy: "Copy Host Address",
+lanHostCopied: "Host address copied",
 lanDetailIdle: "Run the LAN launcher on the same Wi-Fi, then enter the same room code.",
 lanDetailConnecting: "Connecting to LAN room {room}...",
 lanDetailWhite: "You play White. Wait for Black to join.",
@@ -1644,7 +1658,7 @@ lanFileSiteBlocked: "Local file pages cannot connect to LAN reliably. Run the LA
 lanStaticSiteBlocked: "This web page cannot start LAN directly. Ask the host to run the LAN server and use the 192.168 LAN URL or QR code.",
 lanJumpLabel: "Backup Web LAN",
 lanJumpTitle: "Open the Host LAN Address",
-lanJumpText: "The GitHub build cannot start LAN by itself. Ask the host to run the LAN launcher, then enter the host 192.168 address.",
+lanJumpText: "The GitHub build cannot start LAN directly. Ask the host to run the LAN server, then enter the host 192.168 address here to join.",
 lanJumpPlaceholder: "192.168.x.x:5173",
 lanJumpOpen: "Open",
 lanJumpNeedHost: "Enter the host 192.168 LAN address.",
@@ -2293,6 +2307,12 @@ lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
 lanDetail: document.querySelector("#lanDetail"),
 lanCheckBtn: document.querySelector("#lanCheckBtn"),
 lanDiagnosticBtn: document.querySelector("#lanDiagnosticBtn"),
+lanHostCard: document.querySelector("#lanHostCard"),
+lanHostLabel: document.querySelector("#lanHostLabel"),
+lanHostTitle: document.querySelector("#lanHostTitle"),
+lanHostText: document.querySelector("#lanHostText"),
+lanHostLink: document.querySelector("#lanHostLink"),
+lanCopyHostBtn: document.querySelector("#lanCopyHostBtn"),
 lanJumpCard: document.querySelector("#lanJumpCard"),
 lanJumpLabel: document.querySelector("#lanJumpLabel"),
 lanJumpTitle: document.querySelector("#lanJumpTitle"),
@@ -2526,6 +2546,7 @@ reconnectTimer: null,
 manualDisconnect: false,
 };
 let lastLanCheck = null;
+let lanHostRefreshPromise = null;
 let releaseHealthState = { status: "idle", rows: [] };
 let accounts = loadAccounts();
 let currentAccountId = loadCurrentAccountId(accounts);
@@ -5791,6 +5812,7 @@ els.lanDetail.textContent = lanState.color === "w" ? t("lanDetailWhite") : t("la
 if (!room) {
 hideLanInviteCard();
 }
+renderLanHostCard();
 renderLanJumpCard();
 const existingDuelHref = els.lanDuelLink.getAttribute("href") || "";
 const existingDuelShare = existingDuelHref && existingDuelHref !== "#" ? els.lanDuelLink.href : "";
@@ -5860,6 +5882,7 @@ setButtonContent(els.lanDisconnectBtn, "×", t("lanDisconnect"));
 setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
 setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
 setButtonContent(els.lanDiagnosticBtn, "?", t("lanDiagnostic"));
+renderLanHostCard();
 renderLanJumpCard();
 els.lanShareLabel.textContent = t("lanShareLabel");
 const duelRoom = normalizeLanRoom(els.lanRoomInput.value || els.lanDuelCard.dataset.room || "");
@@ -8735,6 +8758,76 @@ return `${protocol}://${url.host}/lan`;
 function shouldShowLanJumpCard() {
 return !isLanPlayablePage() && window.location.protocol !== "file:";
 }
+function shouldShowLanHostCard() {
+return isLanPlayablePage() && window.location.protocol !== "file:";
+}
+function lanHostShareUrlFromCheck(check = lastLanCheck) {
+const address = Array.isArray(check?.info?.addresses) ? check.info.addresses[0] : "";
+const port = Number(check?.info?.port) || "";
+if (check?.ok && address && port) {
+return `http://${address}:${port}/index.html`;
+}
+if (isPrivateLanHostname() && window.location.origin) {
+return `${window.location.origin}/index.html`;
+}
+return "";
+}
+function renderLanHostCard() {
+if (!els.lanHostCard) {
+return;
+}
+const show = shouldShowLanHostCard();
+els.lanHostCard.hidden = !show;
+if (!show) {
+return;
+}
+const url = lanHostShareUrlFromCheck();
+els.lanHostLabel.textContent = t("lanHostLabel");
+els.lanHostTitle.textContent = t("lanHostTitle");
+els.lanHostText.textContent = url ? t("lanHostText") : t(lanHostRefreshPromise ? "lanHostChecking" : "lanHostUnavailable");
+els.lanHostLink.textContent = url || t(lanHostRefreshPromise ? "lanHostChecking" : "lanHostUnavailable");
+els.lanHostLink.href = url || "#";
+els.lanHostLink.setAttribute("aria-disabled", url ? "false" : "true");
+els.lanCopyHostBtn.disabled = !url;
+setButtonContent(els.lanCopyHostBtn, "↗", t("lanHostCopy"));
+}
+async function refreshLanHostCard({ force = false } = {}) {
+if (!shouldShowLanHostCard()) {
+renderLanHostCard();
+return lastLanCheck;
+}
+if (lanHostRefreshPromise && !force) {
+return lanHostRefreshPromise;
+}
+lanHostRefreshPromise = fetchLanInfoStatus()
+.then((check) => {
+lastLanCheck = check;
+return check;
+})
+.finally(() => {
+lanHostRefreshPromise = null;
+renderLanHostCard();
+});
+renderLanHostCard();
+return lanHostRefreshPromise;
+}
+async function copyLanHostAddress() {
+let url = lanHostShareUrlFromCheck();
+if (!url) {
+await refreshLanHostCard({ force: true });
+url = lanHostShareUrlFromCheck();
+}
+if (!url) {
+setNotice(t("lanHostUnavailable"));
+return;
+}
+try {
+await navigator.clipboard.writeText(url);
+setNotice(t("lanHostCopied"));
+} catch (error) {
+setNotice(t("copyBlocked"));
+}
+}
 function renderLanJumpCard() {
 if (!els.lanJumpCard) {
 return;
@@ -8960,6 +9053,7 @@ els.lanCheckBtn.disabled = true;
 const check = await fetchLanInfoStatus();
 lastLanCheck = check;
 renderLanCheckResult(check);
+renderLanHostCard();
 els.lanCheckBtn.disabled = false;
 setNotice(check.ok ? t("lanCheckNoticeOk") : t("lanCheckNoticeBad"));
 if (!check.ok) {
@@ -9015,6 +9109,7 @@ els.lanDiagnosticBtn.disabled = true;
 const check = await fetchLanInfoStatus();
 lastLanCheck = check;
 renderLanCheckResult(check);
+renderLanHostCard();
 openLanDiagnosticFromStatus(check, { urgent: !check.ok });
 els.lanDiagnosticBtn.disabled = false;
 }
@@ -9828,6 +9923,7 @@ els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
 els.lanDiagnosticBtn.addEventListener("click", openLanDiagnostic);
+els.lanCopyHostBtn.addEventListener("click", copyLanHostAddress);
 els.lanOpenHostBtn.addEventListener("click", openLanHostPage);
 els.lanHostInput.addEventListener("keydown", (event) => {
 if (event.key === "Enter") {
@@ -10019,6 +10115,7 @@ registerOfflineApp();
 applyBoardTheme(boardTheme);
 restoreSavedGame();
 render();
+refreshLanHostCard();
 openOnboardingIfNeeded();
 showUpdateCompleteNotice();
 checkForUpdates({ silent: true });
