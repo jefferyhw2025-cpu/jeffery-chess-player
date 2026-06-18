@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.44";
+const appVersion = "1.0.45";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.45：每日残局和一步将死会按本地日期自动轮换，同一天固定同一题，第二天换新题。",
 "v1.0.44：LAN 页面新增可复制的房主 192.168 地址；GitHub 备用版新增局域网跳转助手，输入房主地址即可带着房间号打开可联机页面。",
 "v1.0.43：修复 LAN 页面会误触发内部检测导致局域网连接测试失败的问题，普通玩家页保持干净。",
 "v1.0.42：新增错题本、真实棋盘练习入口，并整理 TestFlight、Game Center 和 App Store 推广资料。",
@@ -67,6 +68,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.45: daily endgame and mate-in-one puzzles now rotate by local date, staying fixed for the day and changing tomorrow.",
 "v1.0.44: added a copyable host 192.168 address on LAN pages and a LAN jump helper on the GitHub backup build.",
 "v1.0.43: fixed LAN pages triggering internal checks during normal play, preventing connection-test failures and keeping player pages clean.",
 "v1.0.42: added a mistake book, real-board practice entry, and TestFlight/Game Center/App Store marketing prep.",
@@ -286,8 +288,24 @@ zh: { title: "无提示胜利", detail: "不使用提示赢 1 局 AI。" },
 en: { title: "No-Hint Win", detail: "Win 1 AI game without using a hint." },
 },
 ];
-const dailyEndgameFen = "8/8/8/3k4/3P4/3K4/8/8 w - - 0 1";
-const mateInOneFen = "6k1/7p/6KQ/8/8/8/8/8 w - - 0 1";
+const dailyEndgamePuzzles = [
+{ id: "king-pawn-d-file", fen: "8/8/8/3k4/3P4/3K4/8/8 w - - 0 1" },
+{ id: "king-pawn-e-file", fen: "8/8/4k3/8/4P3/4K3/8/8 w - - 0 1" },
+{ id: "king-pawn-f-file", fen: "8/5k2/8/5P2/5K2/8/8/8 w - - 0 1" },
+{ id: "king-pawn-c-file", fen: "8/8/2k5/2P5/2K5/8/8/8 w - - 0 1" },
+{ id: "king-pawn-g-file", fen: "8/8/8/6k1/6P1/6K1/8/8 w - - 0 1" },
+{ id: "king-pawn-b-file", fen: "8/8/1k6/1P6/1K6/8/8/8 w - - 0 1" },
+{ id: "king-pawn-opposition", fen: "8/8/8/4k3/3P4/4K3/8/8 w - - 0 1" },
+];
+const mateInOnePuzzles = [
+{ id: "queen-corner-net", fen: "6k1/5Q2/6K1/8/8/8/8/8 w - - 0 1" },
+{ id: "queen-back-rank", fen: "8/8/8/8/8/6K1/5Q2/7k w - - 0 1" },
+{ id: "rook-file-mate", fen: "7k/8/6K1/8/8/8/8/5R2 w - - 0 1" },
+{ id: "queen-close-net", fen: "7k/5K2/6Q1/8/8/8/8/8 w - - 0 1" },
+{ id: "queen-edge-mate", fen: "k7/8/KQ6/8/8/8/8/8 w - - 0 1" },
+{ id: "queen-capture-mate", fen: "k7/pp6/K7/1Q6/8/8/8/8 w - - 0 1" },
+{ id: "queen-corner-close", fen: "8/8/8/8/8/1K6/2Q5/k7 w - - 0 1" },
+];
 const rankThresholds = [0, 3, 6, 10, 15, 21, 28, 36, 45, 55];
 const achievementCatalog = [
 {
@@ -3093,7 +3111,29 @@ function dailyTaskStorageId() {
 return `${dailyTaskStorageKey}:${currentAccountId || "guest"}`;
 }
 function todayKey() {
-return new Date().toISOString().slice(0, 10);
+const date = new Date();
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, "0");
+const day = String(date.getDate()).padStart(2, "0");
+return `${year}-${month}-${day}`;
+}
+function dateSeed(dateKey = todayKey()) {
+return String(dateKey)
+.split("")
+.reduce((seed, char) => ((seed * 31) + char.charCodeAt(0)) >>> 0, 0);
+}
+function dailyPuzzleFromCatalog(catalog, salt = 0, dateKey = todayKey()) {
+if (!Array.isArray(catalog) || catalog.length === 0) {
+return { id: "", fen: "" };
+}
+const index = (dateSeed(dateKey) + salt) % catalog.length;
+return catalog[index];
+}
+function currentDailyEndgamePuzzle(dateKey = todayKey()) {
+return dailyPuzzleFromCatalog(dailyEndgamePuzzles, 0, dateKey);
+}
+function currentMateInOnePuzzle(dateKey = todayKey()) {
+return dailyPuzzleFromCatalog(mateInOnePuzzles, 3, dateKey);
 }
 function createDailyProgress() {
 return {
@@ -8302,10 +8342,10 @@ playPositionSound();
 startBackgroundMusic();
 }
 function startDailyEndgame() {
-loadTrainingPosition(dailyEndgameFen, "dailyEndgameStarted");
+loadTrainingPosition(currentDailyEndgamePuzzle().fen, "dailyEndgameStarted");
 }
 function startMateInOneTraining() {
-loadTrainingPosition(mateInOneFen, "mateOneStarted");
+loadTrainingPosition(currentMateInOnePuzzle().fen, "mateOneStarted");
 }
 function toggleAi() {
 if (isLanConnected()) {
