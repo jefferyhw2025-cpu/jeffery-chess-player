@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.46";
+const appVersion = "1.0.47";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.47：App Store 版新增独立局域网模式按钮：创建房间、加入附近房间、扫码加入和输入房间码；网页版保持原有局域网入口。",
 "v1.0.46：修复每日残局中可能出现“兵吃国王”的非法局面，并阻止训练/FEN 载入可吃国王的位置。",
 "v1.0.45：每日残局和一步将死会按本地日期自动轮换，同一天固定同一题，第二天换新题。",
 "v1.0.44：LAN 页面新增可复制的房主 192.168 地址；GitHub 备用版新增局域网跳转助手，输入房主地址即可带着房间号打开可联机页面。",
@@ -69,6 +70,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.47: added App Store-only LAN mode buttons for Create Room, Join Nearby, Scan to Join, and Enter Room Code while keeping the web LAN controls separate.",
 "v1.0.46: fixed an illegal daily endgame that could allow a pawn to capture the king, and blocked training/FEN positions that allow king captures.",
 "v1.0.45: daily endgame and mate-in-one puzzles now rotate by local date, staying fixed for the day and changing tomorrow.",
 "v1.0.44: added a copyable host 192.168 address on LAN pages and a LAN jump helper on the GitHub backup build.",
@@ -860,6 +862,17 @@ languageTitle: "中英文",
 languageAria: "语言选择",
 lanLabel: "局域网",
 lanTitle: "局域网对战",
+lanAppModeLabel: "App 联机",
+lanAppModeTitle: "选择局域网方式",
+lanAppModeText: "App Store 版把常用联机方式放在这里；网页版继续使用下方输入框。",
+lanModeCreate: "创建房间",
+lanModeNearby: "加入附近房间",
+lanModeScan: "扫码加入",
+lanModeCode: "输入房间码",
+lanModeNearbyReady: "请输入朋友给你的房间号，或让房主先创建房间。",
+lanModeScanPrompt: "请粘贴扫码得到的链接或房间号。",
+lanModeScanEmpty: "未输入扫码链接或房间号。",
+lanModeCodeFocus: "请输入房间码，然后点连接。",
 lanDisconnected: "未连接",
 lanConnecting: "连接中",
 lanConnected: "已连接",
@@ -1554,6 +1567,17 @@ languageTitle: "Chinese / English",
 languageAria: "Language selection",
 lanLabel: "LAN",
 lanTitle: "LAN Match",
+lanAppModeLabel: "App LAN",
+lanAppModeTitle: "Choose a LAN Mode",
+lanAppModeText: "The App Store build keeps common LAN actions here. The web build keeps using the room-code controls below.",
+lanModeCreate: "Create Room",
+lanModeNearby: "Join Nearby",
+lanModeScan: "Scan to Join",
+lanModeCode: "Enter Room Code",
+lanModeNearbyReady: "Enter the room code from your friend, or ask the host to create a room first.",
+lanModeScanPrompt: "Paste the scanned invite link or room code.",
+lanModeScanEmpty: "No scanned link or room code was entered.",
+lanModeCodeFocus: "Enter a room code, then tap Connect.",
 lanDisconnected: "Offline",
 lanConnecting: "Connecting",
 lanConnected: "Connected",
@@ -2327,6 +2351,18 @@ lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
 lanDetail: document.querySelector("#lanDetail"),
 lanCheckBtn: document.querySelector("#lanCheckBtn"),
 lanDiagnosticBtn: document.querySelector("#lanDiagnosticBtn"),
+lanAppModeCard: document.querySelector("#lanAppModeCard"),
+lanAppModeLabel: document.querySelector("#lanAppModeLabel"),
+lanAppModeTitle: document.querySelector("#lanAppModeTitle"),
+lanAppModeText: document.querySelector("#lanAppModeText"),
+lanModeCreateBtn: document.querySelector("#lanModeCreateBtn"),
+lanModeNearbyBtn: document.querySelector("#lanModeNearbyBtn"),
+lanModeScanBtn: document.querySelector("#lanModeScanBtn"),
+lanModeCodeBtn: document.querySelector("#lanModeCodeBtn"),
+lanModeCreateLabel: document.querySelector("#lanModeCreateLabel"),
+lanModeNearbyLabel: document.querySelector("#lanModeNearbyLabel"),
+lanModeScanLabel: document.querySelector("#lanModeScanLabel"),
+lanModeCodeLabel: document.querySelector("#lanModeCodeLabel"),
 lanHostCard: document.querySelector("#lanHostCard"),
 lanHostLabel: document.querySelector("#lanHostLabel"),
 lanHostTitle: document.querySelector("#lanHostTitle"),
@@ -5106,6 +5142,9 @@ function isBackupSiteHost() {
 const backup = new URL(backupSiteUrl);
 return window.location.hostname === backup.hostname && window.location.pathname.startsWith(backup.pathname);
 }
+function isIosAppBuild() {
+return window.JEFFERY_CHESS_APP === "ios" || document.documentElement.classList.contains("ios-app");
+}
 function pagesVersionUrl() {
 return isBackupSiteHost() ? `./version.json?pages=${Date.now()}` : `${backupSiteUrl.replace(/\/$/, "")}/version.json?pages=${Date.now()}`;
 }
@@ -5854,6 +5893,7 @@ els.lanDetail.textContent = lanState.color === "w" ? t("lanDetailWhite") : t("la
 if (!room) {
 hideLanInviteCard();
 }
+renderLanAppModeCard();
 renderLanHostCard();
 renderLanJumpCard();
 const existingDuelHref = els.lanDuelLink.getAttribute("href") || "";
@@ -5924,6 +5964,7 @@ setButtonContent(els.lanDisconnectBtn, "×", t("lanDisconnect"));
 setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
 setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
 setButtonContent(els.lanDiagnosticBtn, "?", t("lanDiagnostic"));
+renderLanAppModeCard();
 renderLanHostCard();
 renderLanJumpCard();
 els.lanShareLabel.textContent = t("lanShareLabel");
@@ -8818,6 +8859,28 @@ return !isLanPlayablePage() && window.location.protocol !== "file:";
 function shouldShowLanHostCard() {
 return isLanPlayablePage() && window.location.protocol !== "file:";
 }
+function renderLanAppModeCard() {
+if (!els.lanAppModeCard) {
+return;
+}
+const show = isIosAppBuild();
+els.lanAppModeCard.hidden = !show;
+if (!show) {
+return;
+}
+const busy = isLanConnected() || lanState.status === "connecting";
+els.lanAppModeLabel.textContent = t("lanAppModeLabel");
+els.lanAppModeTitle.textContent = t("lanAppModeTitle");
+els.lanAppModeText.textContent = t("lanAppModeText");
+els.lanModeCreateLabel.textContent = t("lanModeCreate");
+els.lanModeNearbyLabel.textContent = t("lanModeNearby");
+els.lanModeScanLabel.textContent = t("lanModeScan");
+els.lanModeCodeLabel.textContent = t("lanModeCode");
+els.lanModeCreateBtn.disabled = busy;
+els.lanModeNearbyBtn.disabled = busy;
+els.lanModeScanBtn.disabled = busy;
+els.lanModeCodeBtn.disabled = false;
+}
 function lanHostShareUrlFromCheck(check = lastLanCheck) {
 const address = Array.isArray(check?.info?.addresses) ? check.info.addresses[0] : "";
 const port = Number(check?.info?.port) || "";
@@ -9703,6 +9766,48 @@ return;
 els.lanRoomInput.value = room;
 connectLan();
 }
+function focusLanRoomInput() {
+els.lanRoomInput.focus();
+els.lanRoomInput.select();
+}
+async function joinNearbyLanRoom() {
+await checkLanStatus();
+const room = currentLanRoom();
+if (room) {
+connectLan();
+return;
+}
+focusLanRoomInput();
+setNotice(t("lanModeNearbyReady"));
+}
+function roomFromLanInviteText(text = "") {
+const raw = String(text || "").trim();
+if (!raw) {
+return "";
+}
+try {
+const url = new URL(raw);
+return normalizeLanRoom(url.searchParams.get("lanRoom") || "");
+} catch (error) {
+return normalizeLanRoom(raw);
+}
+}
+function joinScannedLanRoom() {
+const scanned = window.prompt(t("lanModeScanPrompt"), "");
+const room = roomFromLanInviteText(scanned || "");
+if (!room) {
+setNotice(t(scanned === null ? "lanModeCodeFocus" : "lanModeScanEmpty"));
+focusLanRoomInput();
+return;
+}
+els.lanRoomInput.value = room;
+renderLanPanel();
+connectLan();
+}
+function enterLanRoomCode() {
+focusLanRoomInput();
+setNotice(t("lanModeCodeFocus"));
+}
 async function createLanRoom() {
 const room = createLanRoomCode();
 els.lanRoomInput.value = room;
@@ -9977,6 +10082,10 @@ els.lanConnectBtn.addEventListener("click", connectLan);
 els.lanReconnectBtn.addEventListener("click", reconnectLan);
 els.lanDisconnectBtn.addEventListener("click", () => disconnectLan());
 els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
+els.lanModeCreateBtn.addEventListener("click", createLanRoom);
+els.lanModeNearbyBtn.addEventListener("click", joinNearbyLanRoom);
+els.lanModeScanBtn.addEventListener("click", joinScannedLanRoom);
+els.lanModeCodeBtn.addEventListener("click", enterLanRoomCode);
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
 els.lanDiagnosticBtn.addEventListener("click", openLanDiagnostic);

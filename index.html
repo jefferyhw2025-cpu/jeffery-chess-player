@@ -450,6 +450,31 @@
                 </button>
               </div>
               <p class="lan-detail" id="lanDetail">同一 Wi‑Fi 下运行局域网启动器，然后输入相同房间号。</p>
+              <article class="lan-app-mode-card" id="lanAppModeCard" hidden>
+                <div>
+                  <p class="lan-duel-label" id="lanAppModeLabel">App 联机</p>
+                  <h3 id="lanAppModeTitle">选择局域网方式</h3>
+                  <p id="lanAppModeText">App 版把常用联机方式放在这里；网页版继续使用下方输入框。</p>
+                </div>
+                <div class="lan-app-mode-grid">
+                  <button class="lan-mode-button" id="lanModeCreateBtn" type="button">
+                    <span class="lan-mode-icon">＋</span>
+                    <span id="lanModeCreateLabel">创建房间</span>
+                  </button>
+                  <button class="lan-mode-button" id="lanModeNearbyBtn" type="button">
+                    <span class="lan-mode-icon">⌁</span>
+                    <span id="lanModeNearbyLabel">加入附近房间</span>
+                  </button>
+                  <button class="lan-mode-button" id="lanModeScanBtn" type="button">
+                    <span class="lan-mode-icon">▣</span>
+                    <span id="lanModeScanLabel">扫码加入</span>
+                  </button>
+                  <button class="lan-mode-button" id="lanModeCodeBtn" type="button">
+                    <span class="lan-mode-icon">#</span>
+                    <span id="lanModeCodeLabel">输入房间码</span>
+                  </button>
+                </div>
+              </article>
               <article class="lan-host-card" id="lanHostCard" hidden>
                 <div>
                   <p class="lan-duel-label" id="lanHostLabel">房主地址</p>
@@ -1022,7 +1047,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.46</p>
+        <p class="release-version" id="releaseVersionText">v1.0.47</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1179,7 +1204,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.46"></script>
-    <script src="./app.js?v=1.0.46"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.47"></script>
+    <script src="./app.js?v=1.0.47"></script>
   </body>
 </html>
