@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.50";
+const appVersion = "1.0.51";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.51：普通对局的悔棋按钮不再因为开局暂无走法而灰掉；没有可悔走法时会给出清楚提示，段位赛、职业联赛、局域网和 AI 思考中仍会锁定。",
 "v1.0.50：App Store、iOS 显示名、PWA、隐私政策和玩家共享版品牌名更新为 MateQuest Chess，更适合正式上线与社交媒体推广。",
 "v1.0.49：App Store 版“扫码加入”接入 iPhone 摄像头，可直接扫描局域网房间二维码；网页版继续保留粘贴链接或输入房间码的方式。",
 "v1.0.48：云端安全档案现在包含段位、成就、职业联赛积分和每日训练进度；每日残局与一步将死加入连续 7 天训练徽章；App Store 文案和发布安全检查继续强化。",
@@ -73,6 +74,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.51: Undo stays available in normal games even before a move is made, shows a clear message when there is nothing to undo, and remains locked for ranked, Pro League, LAN, and AI-thinking states.",
 "v1.0.50: App Store, iOS display name, PWA, privacy policy, and player share branding were updated to MateQuest Chess for a more marketable launch identity.",
 "v1.0.49: the App Store build now uses the iPhone camera for Scan to Join LAN QR codes, while the web build keeps the paste-link or room-code flow.",
 "v1.0.48: safe cloud profiles now include rank, achievements, Pro League points, and daily training progress; Daily Endgame and Mate-in-One now feed a 7-day training badge; App Store copy and release safety checks were strengthened.",
@@ -1257,6 +1259,7 @@ aiThinking: "AI 正在思考...",
 aiMove: "AI：{san}",
 newGameStarted: "新对局已开始",
 undoNotice: "已撤回一步",
+undoEmpty: "还没有可悔的走法。",
 copied: "{label}已复制",
 copyBlocked: "浏览器阻止了复制，请手动选中文本",
 needFen: "请输入 FEN",
@@ -1974,6 +1977,7 @@ aiThinking: "AI is thinking...",
 aiMove: "AI: {san}",
 newGameStarted: "New game started",
 undoNotice: "Move undone",
+undoEmpty: "There is no move to undo yet.",
 copied: "{label} copied",
 copyBlocked: "The browser blocked copying. Select the text manually.",
 needFen: "Enter a FEN first",
@@ -7277,7 +7281,7 @@ professionalLeagueModeEnabled ||
 (isLanConnected() && !canPlayLanMove());
 els.tutorialBtn.disabled = aiThinking || Boolean(pendingPromotion);
 els.undoBtn.disabled =
-game.history().length === 0 || aiThinking || isLanConnected() || rankedModeEnabled || professionalLeagueModeEnabled;
+aiThinking || isLanConnected() || rankedModeEnabled || professionalLeagueModeEnabled;
 els.fenInput.value = game.fen();
 renderMusicButton();
 renderAiPanel();
@@ -8568,6 +8572,11 @@ return;
 }
 if (professionalLeagueModeEnabled) {
 setNotice(t("professionalLeagueNoUndo"));
+return;
+}
+if (!game.history().length) {
+setNotice(t("undoEmpty"));
+renderStatus();
 return;
 }
 stopAiThinking();
