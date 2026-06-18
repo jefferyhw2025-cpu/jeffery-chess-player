@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.49";
+const appVersion = "1.0.50";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.50：App Store、iOS 显示名、PWA、隐私政策和玩家共享版品牌名更新为 MateQuest Chess，更适合正式上线与社交媒体推广。",
 "v1.0.49：App Store 版“扫码加入”接入 iPhone 摄像头，可直接扫描局域网房间二维码；网页版继续保留粘贴链接或输入房间码的方式。",
 "v1.0.48：云端安全档案现在包含段位、成就、职业联赛积分和每日训练进度；每日残局与一步将死加入连续 7 天训练徽章；App Store 文案和发布安全检查继续强化。",
 "v1.0.47：App Store 版新增独立局域网模式按钮：创建房间、加入附近房间、扫码加入和输入房间码；网页版保持原有局域网入口。",
@@ -72,6 +73,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.50: App Store, iOS display name, PWA, privacy policy, and player share branding were updated to MateQuest Chess for a more marketable launch identity.",
 "v1.0.49: the App Store build now uses the iPhone camera for Scan to Join LAN QR codes, while the web build keeps the paste-link or room-code flow.",
 "v1.0.48: safe cloud profiles now include rank, achievements, Pro League points, and daily training progress; Daily Endgame and Mate-in-One now feed a 7-day training badge; App Store copy and release safety checks were strengthened.",
 "v1.0.47: added App Store-only LAN mode buttons for Create Room, Join Nearby, Scan to Join, and Enter Room Code while keeping the web LAN controls separate.",
@@ -198,6 +200,7 @@ const safeAccountProfileStorageKey = "local-chess-safe-account-profile-v1";
 const tutorialLessonStorageKey = "local-chess-tutorial-lessons-v1";
 const profileBackupStorageKey = "local-chess-profile-backup-v1";
 const profileExportReminderStorageKey = "local-chess-profile-export-reminder-v1";
+const profilePayloadTypes = new Set(["matequest-chess-profile", "jeffery-chess-profile"]);
 const onlineRankMigrationStorageKey = "local-chess-online-rank-migration-v1";
 const volumeSettingsStorageKey = "local-chess-volume-settings-v1";
 const leagueSeasonRewardStorageKey = "local-chess-league-season-rewards-v1";
@@ -614,7 +617,7 @@ feedbackBackupText: "如果当前线路无法发送，可复制反馈内容，�
 feedbackBackupCopy: "复制反馈内容",
 feedbackBackupMail: "用邮箱发送",
 feedbackBackupCopied: "反馈内容已复制，可粘贴到邮箱或聊天工具发送。",
-feedbackBackupSubject: "Jeffery Chess 玩家反馈",
+feedbackBackupSubject: "MateQuest Chess 玩家反馈",
 playerProfileButton: "档案",
 playerProfileButtonAria: "打开玩家档案",
 playerProfileLabel: "玩家档案",
@@ -1331,7 +1334,7 @@ feedbackBackupText: "If this route cannot send, copy the feedback or open mail a
 feedbackBackupCopy: "Copy Feedback",
 feedbackBackupMail: "Send by Email",
 feedbackBackupCopied: "Feedback copied. You can paste it into mail or chat.",
-feedbackBackupSubject: "Jeffery Chess Player Feedback",
+feedbackBackupSubject: "MateQuest Chess Player Feedback",
 playerProfileButton: "Profile",
 playerProfileButtonAria: "Open player profile",
 playerProfileLabel: "Player Profile",
@@ -3687,7 +3690,7 @@ setNotice(t("realBoardOpened"));
 }
 }
 async function copyRealBoardPosition() {
-const payload = `Jeffery Chess real-board practice\n${game.fen()}`;
+const payload = `MateQuest Chess real-board practice\n${game.fen()}`;
 try {
 await navigator.clipboard.writeText(payload);
 setNotice(t("realBoardCopied"));
@@ -3719,7 +3722,7 @@ const fen = typeof game?.fen === "function" ? game.fen() : "";
 const pgn = typeof game?.pgn === "function" ? game.pgn() : "";
 const labels = currentLanguage === "en"
 ? {
-title: "Jeffery Chess feedback",
+title: "MateQuest Chess feedback",
 kind: "Type",
 account: "Account",
 language: "Language",
@@ -3731,7 +3734,7 @@ message: "Message",
 empty: "(empty)",
 }
 : {
-title: "Jeffery Chess 玩家反馈",
+title: "MateQuest Chess 玩家反馈",
 kind: "类型",
 account: "账号",
 language: "语言",
@@ -4774,7 +4777,7 @@ const cleanName = (account?.name || "guest")
 .replace(/[^a-z0-9\u4e00-\u9fff_-]+/gi, "-")
 .replace(/^-+|-+$/g, "")
 .slice(0, 32) || "guest";
-return `jeffery-chess-profile-${cleanName}-v${appVersion}.json`;
+return `matequest-chess-profile-${cleanName}-v${appVersion}.json`;
 }
 function collectProfileExportData() {
 const data = {};
@@ -4785,7 +4788,7 @@ data[key] = window.localStorage.getItem(key);
 }
 }
 return {
-type: "jeffery-chess-profile",
+type: "matequest-chess-profile",
 version: 1,
 appVersion,
 exportedAt: new Date().toISOString(),
@@ -4831,7 +4834,7 @@ for (const key of safeProfileExportStorageKeys()) {
 copyStoredValue(data, key);
 }
 return {
-type: "jeffery-chess-profile",
+type: "matequest-chess-profile",
 version: 2,
 exportKind: "safe-player-profile",
 appVersion,
@@ -4879,7 +4882,7 @@ els.profileImportInput.click();
 function importPlayerProfilePayload(payload) {
 if (
 !payload ||
-payload.type !== "jeffery-chess-profile" ||
+!profilePayloadTypes.has(payload.type) ||
 !payload.data ||
 typeof payload.data !== "object"
 ) {
@@ -4919,7 +4922,7 @@ return count;
 function profileImportSummary(payload) {
 if (
 !payload ||
-payload.type !== "jeffery-chess-profile" ||
+!profilePayloadTypes.has(payload.type) ||
 !payload.data ||
 typeof payload.data !== "object"
 ) {
