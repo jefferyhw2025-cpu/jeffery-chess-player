@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.47";
+const appVersion = "1.0.48";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.48：云端安全档案现在包含段位、成就、职业联赛积分和每日训练进度；每日残局与一步将死加入连续 7 天训练徽章；App Store 文案和发布安全检查继续强化。",
 "v1.0.47：App Store 版新增独立局域网模式按钮：创建房间、加入附近房间、扫码加入和输入房间码；网页版保持原有局域网入口。",
 "v1.0.46：修复每日残局中可能出现“兵吃国王”的非法局面，并阻止训练/FEN 载入可吃国王的位置。",
 "v1.0.45：每日残局和一步将死会按本地日期自动轮换，同一天固定同一题，第二天换新题。",
@@ -70,6 +71,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.48: safe cloud profiles now include rank, achievements, Pro League points, and daily training progress; Daily Endgame and Mate-in-One now feed a 7-day training badge; App Store copy and release safety checks were strengthened.",
 "v1.0.47: added App Store-only LAN mode buttons for Create Room, Join Nearby, Scan to Join, and Enter Room Code while keeping the web LAN controls separate.",
 "v1.0.46: fixed an illegal daily endgame that could allow a pawn to capture the king, and blocked training/FEN positions that allow king captures.",
 "v1.0.45: daily endgame and mate-in-one puzzles now rotate by local date, staying fixed for the day and changing tomorrow.",
@@ -189,6 +191,8 @@ const professionalLeagueModeStorageKey = "local-chess-professional-league-mode-v
 const dailyTaskStorageKey = "local-chess-daily-tasks-v1";
 const dailyStarsStorageKey = "local-chess-daily-stars-v1";
 const dailyStreakStorageKey = "local-chess-daily-streak-v1";
+const dailyTrainingStorageKey = "local-chess-daily-training-v1";
+const safeAccountProfileStorageKey = "local-chess-safe-account-profile-v1";
 const tutorialLessonStorageKey = "local-chess-tutorial-lessons-v1";
 const profileBackupStorageKey = "local-chess-profile-backup-v1";
 const profileExportReminderStorageKey = "local-chess-profile-export-reminder-v1";
@@ -290,6 +294,20 @@ target: 1,
 reward: 2,
 zh: { title: "无提示胜利", detail: "不使用提示赢 1 局 AI。" },
 en: { title: "No-Hint Win", detail: "Win 1 AI game without using a hint." },
+},
+{
+id: "daily-endgame-clear",
+target: 1,
+reward: 1,
+zh: { title: "完成每日残局", detail: "今天完成每日残局训练。" },
+en: { title: "Clear Daily Endgame", detail: "Finish today's Daily Endgame." },
+},
+{
+id: "mate-one-clear",
+target: 1,
+reward: 1,
+zh: { title: "完成一步将死", detail: "今天完成一步将死训练。" },
+en: { title: "Clear Mate-in-One", detail: "Finish today's Mate-in-One." },
 },
 ];
 const dailyEndgamePuzzles = [
@@ -425,6 +443,12 @@ id: "league-champion",
 badge: "♕",
 zh: { title: "联赛冠军", detail: "职业联赛赛季排名第一。" },
 en: { title: "League Champion", detail: "Reach rank #1 in a Professional League season." },
+},
+{
+id: "seven-day-trainer",
+badge: "7",
+zh: { title: "七日训练王", detail: "连续 7 天完成每日残局和一步将死。" },
+en: { title: "7-Day Trainer", detail: "Finish Daily Endgame and Mate-in-One for 7 days in a row." },
 },
 ];
 const rankTiers = {
@@ -626,6 +650,13 @@ dailyTaskUnlocked: "每日任务完成：{title} +{count} 训练星",
 dailyStreak: "连续 {count} 天",
 dailyStreakEmpty: "连续 0 天",
 dailyRewardToast: "{title} +{count} 训练星",
+dailyTrainingStreakTitle: "每日残局连胜",
+dailyTrainingStreakDetail: "每天完成“每日残局”和“一步将死”两项，连续 7 天获得专属徽章。",
+dailyTrainingStreakProgress: "今日 {done}/{total} · 连续 {count} 天",
+dailyTrainingStreakComplete: "今日训练已完成 · 连续 {count} 天",
+dailyTrainingStreakUnlocked: "连续训练第 {count} 天，七日训练王徽章已解锁。",
+dailyTrainingEndgameComplete: "每日残局完成。",
+dailyTrainingMateComplete: "一步将死完成。",
 profileOpenAchievements: "查看成就",
 profileOpenRank: "查看段位",
 profileExport: "导出档案",
@@ -635,7 +666,7 @@ profileRealBoard: "真实棋盘",
 profileCloudBackup: "同步云端",
 profileCloudRestore: "恢复云端",
 profileCloudIdle: "登录后可把安全档案同步到云端。",
-profileCloudReady: "云端备份使用安全档案，不包含密码、反馈或私人临时资料。",
+profileCloudReady: "云端备份会保存段位、成就、职业联赛积分和每日训练，不包含密码、反馈或私人临时资料。",
 profileCloudNeedAccount: "请先登录或注册，再使用云端备份。",
 profileCloudSaving: "正在同步安全档案到云端...",
 profileCloudSaved: "云端备份已保存。",
@@ -652,7 +683,7 @@ profileExportDone: "玩家档案已导出。",
 profileImportDone: "玩家档案已导入，正在重新载入。",
 profileImportBad: "这个档案文件无法导入。",
 profileImportPreviewTitle: "导入前确认",
-profileImportPreviewText: "将恢复：段位 {rank} 分、成就 {achievements} 个、职业联赛 {league} 分、账号 {accounts} 个、{game}。",
+profileImportPreviewText: "将恢复：段位 {rank} 分、成就 {achievements} 个、职业联赛 {league} 分、连续训练 {training} 天、账号 {accounts} 个、{game}。",
 profileImportHasGame: "包含未完成棋局",
 profileImportNoGame: "没有棋局",
 profileImportConfirm: "确认导入",
@@ -1331,6 +1362,13 @@ dailyTaskUnlocked: "Daily task complete: {title} +{count} training stars",
 dailyStreak: "{count}-day streak",
 dailyStreakEmpty: "0-day streak",
 dailyRewardToast: "{title} +{count} training stars",
+dailyTrainingStreakTitle: "Daily Puzzle Streak",
+dailyTrainingStreakDetail: "Finish both Daily Endgame and Mate-in-One each day. A 7-day streak unlocks a special badge.",
+dailyTrainingStreakProgress: "Today {done}/{total} · {count}-day streak",
+dailyTrainingStreakComplete: "Today's training complete · {count}-day streak",
+dailyTrainingStreakUnlocked: "Training streak day {count}: 7-Day Trainer badge unlocked.",
+dailyTrainingEndgameComplete: "Daily Endgame complete.",
+dailyTrainingMateComplete: "Mate-in-One complete.",
 profileOpenAchievements: "View Achievements",
 profileOpenRank: "View Rank",
 profileExport: "Export Profile",
@@ -1340,7 +1378,7 @@ profileRealBoard: "Real Board",
 profileCloudBackup: "Cloud Backup",
 profileCloudRestore: "Restore Cloud",
 profileCloudIdle: "Log in to sync a safe profile backup to the cloud.",
-profileCloudReady: "Cloud backup uses the safe profile only; no passwords, feedback, or private temporary data.",
+profileCloudReady: "Cloud backup saves rank, achievements, Pro League points, and daily training, with no passwords, feedback, or private temporary data.",
 profileCloudNeedAccount: "Log in or register before using cloud backup.",
 profileCloudSaving: "Syncing safe profile to the cloud...",
 profileCloudSaved: "Cloud backup saved.",
@@ -1357,7 +1395,7 @@ profileExportDone: "Player profile exported.",
 profileImportDone: "Player profile imported. Reloading.",
 profileImportBad: "This profile file cannot be imported.",
 profileImportPreviewTitle: "Confirm Import",
-profileImportPreviewText: "This will restore: {rank} rank points, {achievements} achievements, {league} Pro League points, {accounts} accounts, and {game}.",
+profileImportPreviewText: "This will restore: {rank} rank points, {achievements} achievements, {league} Pro League points, a {training}-day training streak, {accounts} accounts, and {game}.",
 profileImportHasGame: "a saved game",
 profileImportNoGame: "no saved game",
 profileImportConfirm: "Import These",
@@ -2623,6 +2661,9 @@ let profileActivity = loadProfileActivity();
 let dailyStars = loadDailyStars();
 let dailyProgress = loadDailyProgress();
 let dailyStreak = loadDailyStreak();
+let dailyTraining = loadDailyTraining();
+let activeTrainingMode = "";
+let activeTrainingPuzzleId = "";
 let recordedProfileOutcome = null;
 let currentGameUsedTip = false;
 let recordedResult = null;
@@ -2638,6 +2679,7 @@ let volumeSettings = loadVolumeSettings();
 let onlineLeagueEntries = [];
 let onlineLeagueSeason = null;
 let onlineLeagueMyRank = null;
+let onlineLeagueReward = null;
 let onlineLeagueStatus = "idle";
 function opposite(color) {
 return color === "w" ? "b" : "w";
@@ -2727,6 +2769,62 @@ return account.professionalLeague;
 }
 function currentLeagueStats() {
 return ensureAccountLeagueStats(currentAccount());
+}
+function safeAccountProfileStorageId(accountId = currentAccountId || "guest") {
+return `${safeAccountProfileStorageKey}:${accountId || "guest"}`;
+}
+function createSafeAccountSnapshot() {
+const account = currentAccount();
+return {
+accountId: currentAccountId || "guest",
+displayName: cleanPlayerDisplayName(account?.name || "Guest"),
+rankPoints: Math.max(0, Math.floor(Number(rankPoints)) || 0),
+professionalLeague: normalizeLeagueStats(account?.professionalLeague ?? currentLeagueStats()),
+dailyTraining: normalizeDailyTraining(dailyTraining),
+profileActivity: normalizeProfileActivity(profileActivity),
+savedAt: new Date().toISOString(),
+};
+}
+function applySafeAccountSnapshot(snapshot = {}) {
+if (!snapshot || typeof snapshot !== "object") {
+return false;
+}
+const account = currentAccount();
+const safeRankPoints = Math.max(0, Math.floor(Number(snapshot.rankPoints)) || 0);
+const safeLeague = normalizeLeagueStats(snapshot.professionalLeague ?? {});
+if (account) {
+account.rankPoints = Math.max(Math.floor(Number(account.rankPoints)) || 0, safeRankPoints);
+account.professionalLeague = {
+...safeLeague,
+points: Math.max(safeLeague.points, ensureAccountLeagueStats(account).points),
+games: Math.max(safeLeague.games, ensureAccountLeagueStats(account).games),
+wins: Math.max(safeLeague.wins, ensureAccountLeagueStats(account).wins),
+draws: Math.max(safeLeague.draws, ensureAccountLeagueStats(account).draws),
+losses: Math.max(safeLeague.losses, ensureAccountLeagueStats(account).losses),
+updatedAt: safeLeague.updatedAt || ensureAccountLeagueStats(account).updatedAt,
+};
+account.updatedAt = new Date().toISOString();
+saveAccounts();
+}
+if (safeRankPoints > rankPoints) {
+rankPoints = safeRankPoints;
+saveRankPoints();
+}
+if (snapshot.dailyTraining) {
+const restored = normalizeDailyTraining(snapshot.dailyTraining);
+if (restored.streak > currentDailyTrainingStreakCount()) {
+dailyTraining = restored;
+saveDailyTraining();
+}
+}
+if (snapshot.profileActivity) {
+const restoredActivity = normalizeProfileActivity(snapshot.profileActivity);
+if (restoredActivity.completedGames > profileActivity.completedGames) {
+profileActivity = restoredActivity;
+saveProfileActivity();
+}
+}
+return true;
 }
 function normalizeAccountId(name) {
 return name.trim().toLowerCase();
@@ -2828,6 +2926,8 @@ return [
 `${dailyStarsStorageKey}:${accountId}`,
 `${dailyTaskStorageKey}:${accountId}`,
 `${dailyStreakStorageKey}:${accountId}`,
+`${dailyTrainingStorageKey}:${accountId}`,
+`${safeAccountProfileStorageKey}:${accountId}`,
 `${tutorialLessonStorageKey}:${accountId}`,
 `${mistakeBookStorageKey}:${accountId}`,
 `${onlineRankMigrationStorageKey}:${accountId}`,
@@ -3225,6 +3325,9 @@ window.localStorage.setItem(dailyStarsStorageId(), String(dailyStars));
 function dailyStreakStorageId() {
 return `${dailyStreakStorageKey}:${currentAccountId || "guest"}`;
 }
+function dailyTrainingStorageId() {
+return `${dailyTrainingStorageKey}:${currentAccountId || "guest"}`;
+}
 function createDailyStreak() {
 return { count: 0, lastDate: "" };
 }
@@ -3251,6 +3354,109 @@ try {
 window.localStorage.setItem(dailyStreakStorageId(), JSON.stringify(normalizeDailyStreak(dailyStreak)));
 } catch (error) {
 }
+}
+function createDailyTrainingProgress() {
+return {
+streak: 0,
+lastCompletedDate: "",
+days: {},
+};
+}
+function normalizeDailyTrainingDay(day = {}, dateKey = todayKey()) {
+const endgamePuzzle = currentDailyEndgamePuzzle(dateKey);
+const matePuzzle = currentMateInOnePuzzle(dateKey);
+return {
+endgame: Boolean(day.endgame),
+mate: Boolean(day.mate),
+completed: Boolean(day.completed),
+puzzles: {
+endgame: String(day.puzzles?.endgame || endgamePuzzle.id || ""),
+mate: String(day.puzzles?.mate || matePuzzle.id || ""),
+},
+};
+}
+function normalizeDailyTraining(progress = {}) {
+const fresh = createDailyTrainingProgress();
+const days = progress.days && typeof progress.days === "object" && !Array.isArray(progress.days)
+? progress.days
+: {};
+const normalizedDays = {};
+const sortedDates = Object.keys(days)
+.filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date))
+.sort()
+.slice(-21);
+for (const date of sortedDates) {
+normalizedDays[date] = normalizeDailyTrainingDay(days[date], date);
+}
+return {
+streak: Math.max(0, Math.floor(Number(progress.streak)) || 0),
+lastCompletedDate: /^\d{4}-\d{2}-\d{2}$/.test(progress.lastCompletedDate) ? progress.lastCompletedDate : "",
+days: normalizedDays,
+};
+}
+function loadDailyTraining() {
+try {
+const saved = JSON.parse(window.localStorage.getItem(dailyTrainingStorageId()) ?? "null");
+return normalizeDailyTraining(saved ?? createDailyTrainingProgress());
+} catch (error) {
+return createDailyTrainingProgress();
+}
+}
+function saveDailyTraining() {
+try {
+window.localStorage.setItem(dailyTrainingStorageId(), JSON.stringify(normalizeDailyTraining(dailyTraining)));
+} catch (error) {
+}
+}
+function todayDailyTrainingDay() {
+dailyTraining = normalizeDailyTraining(dailyTraining);
+const today = todayKey();
+dailyTraining.days[today] = normalizeDailyTrainingDay(dailyTraining.days[today], today);
+return dailyTraining.days[today];
+}
+function currentDailyTrainingStreakCount() {
+dailyTraining = normalizeDailyTraining(dailyTraining);
+const today = todayKey();
+if (dailyTraining.lastCompletedDate === today || dailyTraining.lastCompletedDate === previousDateKey(today)) {
+return dailyTraining.streak;
+}
+return 0;
+}
+function advanceDailyTrainingStreakIfReady() {
+const today = todayKey();
+const day = todayDailyTrainingDay();
+if (!day.endgame || !day.mate || day.completed) {
+return false;
+}
+const previous = previousDateKey(today);
+day.completed = true;
+const previousStreak = Math.max(0, Math.floor(Number(dailyTraining.streak)) || 0);
+dailyTraining.streak = dailyTraining.lastCompletedDate === previous ? previousStreak + 1 : 1;
+dailyTraining.lastCompletedDate = today;
+saveDailyTraining();
+if (dailyTraining.streak >= 7) {
+unlockAchievement("seven-day-trainer");
+setNotice(t("dailyTrainingStreakUnlocked", { count: dailyTraining.streak }));
+}
+return true;
+}
+function recordDailyTrainingCompletion(kind) {
+const day = todayDailyTrainingDay();
+const key = kind === "mate-one" ? "mate" : "endgame";
+if (day[key]) {
+renderDailyTasks();
+return false;
+}
+day[key] = true;
+if (kind === "mate-one") {
+updateDailyTask("mate-one-clear", 1);
+} else {
+updateDailyTask("daily-endgame-clear", 1);
+}
+advanceDailyTrainingStreakIfReady();
+saveDailyTraining();
+renderDailyTasks();
+return true;
 }
 function tutorialLessonStorageId() {
 return `${tutorialLessonStorageKey}:${currentAccountId || "guest"}`;
@@ -3810,6 +4016,21 @@ return { achievementId: "league-top-three", badge: "△", titleKey: "leaderboard
 }
 return { achievementId: "league-participant", badge: "◇", titleKey: "leaderboardRewardParticipant" };
 }
+function normalizeOnlineLeagueReward(reward) {
+if (!reward || typeof reward !== "object") {
+return null;
+}
+if (reward.achievementId === "league-champion" || reward.tier === "champion") {
+return { achievementId: "league-champion", badge: "♕", titleKey: "leaderboardRewardChampion" };
+}
+if (reward.achievementId === "league-top-three" || reward.tier === "top-three") {
+return { achievementId: "league-top-three", badge: "△", titleKey: "leaderboardRewardTopThree" };
+}
+if (reward.achievementId === "league-participant" || reward.tier === "participant") {
+return { achievementId: "league-participant", badge: "◇", titleKey: "leaderboardRewardParticipant" };
+}
+return null;
+}
 function leagueRewardStorageId(seasonId = currentLeagueSeason().id) {
 return `${leagueSeasonRewardStorageKey}:${currentAccountId || getOnlinePlayerId()}:${seasonId}`;
 }
@@ -3835,7 +4056,7 @@ function applyLeagueSeasonReward({ notify = false } = {}) {
 if (!onlineLeagueMyRank?.rank || !currentAccountId) {
 return null;
 }
-const reward = leagueSeasonRewardForRank(onlineLeagueMyRank.rank);
+const reward = normalizeOnlineLeagueReward(onlineLeagueReward) ?? leagueSeasonRewardForRank(onlineLeagueMyRank.rank);
 if (!reward) {
 return null;
 }
@@ -3875,6 +4096,7 @@ throw new Error(result.reason || "league-leaderboard-failed");
 onlineLeagueEntries = Array.isArray(result.entries) ? result.entries : [];
 onlineLeagueSeason = result.season ?? null;
 onlineLeagueMyRank = result.myRank ?? null;
+onlineLeagueReward = result.reward ?? null;
 onlineLeagueStatus = "ready";
 applyLeagueSeasonReward({ notify: true });
 } catch (error) {
@@ -3903,6 +4125,7 @@ if (response.ok && result.ok) {
 onlineLeagueEntries = Array.isArray(result.entries) ? result.entries : onlineLeagueEntries;
 onlineLeagueSeason = result.season ?? onlineLeagueSeason;
 onlineLeagueMyRank = result.myRank ?? onlineLeagueMyRank;
+onlineLeagueReward = result.reward ?? onlineLeagueReward;
 onlineLeagueStatus = "ready";
 applyLeagueSeasonReward({ notify: true });
 renderLeaderboard();
@@ -4173,6 +4396,8 @@ recordedRankDelta,
 recordedLeagueDelta,
 recordedLeagueOutcome,
 lastRankedSettlement,
+activeTrainingMode,
+activeTrainingPuzzleId,
 savedAt: new Date().toISOString(),
 }),
 );
@@ -4230,6 +4455,8 @@ recordedLeagueOutcome = ["win", "draw", "loss"].includes(saved.recordedLeagueOut
 : null;
 lastRankedSettlement =
 saved.lastRankedSettlement && typeof saved.lastRankedSettlement === "object" ? saved.lastRankedSettlement : null;
+activeTrainingMode = ["daily-endgame", "mate-one"].includes(saved.activeTrainingMode) ? saved.activeTrainingMode : "";
+activeTrainingPuzzleId = typeof saved.activeTrainingPuzzleId === "string" ? saved.activeTrainingPuzzleId : "";
 postGameReview = recordedResult && game.isGameOver() ? buildPostGameReview(recordedResult) : null;
 lastMove = sanitizeSavedMove(saved.lastMove) ?? latestMoveMarker();
 clearSelection();
@@ -4281,6 +4508,7 @@ professionalLeagueModeStorageId(),
 dailyStarsStorageId(),
 dailyTaskStorageId(),
 dailyStreakStorageId(),
+dailyTrainingStorageId(),
 tutorialLessonStorageId(),
 onlineRankMigrationStorageId(),
 ];
@@ -4304,6 +4532,7 @@ createdAt: new Date().toISOString(),
 rankPoints: Math.max(0, Math.floor(Number(rankPoints)) || 0),
 achievements: unlockedAchievements.size,
 dailyStars: Math.max(0, Math.floor(Number(dailyStars)) || 0),
+dailyTrainingStreak: currentDailyTrainingStreakCount(),
 storage,
 };
 }
@@ -4565,7 +4794,9 @@ professionalLeagueModeStorageId(),
 dailyStarsStorageId(),
 dailyTaskStorageId(),
 dailyStreakStorageId(),
+dailyTrainingStorageId(),
 tutorialLessonStorageId(),
+safeAccountProfileStorageId(),
 mistakeBookStorageId(),
 ];
 }
@@ -4582,6 +4813,7 @@ function collectSafeProfileExportData() {
 const data = {
 [scoreStorageKey]: JSON.stringify(normalizeScore(matchScore)),
 [rankStorageKey]: String(Math.max(0, Math.floor(Number(rankPoints)) || 0)),
+[safeAccountProfileStorageId()]: JSON.stringify(createSafeAccountSnapshot()),
 };
 for (const key of safeProfileExportStorageKeys()) {
 copyStoredValue(data, key);
@@ -4595,7 +4827,9 @@ exportedAt: new Date().toISOString(),
 summary: {
 rankPoints: Math.max(0, Math.floor(Number(rankPoints)) || 0),
 achievements: unlockedAchievements.size,
+leaguePoints: Math.max(0, Math.floor(Number(currentLeagueStats().points)) || 0),
 dailyStars: Math.max(0, Math.floor(Number(dailyStars)) || 0),
+dailyTrainingStreak: currentDailyTrainingStreakCount(),
 completedGames: Math.max(0, Math.floor(Number(profileActivity.completedGames)) || 0),
 wins: Math.max(0, Math.floor(Number(profileActivity.wins)) || 0),
 hasSavedGame: Boolean(data[savedGameStorageKey]),
@@ -4644,6 +4878,15 @@ if (key.startsWith("local-chess-") && typeof value === "string") {
 window.localStorage.setItem(key, value);
 }
 }
+for (const [key, value] of Object.entries(payload.data)) {
+if (!key.startsWith(safeAccountProfileStorageKey) || typeof value !== "string") {
+continue;
+}
+try {
+applySafeAccountSnapshot(JSON.parse(value));
+} catch (error) {
+}
+}
 }
 function maxStoredAchievementCount(data) {
 let count = 0;
@@ -4675,6 +4918,7 @@ return {
 rank: Math.max(0, Math.floor(Number(payload.summary.rankPoints)) || 0),
 achievements: Math.max(0, Math.floor(Number(payload.summary.achievements)) || 0),
 league: Math.max(0, Math.floor(Number(payload.summary.leaguePoints)) || 0),
+training: Math.max(0, Math.floor(Number(payload.summary.dailyTrainingStreak)) || 0),
 accounts: 0,
 game: payload.summary.hasSavedGame ? t("profileImportHasGame") : t("profileImportNoGame"),
 };
@@ -4684,6 +4928,7 @@ const rank = Math.max(0, Math.floor(Number(data[rankStorageKey])) || 0);
 const achievements = maxStoredAchievementCount(data);
 let accountsCount = 0;
 let league = 0;
+let training = 0;
 try {
 const savedAccounts = JSON.parse(data[accountStorageKey] || "{}");
 if (savedAccounts && typeof savedAccounts === "object" && !Array.isArray(savedAccounts)) {
@@ -4698,8 +4943,18 @@ return Math.max(best, points);
 accountsCount = 0;
 league = 0;
 }
+try {
+for (const [key, value] of Object.entries(data)) {
+if (key.startsWith(dailyTrainingStorageKey)) {
+const restored = normalizeDailyTraining(JSON.parse(value));
+training = Math.max(training, restored.streak);
+}
+}
+} catch (error) {
+training = 0;
+}
 const hasGame = Boolean(data[savedGameStorageKey]);
-return { rank, achievements, league, accounts: accountsCount, game: hasGame ? t("profileImportHasGame") : t("profileImportNoGame") };
+return { rank, achievements, league, training, accounts: accountsCount, game: hasGame ? t("profileImportHasGame") : t("profileImportNoGame") };
 }
 function renderProfileImportPreview() {
 if (!els.profileImportPreview) {
@@ -4919,6 +5174,28 @@ progress.title = t("dailyTaskReward", { count: task.reward });
 item.append(badge, copy, progress);
 els.dailyList.append(item);
 }
+const trainingDay = todayDailyTrainingDay();
+const trainingDone = Number(trainingDay.endgame) + Number(trainingDay.mate);
+const trainingItem = document.createElement("article");
+trainingItem.className = "daily-task daily-training-summary";
+trainingItem.classList.toggle("is-complete", trainingDone >= 2);
+const trainingBadge = document.createElement("span");
+trainingBadge.className = "daily-task-badge";
+trainingBadge.textContent = trainingDone >= 2 ? "7" : `${trainingDone}/2`;
+const trainingCopy = document.createElement("div");
+const trainingTitle = document.createElement("strong");
+trainingTitle.textContent = t("dailyTrainingStreakTitle");
+const trainingDetail = document.createElement("p");
+trainingDetail.textContent = t("dailyTrainingStreakDetail");
+trainingCopy.append(trainingTitle, trainingDetail);
+const trainingProgress = document.createElement("span");
+trainingProgress.className = "daily-task-progress";
+const streakCount = currentDailyTrainingStreakCount();
+trainingProgress.textContent = trainingDone >= 2
+? t("dailyTrainingStreakComplete", { count: streakCount })
+: t("dailyTrainingStreakProgress", { done: trainingDone, total: 2, count: streakCount });
+trainingItem.append(trainingBadge, trainingCopy, trainingProgress);
+els.dailyList.append(trainingItem);
 }
 function showDailyReward(title, reward) {
 if (!els.dailyRewardToast) {
@@ -6246,9 +6523,15 @@ unlockAchievement("castle-keeper");
 }
 if (result.promotion) {
 unlockAchievement("promotion-star");
+if (activeTrainingMode === "daily-endgame") {
+recordDailyTrainingCompletion("daily-endgame");
+}
 }
 if (game.isCheckmate()) {
 unlockAchievement("checkmate-artist");
+if (activeTrainingMode === "mate-one") {
+recordDailyTrainingCompletion("mate-one");
+}
 }
 }
 function createAudioContext() {
@@ -8232,6 +8515,8 @@ recordedProfileOutcome = null;
 recordedRankDelta = 0;
 recordedLeagueDelta = 0;
 recordedLeagueOutcome = null;
+activeTrainingMode = "";
+activeTrainingPuzzleId = "";
 postGameReview = null;
 lastRankedSettlement = null;
 if (rankedModeEnabled && !byLan) {
@@ -8333,6 +8618,8 @@ recordedResult = null;
 recordedProfileOutcome = null;
 recordedRankDelta = 0;
 clearRecordedLeagueResult();
+activeTrainingMode = "";
+activeTrainingPuzzleId = "";
 postGameReview = null;
 lastRankedSettlement = null;
 clearRankedGameEligibility();
@@ -8361,7 +8648,7 @@ return chess.moves({ verbose: true }).some((move) => move.captured === "k");
 return true;
 }
 }
-function loadTrainingPosition(fen, noticeKey) {
+function loadTrainingPosition(fen, noticeKey, options = {}) {
 stopAiThinking();
 try {
 const preview = new Chess(fen);
@@ -8371,7 +8658,7 @@ throw new Error("unsafe-king-capture-position");
 game.load(fen);
 } catch (error) {
 setNotice(t("badFen"));
-return;
+return false;
 }
 aiEnabled = false;
 rankedModeEnabled = false;
@@ -8387,6 +8674,8 @@ recordedResult = null;
 recordedProfileOutcome = null;
 recordedRankDelta = 0;
 clearRecordedLeagueResult();
+activeTrainingMode = ["daily-endgame", "mate-one"].includes(options.mode) ? options.mode : "";
+activeTrainingPuzzleId = typeof options.puzzleId === "string" ? options.puzzleId : "";
 postGameReview = null;
 lastRankedSettlement = null;
 clearRankedGameEligibility();
@@ -8398,12 +8687,15 @@ render();
 saveCurrentGame();
 playPositionSound();
 startBackgroundMusic();
+return true;
 }
 function startDailyEndgame() {
-loadTrainingPosition(currentDailyEndgamePuzzle().fen, "dailyEndgameStarted");
+const puzzle = currentDailyEndgamePuzzle();
+loadTrainingPosition(puzzle.fen, "dailyEndgameStarted", { mode: "daily-endgame", puzzleId: puzzle.id });
 }
 function startMateInOneTraining() {
-loadTrainingPosition(currentMateInOnePuzzle().fen, "mateOneStarted");
+const puzzle = currentMateInOnePuzzle();
+loadTrainingPosition(puzzle.fen, "mateOneStarted", { mode: "mate-one", puzzleId: puzzle.id });
 }
 function toggleAi() {
 if (isLanConnected()) {
@@ -8619,7 +8911,10 @@ profileActivity = loadProfileActivity();
 dailyStars = loadDailyStars();
 dailyProgress = loadDailyProgress();
 dailyStreak = loadDailyStreak();
+dailyTraining = loadDailyTraining();
 completedTutorialLessons = loadTutorialLessons();
+activeTrainingMode = "";
+activeTrainingPuzzleId = "";
 recordedProfileOutcome = null;
 recordedRankDelta = 0;
 recordedLeagueDelta = 0;
@@ -8735,6 +9030,7 @@ profileActivity = createEmptyProfileActivity();
 dailyStars = 0;
 dailyProgress = createDailyProgress();
 dailyStreak = createDailyStreak();
+dailyTraining = createDailyTrainingProgress();
 completedTutorialLessons = new Set();
 unlockedAchievements = new Set();
 rankedModeEnabled = false;
@@ -8750,6 +9046,7 @@ saveProfileActivity();
 saveDailyStars();
 saveDailyProgress();
 saveDailyStreak();
+saveDailyTraining();
 saveTutorialLessons();
 saveRankedMode();
 saveProfessionalLeagueMode();
