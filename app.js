@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.48";
+const appVersion = "1.0.49";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.49：App Store 版“扫码加入”接入 iPhone 摄像头，可直接扫描局域网房间二维码；网页版继续保留粘贴链接或输入房间码的方式。",
 "v1.0.48：云端安全档案现在包含段位、成就、职业联赛积分和每日训练进度；每日残局与一步将死加入连续 7 天训练徽章；App Store 文案和发布安全检查继续强化。",
 "v1.0.47：App Store 版新增独立局域网模式按钮：创建房间、加入附近房间、扫码加入和输入房间码；网页版保持原有局域网入口。",
 "v1.0.46：修复每日残局中可能出现“兵吃国王”的非法局面，并阻止训练/FEN 载入可吃国王的位置。",
@@ -71,6 +72,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.49: the App Store build now uses the iPhone camera for Scan to Join LAN QR codes, while the web build keeps the paste-link or room-code flow.",
 "v1.0.48: safe cloud profiles now include rank, achievements, Pro League points, and daily training progress; Daily Endgame and Mate-in-One now feed a 7-day training badge; App Store copy and release safety checks were strengthened.",
 "v1.0.47: added App Store-only LAN mode buttons for Create Room, Join Nearby, Scan to Join, and Enter Room Code while keeping the web LAN controls separate.",
 "v1.0.46: fixed an illegal daily endgame that could allow a pawn to capture the king, and blocked training/FEN positions that allow king captures.",
@@ -903,6 +905,11 @@ lanModeCode: "输入房间码",
 lanModeNearbyReady: "请输入朋友给你的房间号，或让房主先创建房间。",
 lanModeScanPrompt: "请粘贴扫码得到的链接或房间号。",
 lanModeScanEmpty: "未输入扫码链接或房间号。",
+lanModeScanNativeStarting: "正在打开摄像头扫码...",
+lanModeScanNativeFound: "已识别二维码，正在加入房间...",
+lanModeScanNativeDenied: "无法使用摄像头。请在系统设置中允许相机权限，或改用输入房间码。",
+lanModeScanNativeUnavailable: "这台设备暂时不能使用摄像头扫码，请改用输入房间码。",
+lanModeScanNativeCancelled: "已取消扫码。",
 lanModeCodeFocus: "请输入房间码，然后点连接。",
 lanDisconnected: "未连接",
 lanConnecting: "连接中",
@@ -1615,6 +1622,11 @@ lanModeCode: "Enter Room Code",
 lanModeNearbyReady: "Enter the room code from your friend, or ask the host to create a room first.",
 lanModeScanPrompt: "Paste the scanned invite link or room code.",
 lanModeScanEmpty: "No scanned link or room code was entered.",
+lanModeScanNativeStarting: "Opening the camera scanner...",
+lanModeScanNativeFound: "QR code recognized. Joining the room...",
+lanModeScanNativeDenied: "Camera access is not available. Allow Camera in Settings, or enter the room code instead.",
+lanModeScanNativeUnavailable: "This device cannot scan with the camera right now. Enter the room code instead.",
+lanModeScanNativeCancelled: "Scan cancelled.",
 lanModeCodeFocus: "Enter a room code, then tap Connect.",
 lanDisconnected: "Offline",
 lanConnecting: "Connecting",
@@ -10089,22 +10101,60 @@ return normalizeLanRoom(url.searchParams.get("lanRoom") || "");
 return normalizeLanRoom(raw);
 }
 }
-function joinScannedLanRoom() {
-const scanned = window.prompt(t("lanModeScanPrompt"), "");
+function nativeQrScannerAvailable() {
+return Boolean(
+isIosAppBuild() &&
+window.JEFFERY_CHESS_NATIVE_QR &&
+window.webkit?.messageHandlers?.scanLanQr,
+);
+}
+function handleScannedLanRoomText(scanned, { cancelled = false } = {}) {
 const room = roomFromLanInviteText(scanned || "");
 if (!room) {
-setNotice(t(scanned === null ? "lanModeCodeFocus" : "lanModeScanEmpty"));
+setNotice(t(cancelled ? "lanModeCodeFocus" : "lanModeScanEmpty"));
 focusLanRoomInput();
-return;
+return false;
 }
 els.lanRoomInput.value = room;
+setNotice(t("lanModeScanNativeFound"));
 renderLanPanel();
 connectLan();
+return true;
+}
+function handleNativeQrScanError(reason = "") {
+if (reason === "camera-denied") {
+setNotice(t("lanModeScanNativeDenied"));
+} else if (reason === "cancelled") {
+setNotice(t("lanModeScanNativeCancelled"));
+} else {
+setNotice(t("lanModeScanNativeUnavailable"));
+}
+focusLanRoomInput();
+}
+function joinScannedLanRoom() {
+if (nativeQrScannerAvailable()) {
+setNotice(t("lanModeScanNativeStarting"));
+try {
+window.webkit.messageHandlers.scanLanQr.postMessage("scan");
+return;
+} catch (error) {
+handleNativeQrScanError("camera-unavailable");
+return;
+}
+}
+const scanned = window.prompt(t("lanModeScanPrompt"), "");
+handleScannedLanRoomText(scanned || "", { cancelled: scanned === null });
 }
 function enterLanRoomCode() {
 focusLanRoomInput();
 setNotice(t("lanModeCodeFocus"));
 }
+window.jefferyChessHandleNativeQrScan = function jefferyChessHandleNativeQrScan(scanned) {
+handleScannedLanRoomText(scanned || "");
+};
+window.jefferyChessHandleNativeQrScanError = function jefferyChessHandleNativeQrScanError(reason) {
+handleNativeQrScanError(String(reason || ""));
+};
 async function createLanRoom() {
 const room = createLanRoomCode();
 els.lanRoomInput.value = room;
