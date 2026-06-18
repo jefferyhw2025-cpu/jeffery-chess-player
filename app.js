@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.45";
+const appVersion = "1.0.46";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.46：修复每日残局中可能出现“兵吃国王”的非法局面，并阻止训练/FEN 载入可吃国王的位置。",
 "v1.0.45：每日残局和一步将死会按本地日期自动轮换，同一天固定同一题，第二天换新题。",
 "v1.0.44：LAN 页面新增可复制的房主 192.168 地址；GitHub 备用版新增局域网跳转助手，输入房主地址即可带着房间号打开可联机页面。",
 "v1.0.43：修复 LAN 页面会误触发内部检测导致局域网连接测试失败的问题，普通玩家页保持干净。",
@@ -68,6 +69,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.46: fixed an illegal daily endgame that could allow a pawn to capture the king, and blocked training/FEN positions that allow king captures.",
 "v1.0.45: daily endgame and mate-in-one puzzles now rotate by local date, staying fixed for the day and changing tomorrow.",
 "v1.0.44: added a copyable host 192.168 address on LAN pages and a LAN jump helper on the GitHub backup build.",
 "v1.0.43: fixed LAN pages triggering internal checks during normal play, preventing connection-test failures and keeping player pages clean.",
@@ -295,16 +297,16 @@ const dailyEndgamePuzzles = [
 { id: "king-pawn-c-file", fen: "8/8/2k5/2P5/2K5/8/8/8 w - - 0 1" },
 { id: "king-pawn-g-file", fen: "8/8/8/6k1/6P1/6K1/8/8 w - - 0 1" },
 { id: "king-pawn-b-file", fen: "8/8/1k6/1P6/1K6/8/8/8 w - - 0 1" },
-{ id: "king-pawn-opposition", fen: "8/8/8/4k3/3P4/4K3/8/8 w - - 0 1" },
+{ id: "king-pawn-e-block", fen: "8/8/8/4k3/4P3/4K3/8/8 w - - 0 1" },
 ];
 const mateInOnePuzzles = [
-{ id: "queen-corner-net", fen: "6k1/5Q2/6K1/8/8/8/8/8 w - - 0 1" },
-{ id: "queen-back-rank", fen: "8/8/8/8/8/6K1/5Q2/7k w - - 0 1" },
-{ id: "rook-file-mate", fen: "7k/8/6K1/8/8/8/8/5R2 w - - 0 1" },
-{ id: "queen-close-net", fen: "7k/5K2/6Q1/8/8/8/8/8 w - - 0 1" },
-{ id: "queen-edge-mate", fen: "k7/8/KQ6/8/8/8/8/8 w - - 0 1" },
-{ id: "queen-capture-mate", fen: "k7/pp6/K7/1Q6/8/8/8/8 w - - 0 1" },
-{ id: "queen-corner-close", fen: "8/8/8/8/8/1K6/2Q5/k7 w - - 0 1" },
+{ id: "queen-h-file-net", fen: "8/8/8/5Q2/5K1k/8/8/8 w - - 0 1" },
+{ id: "queen-e-file-net", fen: "4k3/8/3Q1K2/8/8/8/8/8 w - - 0 1" },
+{ id: "queen-back-rank-net", fen: "6k1/8/6K1/1Q6/8/8/8/8 w - - 0 1" },
+{ id: "queen-a-file-net", fen: "8/1Q6/8/8/k7/2K5/8/8 w - - 0 1" },
+{ id: "queen-corner-net", fen: "8/8/2Q5/8/8/8/7k/5K2 w - - 0 1" },
+{ id: "queen-g-file-net", fen: "5Q2/7k/5K2/8/8/8/8/8 w - - 0 1" },
+{ id: "queen-edge-net", fen: "k1K5/8/3Q4/8/8/8/8/8 w - - 0 1" },
 ];
 const rankThresholds = [0, 3, 6, 10, 15, 21, 28, 36, 45, 55];
 const achievementCatalog = [
@@ -8278,6 +8280,10 @@ setNotice(t("needFen"));
 return;
 }
 try {
+const preview = new Chess(fen);
+if (hasKingCaptureMove(preview)) {
+throw new Error("unsafe-king-capture-position");
+}
 game.load(fen);
 currentGameUsedTip = false;
 clearSelection();
@@ -8307,9 +8313,20 @@ scheduleAiMove();
 setNotice(t("badFen"));
 }
 }
+function hasKingCaptureMove(chess = game) {
+try {
+return chess.moves({ verbose: true }).some((move) => move.captured === "k");
+} catch (error) {
+return true;
+}
+}
 function loadTrainingPosition(fen, noticeKey) {
 stopAiThinking();
 try {
+const preview = new Chess(fen);
+if (hasKingCaptureMove(preview)) {
+throw new Error("unsafe-king-capture-position");
+}
 game.load(fen);
 } catch (error) {
 setNotice(t("badFen"));
