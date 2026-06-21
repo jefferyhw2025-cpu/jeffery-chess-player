@@ -475,6 +475,28 @@
                   </button>
                 </div>
               </article>
+              <article class="game-center-card" id="gameCenterCard" hidden>
+                <div>
+                  <p class="lan-duel-label" id="gameCenterLabel">Game Center</p>
+                  <h3 id="gameCenterTitle">互联网对战</h3>
+                  <p id="gameCenterText">App Store 版可用 Game Center 登录、随机匹配和邀请朋友。</p>
+                </div>
+                <div class="game-center-actions">
+                  <button class="action-button primary" id="gameCenterAuthBtn" type="button">
+                    <span class="button-icon">GC</span>
+                    登录 Game Center
+                  </button>
+                  <button class="action-button" id="gameCenterMatchBtn" type="button">
+                    <span class="button-icon">⚔</span>
+                    随机匹配
+                  </button>
+                  <button class="action-button" id="gameCenterDashboardBtn" type="button">
+                    <span class="button-icon">★</span>
+                    打开 Game Center
+                  </button>
+                </div>
+                <p class="game-center-status" id="gameCenterStatus">等待登录 Game Center。</p>
+              </article>
               <article class="lan-host-card" id="lanHostCard" hidden>
                 <div>
                   <p class="lan-duel-label" id="lanHostLabel">房主地址</p>
@@ -1047,7 +1069,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.51</p>
+        <p class="release-version" id="releaseVersionText">v1.0.52</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1204,7 +1226,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.51"></script>
-    <script src="./app.js?v=1.0.51"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.52"></script>
+    <script src="./app.js?v=1.0.52"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.51";
+const appVersion = "1.0.52";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.52：App Store 版新增 Game Center 互联网对战入口和原生 GameKit 桥接；网页版继续保持独立，不显示该入口。",
 "v1.0.51：普通对局的悔棋按钮不再因为开局暂无走法而灰掉；没有可悔走法时会给出清楚提示，段位赛、职业联赛、局域网和 AI 思考中仍会锁定。",
 "v1.0.50：App Store、iOS 显示名、PWA、隐私政策和玩家共享版品牌名更新为 MateQuest Chess，更适合正式上线与社交媒体推广。",
 "v1.0.49：App Store 版“扫码加入”接入 iPhone 摄像头，可直接扫描局域网房间二维码；网页版继续保留粘贴链接或输入房间码的方式。",
@@ -74,6 +75,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.52: added an App Store-only Game Center online play entry and native GameKit bridge while keeping the web build separate.",
 "v1.0.51: Undo stays available in normal games even before a move is made, shows a clear message when there is nothing to undo, and remains locked for ranked, Pro League, LAN, and AI-thinking states.",
 "v1.0.50: App Store, iOS display name, PWA, privacy policy, and player share branding were updated to MateQuest Chess for a more marketable launch identity.",
 "v1.0.49: the App Store build now uses the iPhone camera for Scan to Join LAN QR codes, while the web build keeps the paste-link or room-code flow.",
@@ -903,6 +905,22 @@ lanTitle: "局域网对战",
 lanAppModeLabel: "App 联机",
 lanAppModeTitle: "选择局域网方式",
 lanAppModeText: "App Store 版把常用联机方式放在这里；网页版继续使用下方输入框。",
+gameCenterLabel: "Game Center",
+gameCenterTitle: "互联网对战",
+gameCenterText: "App Store 版可用 Apple Game Center 登录、随机匹配和邀请朋友；网页版保持独立。",
+gameCenterAuth: "登录 Game Center",
+gameCenterMatch: "随机匹配",
+gameCenterDashboard: "打开 Game Center",
+gameCenterStatusIdle: "等待登录 Game Center。",
+gameCenterStatusAuthenticating: "正在请求 Game Center 登录...",
+gameCenterStatusAuthenticated: "已登录：{player}",
+gameCenterStatusAuthRequired: "需要先登录 Game Center。",
+gameCenterStatusMatchmaker: "已打开 Game Center 匹配界面。",
+gameCenterStatusMatchReady: "匹配成功，正在准备对局。",
+gameCenterStatusDashboard: "已打开 Game Center 面板。",
+gameCenterStatusCancelled: "已取消 Game Center 操作。",
+gameCenterStatusFailed: "Game Center 操作失败：{reason}",
+gameCenterStatusUnavailable: "当前设备暂时不能使用 Game Center：{reason}",
 lanModeCreate: "创建房间",
 lanModeNearby: "加入附近房间",
 lanModeScan: "扫码加入",
@@ -1621,6 +1639,22 @@ lanTitle: "LAN Match",
 lanAppModeLabel: "App LAN",
 lanAppModeTitle: "Choose a LAN Mode",
 lanAppModeText: "The App Store build keeps common LAN actions here. The web build keeps using the room-code controls below.",
+gameCenterLabel: "Game Center",
+gameCenterTitle: "Online Play",
+gameCenterText: "The App Store build can use Apple Game Center for sign-in, matchmaking, and friend invites. The web build stays separate.",
+gameCenterAuth: "Sign In to Game Center",
+gameCenterMatch: "Quick Match",
+gameCenterDashboard: "Open Game Center",
+gameCenterStatusIdle: "Waiting for Game Center sign-in.",
+gameCenterStatusAuthenticating: "Requesting Game Center sign-in...",
+gameCenterStatusAuthenticated: "Signed in: {player}",
+gameCenterStatusAuthRequired: "Sign in to Game Center first.",
+gameCenterStatusMatchmaker: "Game Center matchmaking is open.",
+gameCenterStatusMatchReady: "Match found. Preparing the game.",
+gameCenterStatusDashboard: "Game Center dashboard opened.",
+gameCenterStatusCancelled: "Game Center action cancelled.",
+gameCenterStatusFailed: "Game Center action failed: {reason}",
+gameCenterStatusUnavailable: "Game Center is unavailable on this device: {reason}",
 lanModeCreate: "Create Room",
 lanModeNearby: "Join Nearby",
 lanModeScan: "Scan to Join",
@@ -2420,6 +2454,14 @@ lanModeCreateLabel: document.querySelector("#lanModeCreateLabel"),
 lanModeNearbyLabel: document.querySelector("#lanModeNearbyLabel"),
 lanModeScanLabel: document.querySelector("#lanModeScanLabel"),
 lanModeCodeLabel: document.querySelector("#lanModeCodeLabel"),
+gameCenterCard: document.querySelector("#gameCenterCard"),
+gameCenterLabel: document.querySelector("#gameCenterLabel"),
+gameCenterTitle: document.querySelector("#gameCenterTitle"),
+gameCenterText: document.querySelector("#gameCenterText"),
+gameCenterAuthBtn: document.querySelector("#gameCenterAuthBtn"),
+gameCenterMatchBtn: document.querySelector("#gameCenterMatchBtn"),
+gameCenterDashboardBtn: document.querySelector("#gameCenterDashboardBtn"),
+gameCenterStatus: document.querySelector("#gameCenterStatus"),
 lanHostCard: document.querySelector("#lanHostCard"),
 lanHostLabel: document.querySelector("#lanHostLabel"),
 lanHostTitle: document.querySelector("#lanHostTitle"),
@@ -2658,6 +2700,7 @@ reconnectAttempts: 0,
 reconnectTimer: null,
 manualDisconnect: false,
 };
+let gameCenterState = { status: "idle", player: "", reason: "" };
 let lastLanCheck = null;
 let lanHostRefreshPromise = null;
 let releaseHealthState = { status: "idle", rows: [] };
@@ -6190,6 +6233,7 @@ if (!room) {
 hideLanInviteCard();
 }
 renderLanAppModeCard();
+renderGameCenterCard();
 renderLanHostCard();
 renderLanJumpCard();
 const existingDuelHref = els.lanDuelLink.getAttribute("href") || "";
@@ -6261,6 +6305,7 @@ setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
 setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
 setButtonContent(els.lanDiagnosticBtn, "?", t("lanDiagnostic"));
 renderLanAppModeCard();
+renderGameCenterCard();
 renderLanHostCard();
 renderLanJumpCard();
 els.lanShareLabel.textContent = t("lanShareLabel");
@@ -7384,7 +7429,18 @@ const isRankedLocked = rankedGameEligible && game.history().length > 0 && level 
 button.classList.toggle("is-active", isActive);
 button.disabled = aiThinking || professionalLeagueModeEnabled || isProfessionalLocked || isRankedLocked;
 button.setAttribute("aria-pressed", String(isActive));
-button.textContent = `${aiLevelDetails(level).name}${isProfessionalLocked ? " 🔒" : ""}`;
+button.replaceChildren();
+const label = document.createElement("span");
+label.className = "level-button-label";
+label.textContent = aiLevelDetails(level).name;
+button.append(label);
+if (isProfessionalLocked) {
+const lock = document.createElement("span");
+lock.className = "level-button-lock";
+lock.setAttribute("aria-hidden", "true");
+lock.textContent = "🔒";
+button.append(lock);
+}
 button.setAttribute(
 "aria-label",
 isProfessionalLocked ? t("professionalLocked") : `${t("aiLevel")} ${button.dataset.aiLevel}: ${aiLevelDetails(level).name}`,
@@ -9202,6 +9258,91 @@ els.lanModeNearbyBtn.disabled = busy;
 els.lanModeScanBtn.disabled = busy;
 els.lanModeCodeBtn.disabled = false;
 }
+function nativeGameCenterAvailable() {
+return Boolean(
+isIosAppBuild() &&
+window.JEFFERY_CHESS_GAME_CENTER &&
+window.webkit?.messageHandlers?.gameCenter,
+);
+}
+function gameCenterStatusText() {
+const reason = gameCenterState.reason || "unavailable";
+switch (gameCenterState.status) {
+case "authenticating":
+return t("gameCenterStatusAuthenticating");
+case "authenticated":
+return t("gameCenterStatusAuthenticated", { player: gameCenterState.player || "Game Center" });
+case "auth-required":
+return t("gameCenterStatusAuthRequired");
+case "matchmaker-opened":
+return t("gameCenterStatusMatchmaker");
+case "match-ready":
+return t("gameCenterStatusMatchReady");
+case "dashboard-opened":
+case "dashboard-closed":
+return t("gameCenterStatusDashboard");
+case "cancelled":
+return t("gameCenterStatusCancelled");
+case "failed":
+return t("gameCenterStatusFailed", { reason });
+case "unavailable":
+return t("gameCenterStatusUnavailable", { reason });
+default:
+return t("gameCenterStatusIdle");
+}
+}
+function renderGameCenterCard() {
+if (!els.gameCenterCard) {
+return;
+}
+const show = isIosAppBuild();
+els.gameCenterCard.hidden = !show;
+if (!show) {
+return;
+}
+const available = nativeGameCenterAvailable();
+els.gameCenterLabel.textContent = t("gameCenterLabel");
+els.gameCenterTitle.textContent = t("gameCenterTitle");
+els.gameCenterText.textContent = t("gameCenterText");
+setButtonContent(els.gameCenterAuthBtn, "GC", t("gameCenterAuth"));
+setButtonContent(els.gameCenterMatchBtn, "VS", t("gameCenterMatch"));
+setButtonContent(els.gameCenterDashboardBtn, "★", t("gameCenterDashboard"));
+els.gameCenterAuthBtn.disabled = !available || gameCenterState.status === "authenticating";
+els.gameCenterMatchBtn.disabled = !available;
+els.gameCenterDashboardBtn.disabled = !available;
+els.gameCenterStatus.textContent = available
+? gameCenterStatusText()
+: t("gameCenterStatusUnavailable", { reason: "native-bridge-unavailable" });
+}
+function postGameCenterAction(action) {
+if (!nativeGameCenterAvailable()) {
+gameCenterState = { status: "unavailable", player: "", reason: "native-bridge-unavailable" };
+renderGameCenterCard();
+setNotice(gameCenterStatusText());
+return;
+}
+if (action === "authenticate") {
+gameCenterState = { status: "authenticating", player: "", reason: "" };
+}
+renderGameCenterCard();
+try {
+window.webkit.messageHandlers.gameCenter.postMessage({ action });
+} catch (error) {
+gameCenterState = { status: "unavailable", player: "", reason: "native-post-failed" };
+renderGameCenterCard();
+setNotice(gameCenterStatusText());
+}
+}
+window.jefferyChessHandleGameCenterStatus = function jefferyChessHandleGameCenterStatus(payload = {}) {
+const status = String(payload.status || "idle");
+gameCenterState = {
+status,
+player: String(payload.player || payload.alias || ""),
+reason: String(payload.reason || ""),
+};
+renderGameCenterCard();
+setNotice(gameCenterStatusText());
+};
 function lanHostShareUrlFromCheck(check = lastLanCheck) {
 const address = Array.isArray(check?.info?.addresses) ? check.info.addresses[0] : "";
 const port = Number(check?.info?.port) || "";
@@ -10445,6 +10586,9 @@ els.lanModeCreateBtn.addEventListener("click", createLanRoom);
 els.lanModeNearbyBtn.addEventListener("click", joinNearbyLanRoom);
 els.lanModeScanBtn.addEventListener("click", joinScannedLanRoom);
 els.lanModeCodeBtn.addEventListener("click", enterLanRoomCode);
+els.gameCenterAuthBtn.addEventListener("click", () => postGameCenterAction("authenticate"));
+els.gameCenterMatchBtn.addEventListener("click", () => postGameCenterAction("match"));
+els.gameCenterDashboardBtn.addEventListener("click", () => postGameCenterAction("dashboard"));
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
 els.lanDiagnosticBtn.addEventListener("click", openLanDiagnostic);
