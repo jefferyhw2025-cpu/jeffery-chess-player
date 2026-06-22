@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.52";
+const appVersion = "1.0.53";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.53：App Store 版 Game Center 对战加入真实棋步同步；赛后新增胜负结算卡、每日训练连续奖励提示和真实棋盘摆局引导。",
 "v1.0.52：App Store 版新增 Game Center 互联网对战入口和原生 GameKit 桥接；网页版继续保持独立，不显示该入口。",
 "v1.0.51：普通对局的悔棋按钮不再因为开局暂无走法而灰掉；没有可悔走法时会给出清楚提示，段位赛、职业联赛、局域网和 AI 思考中仍会锁定。",
 "v1.0.50：App Store、iOS 显示名、PWA、隐私政策和玩家共享版品牌名更新为 MateQuest Chess，更适合正式上线与社交媒体推广。",
@@ -75,6 +76,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.53: App Store Game Center play now syncs real chess moves, with a stronger result card, daily training streak rewards, and real-board practice prompts.",
 "v1.0.52: added an App Store-only Game Center online play entry and native GameKit bridge while keeping the web build separate.",
 "v1.0.51: Undo stays available in normal games even before a move is made, shows a clear message when there is nothing to undo, and remains locked for ranked, Pro League, LAN, and AI-thinking states.",
 "v1.0.50: App Store, iOS display name, PWA, privacy policy, and player share branding were updated to MateQuest Chess for a more marketable launch identity.",
@@ -666,6 +668,7 @@ dailyTrainingStreakComplete: "今日训练已完成 · 连续 {count} 天",
 dailyTrainingStreakUnlocked: "连续训练第 {count} 天，七日训练王徽章已解锁。",
 dailyTrainingEndgameComplete: "每日残局完成。",
 dailyTrainingMateComplete: "一步将死完成。",
+dailyTrainingRealBoardPrompt: "试着用真实棋盘摆出今天这局，再练 3 分钟。",
 profileOpenAchievements: "查看成就",
 profileOpenRank: "查看段位",
 profileExport: "导出档案",
@@ -714,6 +717,15 @@ realBoardText: "把当前局面摆到真实棋盘上练 3 分钟。建议先找�
 realBoardCopy: "复制练习局面",
 realBoardCopied: "练习局面已复制，可在自己的棋谱工具或真实棋盘练习中使用。",
 realBoardOpened: "已打开真实棋盘练习。",
+resultSettlementLabel: "对局结算",
+resultSettlementWin: "漂亮胜利",
+resultSettlementLoss: "复盘再战",
+resultSettlementDraw: "稳住和棋",
+resultSettlementRank: "段位 {rank} 分",
+resultSettlementLeague: "职业联赛 {league} 分",
+resultSettlementBadges: "成就 {count}/{total}",
+resultSettlementPractice: "下一步：{advice}",
+resultSettlementRealBoard: "真实棋盘练习：摆出终局，先找王安全，再找下一步威胁。",
 releaseButtonAria: "查看版本更新",
 releaseLabel: "版本",
 releaseTitle: "更新日志",
@@ -921,6 +933,11 @@ gameCenterStatusDashboard: "已打开 Game Center 面板。",
 gameCenterStatusCancelled: "已取消 Game Center 操作。",
 gameCenterStatusFailed: "Game Center 操作失败：{reason}",
 gameCenterStatusUnavailable: "当前设备暂时不能使用 Game Center：{reason}",
+gameCenterStatusConnected: "Game Center 已连接：你执{side}。",
+gameCenterStatusWaiting: "Game Center 对局中，请等待对手走棋。",
+gameCenterStatusSent: "已发送棋步：{move}",
+gameCenterStatusReceived: "收到对手棋步：{move}",
+gameCenterStatusNotReady: "请先完成 Game Center 匹配。",
 lanModeCreate: "创建房间",
 lanModeNearby: "加入附近房间",
 lanModeScan: "扫码加入",
@@ -1188,6 +1205,7 @@ rankServerVerified: "服务器已验证：本局可以计入正式段位。",
 rankServerRejected: "服务器验证失败：本局已撤销段位分。",
 rankServerUnavailable: "服务器暂时无法验证：本局只保留为本地记录。",
 rankedInvalidLan: "局域网对局不计算段位分。",
+rankedInvalidGameCenter: "Game Center 互联网对战不计算段位分。",
 rankedInvalidNotRanked: "未开启段位赛。",
 rankedInvalidNoAi: "不是完整 AI 对局。",
 rankedInvalidHint: "本局使用过提示，所以不计分。",
@@ -1400,6 +1418,7 @@ dailyTrainingStreakComplete: "Today's training complete · {count}-day streak",
 dailyTrainingStreakUnlocked: "Training streak day {count}: 7-Day Trainer badge unlocked.",
 dailyTrainingEndgameComplete: "Daily Endgame complete.",
 dailyTrainingMateComplete: "Mate-in-One complete.",
+dailyTrainingRealBoardPrompt: "Try setting up today's position on a real board for 3 more minutes.",
 profileOpenAchievements: "View Achievements",
 profileOpenRank: "View Rank",
 profileExport: "Export Profile",
@@ -1448,6 +1467,15 @@ realBoardText: "Set up the current position on a real chess board for 3 minutes.
 realBoardCopy: "Copy Practice Position",
 realBoardCopied: "Practice position copied for your own chess tools or real-board setup.",
 realBoardOpened: "Real board practice opened.",
+resultSettlementLabel: "Result",
+resultSettlementWin: "Clean Win",
+resultSettlementLoss: "Review & Retry",
+resultSettlementDraw: "Solid Draw",
+resultSettlementRank: "Rank {rank} pts",
+resultSettlementLeague: "Pro League {league} pts",
+resultSettlementBadges: "Achievements {count}/{total}",
+resultSettlementPractice: "Next: {advice}",
+resultSettlementRealBoard: "Real-board practice: set up the final position, check king safety, then find the next threat.",
 releaseButtonAria: "View version notes",
 releaseLabel: "Version",
 releaseTitle: "Changelog",
@@ -1655,6 +1683,11 @@ gameCenterStatusDashboard: "Game Center dashboard opened.",
 gameCenterStatusCancelled: "Game Center action cancelled.",
 gameCenterStatusFailed: "Game Center action failed: {reason}",
 gameCenterStatusUnavailable: "Game Center is unavailable on this device: {reason}",
+gameCenterStatusConnected: "Game Center connected: you play {side}.",
+gameCenterStatusWaiting: "Game Center game: wait for your opponent's move.",
+gameCenterStatusSent: "Move sent: {move}",
+gameCenterStatusReceived: "Opponent move received: {move}",
+gameCenterStatusNotReady: "Finish Game Center matchmaking first.",
 lanModeCreate: "Create Room",
 lanModeNearby: "Join Nearby",
 lanModeScan: "Scan to Join",
@@ -1922,6 +1955,7 @@ rankServerVerified: "Server verified: this game can count for official rank.",
 rankServerRejected: "Server verification failed: rank points were removed.",
 rankServerUnavailable: "The server could not verify this game; it stays as a local record.",
 rankedInvalidLan: "LAN games do not change rank points.",
+rankedInvalidGameCenter: "Game Center online games do not change rank points.",
 rankedInvalidNotRanked: "Ranked mode was not enabled.",
 rankedInvalidNoAi: "This was not a complete AI game.",
 rankedInvalidHint: "A hint was used, so this game does not count.",
@@ -2262,6 +2296,12 @@ reviewTitle: document.querySelector("#reviewTitle"),
 reviewChip: document.querySelector("#reviewChip"),
 reviewSummary: document.querySelector("#reviewSummary"),
 reviewList: document.querySelector("#reviewList"),
+resultSettlementCard: document.querySelector("#resultSettlementCard"),
+resultSettlementLabel: document.querySelector("#resultSettlementLabel"),
+resultSettlementTitle: document.querySelector("#resultSettlementTitle"),
+resultSettlementScore: document.querySelector("#resultSettlementScore"),
+resultSettlementMeta: document.querySelector("#resultSettlementMeta"),
+resultSettlementPractice: document.querySelector("#resultSettlementPractice"),
 rankedSettlementCard: document.querySelector("#rankedSettlementCard"),
 rankedSettlementLabel: document.querySelector("#rankedSettlementLabel"),
 rankedSettlementTitle: document.querySelector("#rankedSettlementTitle"),
@@ -2700,7 +2740,17 @@ reconnectAttempts: 0,
 reconnectTimer: null,
 manualDisconnect: false,
 };
-let gameCenterState = { status: "idle", player: "", reason: "" };
+let gameCenterState = {
+status: "idle",
+player: "",
+reason: "",
+color: "",
+localPlayerId: "",
+remotePlayerIds: [],
+remotePlayers: [],
+connected: false,
+lastMessageId: "",
+};
 let lastLanCheck = null;
 let lanHostRefreshPromise = null;
 let releaseHealthState = { status: "idle", rows: [] };
@@ -3515,7 +3565,11 @@ updateDailyTask("mate-one-clear", 1);
 } else {
 updateDailyTask("daily-endgame-clear", 1);
 }
-advanceDailyTrainingStreakIfReady();
+const streakAdvanced = advanceDailyTrainingStreakIfReady();
+if (streakAdvanced) {
+showDailyReward(t("dailyTrainingStreakTitle"), dailyTraining.streak);
+setNotice(`${t(kind === "mate-one" ? "dailyTrainingMateComplete" : "dailyTrainingEndgameComplete")} ${t("dailyTrainingRealBoardPrompt")}`);
+}
 saveDailyTraining();
 renderDailyTasks();
 return true;
@@ -3980,12 +4034,13 @@ return amount > 0 ? `+${amount}` : String(amount);
 function rankScoreForLevel(level = aiLevel) {
 return aiRankScores[level] ?? aiRankScores[3];
 }
-function isAiRankScoredGame({ byLan = false } = {}) {
+function isAiRankScoredGame({ byLan = false, byGameCenter = false } = {}) {
 return (
 rankedModeEnabled &&
 rankedGameEligible &&
 aiEnabled &&
 !byLan &&
+!byGameCenter &&
 game.history().length > 0 &&
 !currentGameUsedTip &&
 rankedGameAiLevel === aiLevel &&
@@ -3998,20 +4053,21 @@ return "draw";
 }
 return resultColor === humanColor ? "win" : "loss";
 }
-function getAiRankDelta(resultColor, { byLan = false } = {}) {
-if (!isAiRankScoredGame({ byLan })) {
+function getAiRankDelta(resultColor, { byLan = false, byGameCenter = false } = {}) {
+if (!isAiRankScoredGame({ byLan, byGameCenter })) {
 return 0;
 }
 const scores = rankScoreForLevel(aiLevel);
 return scores[humanResultOutcome(resultColor)] ?? 0;
 }
-function isProfessionalLeagueScoredGame({ byLan = false } = {}) {
+function isProfessionalLeagueScoredGame({ byLan = false, byGameCenter = false } = {}) {
 return (
 professionalLeagueModeEnabled &&
 professionalLeagueGameEligible &&
 Boolean(currentAccount()) &&
 aiEnabled &&
 !byLan &&
+!byGameCenter &&
 game.history().length > 0
 );
 }
@@ -4196,8 +4252,8 @@ renderLeaderboard();
 onlineLeagueStatus = "offline";
 }
 }
-function recordProfessionalLeagueResult(resultColor, { byLan = false } = {}) {
-if (!isProfessionalLeagueScoredGame({ byLan })) {
+function recordProfessionalLeagueResult(resultColor, { byLan = false, byGameCenter = false } = {}) {
+if (!isProfessionalLeagueScoredGame({ byLan, byGameCenter })) {
 return "";
 }
 const outcome = humanResultOutcome(resultColor);
@@ -4227,9 +4283,12 @@ draw: signedPoints(scores.draw),
 loss: signedPoints(scores.loss),
 });
 }
-function rankedInvalidReasonKey({ byLan = false } = {}) {
+function rankedInvalidReasonKey({ byLan = false, byGameCenter = false } = {}) {
 if (byLan || isLanConnected()) {
 return "rankedInvalidLan";
+}
+if (byGameCenter || isGameCenterConnected()) {
+return "rankedInvalidGameCenter";
 }
 if (!rankedModeEnabled) {
 return "rankedInvalidNotRanked";
@@ -4262,7 +4321,7 @@ return t("rankedSettlementDraw");
 }
 function buildRankedSettlement(
 resultColor,
-{ byLan = false, rankedScored = false, requestedRankDelta = 0, appliedRankDelta = 0 } = {},
+{ byLan = false, byGameCenter = false, rankedScored = false, requestedRankDelta = 0, appliedRankDelta = 0 } = {},
 ) {
 const outcome = humanResultOutcome(resultColor);
 const points = rankedScored ? appliedRankDelta : 0;
@@ -4273,7 +4332,7 @@ rankedScored && shouldUseRankServerVerification()
 ? "rankScoreFloorNotice"
 : rankedScored
 ? "rankedSettlementReasonLocal"
-: rankedInvalidReasonKey({ byLan });
+: rankedInvalidReasonKey({ byLan, byGameCenter });
 return {
 valid: rankedScored,
 outcome,
@@ -4285,7 +4344,7 @@ verification: rankedScored ? (shouldUseRankServerVerification() ? "checking" : "
 function shouldUseRankServerVerification() {
 return window.location.protocol === "https:" && isNetlifyHost();
 }
-function rankVerificationPayload(resultColor, { byLan = false } = {}) {
+function rankVerificationPayload(resultColor, { byLan = false, byGameCenter = false } = {}) {
 return {
 appVersion,
 playerId: getOnlinePlayerId(),
@@ -4303,6 +4362,7 @@ rankedGameAiLevel,
 rankedGameHumanColor,
 usedTip: currentGameUsedTip,
 byLan,
+byGameCenter,
 professionalUnlocked: isProfessionalAiUnlocked(),
 };
 }
@@ -7153,7 +7213,7 @@ const pieceType = checkingPieces[0]?.piece.type ?? "q";
 playCheckSound(pieceType, game.isCheckmate(), checkingPieces.length, startDelay);
 }
 function isAiTurn() {
-return aiEnabled && game.turn() !== humanColor && !game.isGameOver();
+return aiEnabled && !isGameCenterConnected() && game.turn() !== humanColor && !game.isGameOver();
 }
 function renderBoard() {
 const shownFiles = orientedFiles();
@@ -7323,10 +7383,11 @@ aiThinking ||
 isAiTurn() ||
 rankedModeEnabled ||
 professionalLeagueModeEnabled ||
+(isGameCenterConnected() && !canPlayGameCenterMove()) ||
 (isLanConnected() && !canPlayLanMove());
 els.tutorialBtn.disabled = aiThinking || Boolean(pendingPromotion);
 els.undoBtn.disabled =
-aiThinking || isLanConnected() || rankedModeEnabled || professionalLeagueModeEnabled;
+aiThinking || isLanConnected() || isGameCenterConnected() || rankedModeEnabled || professionalLeagueModeEnabled;
 els.fenInput.value = game.fen();
 renderMusicButton();
 renderAiPanel();
@@ -7354,7 +7415,7 @@ const stats = currentLeagueStats();
 els.professionalLeagueBtn.classList.toggle("is-active", professionalLeagueModeEnabled);
 els.professionalLeagueBtn.setAttribute("aria-pressed", String(professionalLeagueModeEnabled));
 els.professionalLeagueBtn.setAttribute("aria-label", t("professionalLeagueAria"));
-els.professionalLeagueBtn.disabled = isLanConnected() || aiThinking;
+els.professionalLeagueBtn.disabled = isLanConnected() || isGameCenterConnected() || aiThinking;
 setButtonContent(els.professionalLeagueBtn, "♛", t("professionalLeagueMode"));
 els.professionalLeagueDetail.textContent = professionalLeagueModeEnabled
 ? t("professionalLeagueDetailOn", professionalLeagueScores)
@@ -7397,12 +7458,12 @@ els.aiTitle.textContent = aiEnabled ? t("playAs", { side: humanSide }) : t("loca
 els.aiBadge.textContent = aiThinking ? t("thinking") : aiEnabled ? t("aiPlays", { side: aiSide }) : t("off");
 els.aiBadge.classList.toggle("is-thinking", aiThinking);
 els.aiToggleBtn.classList.toggle("is-active", aiEnabled);
-els.aiToggleBtn.disabled = isLanConnected();
-els.playerSideBtn.disabled = isLanConnected();
+els.aiToggleBtn.disabled = isLanConnected() || isGameCenterConnected();
+els.playerSideBtn.disabled = isLanConnected() || isGameCenterConnected();
 els.rankedModeBtn.classList.toggle("is-active", rankedModeEnabled);
 els.rankedModeBtn.setAttribute("aria-pressed", String(rankedModeEnabled));
 els.rankedModeBtn.setAttribute("aria-label", t("rankedModeAria"));
-els.rankedModeBtn.disabled = isLanConnected() || aiThinking;
+els.rankedModeBtn.disabled = isLanConnected() || isGameCenterConnected() || aiThinking;
 setButtonContent(els.aiToggleBtn, "AI", aiEnabled ? t("disableAi") : t("enableAi"));
 setButtonContent(els.playerSideBtn, humanColor === "w" ? "♙" : "♟", t("playAs", { side: humanSide }));
 setButtonContent(els.rankedModeBtn, "★", t("rankedMode"));
@@ -7427,7 +7488,7 @@ const isActive = professionalLeagueModeEnabled ? level === 6 : level === aiLevel
 const isProfessionalLocked = !professionalLeagueModeEnabled && level === 6 && !isProfessionalAiUnlocked();
 const isRankedLocked = rankedGameEligible && game.history().length > 0 && level !== aiLevel;
 button.classList.toggle("is-active", isActive);
-button.disabled = aiThinking || professionalLeagueModeEnabled || isProfessionalLocked || isRankedLocked;
+button.disabled = aiThinking || isGameCenterConnected() || professionalLeagueModeEnabled || isProfessionalLocked || isRankedLocked;
 button.setAttribute("aria-pressed", String(isActive));
 button.replaceChildren();
 const label = document.createElement("span");
@@ -7605,6 +7666,54 @@ endgame: analysis.phaseScores.endgame,
 practiceIndex: postGamePracticeStep(outcome, analysis),
 };
 }
+function resultSettlementTitleKey(outcome) {
+if (outcome === "win") {
+return "resultSettlementWin";
+}
+if (outcome === "loss") {
+return "resultSettlementLoss";
+}
+return "resultSettlementDraw";
+}
+function buildResultSettlement() {
+if (!recordedResult) {
+return null;
+}
+const outcome = humanResultOutcome(recordedResult);
+const totalDelta = (Number(recordedRankDelta) || 0) + (Number(recordedLeagueDelta) || 0);
+const rankMeta = t("resultSettlementRank", { rank: getRankPoints() });
+const leagueMeta = t("resultSettlementLeague", { league: currentLeagueStats().points });
+const badgeMeta = t("resultSettlementBadges", {
+count: achievementUnlockedCount(),
+total: achievementCatalog.length,
+});
+const practice = postGameReview?.items?.find((item) => item.title === t("reviewNextPractice"))?.detail
+|| t("resultSettlementRealBoard");
+return {
+outcome,
+title: t(resultSettlementTitleKey(outcome)),
+score: totalDelta ? signedPoints(totalDelta) : outcome === "draw" ? "=" : outcome === "win" ? "+" : "!",
+meta: `${rankMeta} · ${leagueMeta} · ${badgeMeta}`,
+practice: t("resultSettlementPractice", { advice: practice }),
+};
+}
+function renderResultSettlementCard() {
+if (!els.resultSettlementCard) {
+return;
+}
+const settlement = buildResultSettlement();
+if (!settlement || !game.isGameOver()) {
+els.resultSettlementCard.hidden = true;
+return;
+}
+els.resultSettlementCard.hidden = false;
+els.resultSettlementCard.dataset.outcome = settlement.outcome;
+els.resultSettlementLabel.textContent = t("resultSettlementLabel");
+els.resultSettlementTitle.textContent = settlement.title;
+els.resultSettlementScore.textContent = settlement.score;
+els.resultSettlementMeta.textContent = settlement.meta;
+els.resultSettlementPractice.textContent = settlement.practice;
+}
 function renderPostGameReview() {
 if (!els.postGameReviewPanel) {
 return;
@@ -7614,6 +7723,9 @@ postGameReview = buildPostGameReview(recordedResult);
 }
 if (!postGameReview || !game.isGameOver()) {
 els.postGameReviewPanel.hidden = true;
+if (els.resultSettlementCard) {
+els.resultSettlementCard.hidden = true;
+}
 return;
 }
 els.postGameReviewPanel.hidden = false;
@@ -7621,6 +7733,7 @@ els.reviewLabel.textContent = t("reviewLabel");
 els.reviewTitle.textContent = t("reviewTitle");
 els.reviewChip.textContent = postGameReview.chip;
 els.reviewSummary.textContent = postGameReview.summary;
+renderResultSettlementCard();
 if (els.rankedSettlementCard) {
 if (lastRankedSettlement) {
 els.rankedSettlementCard.hidden = false;
@@ -7724,7 +7837,7 @@ masterNoHintWinStreak = 0;
 saveMasterNoHintWinStreak();
 return currentGameUsedTip ? t("geniusStreakHintReset") : t("geniusStreakReset");
 }
-function recordGameResult({ byAi = false, byLan = false } = {}) {
+function recordGameResult({ byAi = false, byLan = false, byGameCenter = false } = {}) {
 if (recordedResult || !game.isGameOver()) {
 return "";
 }
@@ -7733,19 +7846,20 @@ recordedResult = opposite(game.turn());
 } else {
 recordedResult = "d";
 }
-const rankedScored = isAiRankScoredGame({ byLan });
+const rankedScored = isAiRankScoredGame({ byLan, byGameCenter });
 updateMatchScore(recordedResult, 1);
 updateFriendRecord(recordedResult, 1);
-const requestedRankDelta = getAiRankDelta(recordedResult, { byLan });
+const requestedRankDelta = getAiRankDelta(recordedResult, { byLan, byGameCenter });
 recordedRankDelta = requestedRankDelta ? updateRankPoints(requestedRankDelta) : 0;
-const professionalLeagueNotice = recordProfessionalLeagueResult(recordedResult, { byLan });
+const professionalLeagueNotice = recordProfessionalLeagueResult(recordedResult, { byLan, byGameCenter });
 lastRankedSettlement = buildRankedSettlement(recordedResult, {
 byLan,
+byGameCenter,
 rankedScored,
 requestedRankDelta,
 appliedRankDelta: recordedRankDelta,
 });
-const rankedVerificationPayload = rankedScored ? rankVerificationPayload(recordedResult, { byLan }) : null;
+const rankedVerificationPayload = rankedScored ? rankVerificationPayload(recordedResult, { byLan, byGameCenter }) : null;
 const rankedVerificationPgn = rankedVerificationPayload?.pgn;
 recordedProfileOutcome = profileOutcomeForResult(recordedResult, { byLan });
 updateProfileGameResult(recordedProfileOutcome, 1);
@@ -7754,7 +7868,7 @@ savePostGameMistakeEntry(recordedResult, postGameReview);
 if (rankedScored) {
 updateDailyTask("ranked-complete", 1);
 }
-if (!byLan && aiEnabled && recordedResult === humanColor && !currentGameUsedTip) {
+if (!byLan && !byGameCenter && aiEnabled && recordedResult === humanColor && !currentGameUsedTip) {
 updateDailyTask("no-hint-ai-win", 1);
 }
 const challengeNotice = updateMasterNoHintChallenge(recordedResult, { byLan });
@@ -7765,7 +7879,7 @@ requestedRankDelta < 0 && recordedRankDelta === 0
 ? t("rankScoreFloorNotice")
 : t("rankScoreNotice", { points: signedPoints(recordedRankDelta) }),
 );
-} else if (!byLan) {
+} else if (!byLan && !byGameCenter) {
 resultNotices.push(t("rankNoAiScoreNotice"));
 }
 if (challengeNotice) {
@@ -7774,7 +7888,7 @@ resultNotices.push(challengeNotice);
 if (professionalLeagueNotice) {
 resultNotices.push(professionalLeagueNotice);
 }
-if (!byLan) {
+if (!byLan && !byGameCenter) {
 if (recordedResult === "d") {
 unlockAchievement("peace-maker");
 } else if (!byAi || recordedResult === humanColor) {
@@ -7884,6 +7998,12 @@ return;
 if (pendingPromotion || game.isGameOver() || aiThinking || isAiTurn()) {
 return;
 }
+if (isGameCenterConnected() && !canPlayGameCenterMove()) {
+clearSelection();
+renderBoard();
+setNotice(t("gameCenterStatusWaiting"));
+return;
+}
 if (isLanConnected() && lanState.color === "s") {
 setNotice(t("lanSpectatorNotice"));
 return;
@@ -7905,7 +8025,11 @@ return;
 makeMove({ from: selectedSquare, to: square });
 return;
 }
-if (piece?.color === game.turn() && (!isLanConnected() || piece.color === lanState.color)) {
+if (
+piece?.color === game.turn() &&
+(!isLanConnected() || piece.color === lanState.color) &&
+(!isGameCenterConnected() || piece.color === gameCenterState.color)
+) {
 selectSquare(square);
 return;
 }
@@ -7919,8 +8043,16 @@ return false;
 if (isLanConnected() && !canPlayLanMove()) {
 return false;
 }
+if (isGameCenterConnected() && !canPlayGameCenterMove()) {
+return false;
+}
 const piece = game.get(square);
-return Boolean(piece && piece.color === game.turn() && (!isLanConnected() || piece.color === lanState.color));
+return Boolean(
+piece &&
+piece.color === game.turn() &&
+(!isLanConnected() || piece.color === lanState.color) &&
+(!isGameCenterConnected() || piece.color === gameCenterState.color),
+);
 }
 function moveDragGhost(event) {
 if (!dragGhost) {
@@ -8016,7 +8148,7 @@ return;
 }
 makeMove({ from, to: targetSquare });
 }
-function makeMove(move, { byAi = false, byLan = false } = {}) {
+function makeMove(move, { byAi = false, byLan = false, byGameCenter = false } = {}) {
 try {
 const result = game.move(move);
 restoredSavedGameAvailable = false;
@@ -8028,16 +8160,18 @@ render();
 playMoveSound(result);
 playPositionSound(0.22);
 nativeHaptic(game.isGameOver() ? "result" : "move");
-if (!byAi && !byLan) {
+if (!byAi && !byLan && !byGameCenter) {
 trackProfileMove(result);
 trackMoveAchievements(result);
 }
-const challengeNotice = recordGameResult({ byAi, byLan });
+const challengeNotice = recordGameResult({ byAi, byLan, byGameCenter });
 saveCurrentGame();
 startBackgroundMusic();
-if (!byAi && !byLan && isLanConnected()) {
+if (!byAi && !byLan && !byGameCenter && isLanConnected()) {
 sendLanMove(result);
-} else if (!byAi && !byLan) {
+} else if (!byAi && !byLan && !byGameCenter && isGameCenterConnected()) {
+sendGameCenterMove(result);
+} else if (!byAi && !byLan && !byGameCenter) {
 scheduleAiMove();
 }
 const notice = moveNotice(result, { byAi, byLan });
@@ -8573,9 +8707,9 @@ function closePromotion() {
 pendingPromotion = null;
 els.promotionDialog.hidden = true;
 }
-function resetGame({ byLan = false } = {}) {
+function resetGame({ byLan = false, byGameCenter = false } = {}) {
 stopAiThinking();
-if ((rankedModeEnabled || professionalLeagueModeEnabled) && !byLan) {
+if ((rankedModeEnabled || professionalLeagueModeEnabled) && !byLan && !byGameCenter) {
 aiEnabled = true;
 orientation = humanColor;
 }
@@ -8594,21 +8728,21 @@ activeTrainingMode = "";
 activeTrainingPuzzleId = "";
 postGameReview = null;
 lastRankedSettlement = null;
-if (rankedModeEnabled && !byLan) {
+if (rankedModeEnabled && !byLan && !byGameCenter) {
 markRankedGameEligible();
 } else {
 clearRankedGameEligibility();
 }
-if (professionalLeagueModeEnabled && !byLan) {
+if (professionalLeagueModeEnabled && !byLan && !byGameCenter) {
 markProfessionalLeagueGameEligible();
 } else {
 clearProfessionalLeagueGameEligibility();
 }
 closePromotion();
 setNotice(
-rankedModeEnabled && !byLan
+rankedModeEnabled && !byLan && !byGameCenter
 ? t("rankedStarted")
-: professionalLeagueModeEnabled && !byLan
+: professionalLeagueModeEnabled && !byLan && !byGameCenter
 ? t("professionalLeagueStarted", professionalLeagueScores)
 : t("newGameStarted"),
 );
@@ -8617,11 +8751,17 @@ saveCurrentGame();
 startBackgroundMusic();
 if (isLanConnected() && !byLan) {
 sendLan({ type: "reset" });
-} else if (!isLanConnected()) {
+} else if (isGameCenterConnected() && !byGameCenter) {
+sendGameCenterReset();
+} else if (!isLanConnected() && !isGameCenterConnected()) {
 scheduleAiMove();
 }
 }
 function undoMove() {
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
+return;
+}
 if (rankedModeEnabled) {
 setNotice(t("rankedNoUndo"));
 return;
@@ -8675,6 +8815,10 @@ setNotice(t("copyBlocked"));
 }
 }
 function loadFen() {
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
+return;
+}
 if (rankedModeEnabled || rankedGameEligible || professionalLeagueModeEnabled || professionalLeagueGameEligible) {
 setNotice(t(rankedModeEnabled || rankedGameEligible ? "rankedNoFen" : "professionalLeagueNoFen"));
 return;
@@ -8729,6 +8873,10 @@ return true;
 }
 }
 function loadTrainingPosition(fen, noticeKey, options = {}) {
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
+return false;
+}
 stopAiThinking();
 try {
 const preview = new Chess(fen);
@@ -8782,6 +8930,10 @@ if (isLanConnected()) {
 setNotice(t("lanAiBlocked"));
 return;
 }
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
+return;
+}
 if (rankedModeEnabled && aiEnabled) {
 setNotice(t("rankedNeedsAi"));
 return;
@@ -8814,6 +8966,10 @@ if (isLanConnected()) {
 setNotice(t("professionalLeagueNoLan"));
 return;
 }
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
+return;
+}
 stopAiThinking();
 professionalLeagueModeEnabled = !professionalLeagueModeEnabled;
 saveProfessionalLeagueMode();
@@ -8835,6 +8991,10 @@ if (isLanConnected()) {
 setNotice(t("rankedNoLan"));
 return;
 }
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
+return;
+}
 stopAiThinking();
 rankedModeEnabled = !rankedModeEnabled;
 saveRankedMode();
@@ -8854,6 +9014,10 @@ scheduleAiMove();
 function togglePlayerSide() {
 if (isLanConnected()) {
 setNotice(t("lanSideBlocked"));
+return;
+}
+if (isGameCenterConnected()) {
+setNotice(t("gameCenterStatusWaiting"));
 return;
 }
 stopAiThinking();
@@ -9265,6 +9429,30 @@ window.JEFFERY_CHESS_GAME_CENTER &&
 window.webkit?.messageHandlers?.gameCenter,
 );
 }
+function gameCenterPlayerIds(payload = gameCenterState) {
+const local = String(payload.localPlayerId || "");
+const remotes = Array.isArray(payload.remotePlayerIds)
+? payload.remotePlayerIds.map((id) => String(id || "")).filter(Boolean)
+: [];
+return [local, ...remotes].filter(Boolean).sort();
+}
+function gameCenterColorForPayload(payload = gameCenterState) {
+const ids = gameCenterPlayerIds(payload);
+if (!payload.localPlayerId || ids.length < 2) {
+return payload.color || "w";
+}
+return ids[0] === payload.localPlayerId ? "w" : "b";
+}
+function isGameCenterConnected() {
+return Boolean(
+nativeGameCenterAvailable() &&
+gameCenterState.connected &&
+!["failed", "cancelled", "unavailable"].includes(gameCenterState.status),
+);
+}
+function canPlayGameCenterMove() {
+return isGameCenterConnected() && gameCenterState.color === game.turn();
+}
 function gameCenterStatusText() {
 const reason = gameCenterState.reason || "unavailable";
 switch (gameCenterState.status) {
@@ -9277,7 +9465,13 @@ return t("gameCenterStatusAuthRequired");
 case "matchmaker-opened":
 return t("gameCenterStatusMatchmaker");
 case "match-ready":
-return t("gameCenterStatusMatchReady");
+return gameCenterState.color
+? t("gameCenterStatusConnected", { side: sideShortName(gameCenterState.color) })
+: t("gameCenterStatusMatchReady");
+case "message-sent":
+return t("gameCenterStatusSent", { move: gameCenterState.lastMove || "..." });
+case "message-received":
+return t("gameCenterStatusReceived", { move: gameCenterState.lastMove || "..." });
 case "dashboard-opened":
 case "dashboard-closed":
 return t("gameCenterStatusDashboard");
@@ -9314,34 +9508,149 @@ els.gameCenterStatus.textContent = available
 ? gameCenterStatusText()
 : t("gameCenterStatusUnavailable", { reason: "native-bridge-unavailable" });
 }
-function postGameCenterAction(action) {
+function postGameCenterAction(action, payload = null) {
 if (!nativeGameCenterAvailable()) {
-gameCenterState = { status: "unavailable", player: "", reason: "native-bridge-unavailable" };
+gameCenterState = { ...gameCenterState, status: "unavailable", connected: false, player: "", reason: "native-bridge-unavailable" };
 renderGameCenterCard();
 setNotice(gameCenterStatusText());
 return;
 }
 if (action === "authenticate") {
-gameCenterState = { status: "authenticating", player: "", reason: "" };
+gameCenterState = { ...gameCenterState, status: "authenticating", connected: false, player: "", reason: "" };
 }
 renderGameCenterCard();
 try {
-window.webkit.messageHandlers.gameCenter.postMessage({ action });
+window.webkit.messageHandlers.gameCenter.postMessage(payload ? { action, payload } : { action });
 } catch (error) {
-gameCenterState = { status: "unavailable", player: "", reason: "native-post-failed" };
+gameCenterState = { ...gameCenterState, status: "unavailable", connected: false, player: "", reason: "native-post-failed" };
 renderGameCenterCard();
 setNotice(gameCenterStatusText());
 }
 }
-window.jefferyChessHandleGameCenterStatus = function jefferyChessHandleGameCenterStatus(payload = {}) {
-const status = String(payload.status || "idle");
+function postGameCenterMessage(payload) {
+if (!isGameCenterConnected()) {
+setNotice(t("gameCenterStatusNotReady"));
+return false;
+}
+postGameCenterAction("send", payload);
+return true;
+}
+function sendGameCenterMove(result) {
+const payload = {
+type: "move",
+id: `gc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+appVersion,
+protocolVersion: 1,
+move: {
+from: result.from,
+to: result.to,
+promotion: result.promotion,
+},
+san: result.san,
+fen: game.fen(),
+lastMove,
+};
+postGameCenterMessage(payload);
+}
+function sendGameCenterReset() {
+postGameCenterMessage({
+type: "reset",
+id: `gc-reset-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+appVersion,
+protocolVersion: 1,
+fen: game.fen(),
+lastMove,
+});
+}
+function loadGameCenterFen(fen, last = null) {
+if (!fen) {
+return;
+}
+try {
+game.load(fen);
+currentGameUsedTip = false;
+lastMove = last;
+recordedResult = null;
+recordedProfileOutcome = null;
+recordedRankDelta = 0;
+clearRecordedLeagueResult();
+postGameReview = null;
+lastRankedSettlement = null;
+clearRankedGameEligibility();
+clearProfessionalLeagueGameEligibility();
+clearSelection();
+closePromotion();
+render();
+saveCurrentGame();
+playPositionSound(0.18);
+} catch (error) {
+}
+}
+function applyGameCenterMove(payload = {}) {
+if (!payload) {
+return;
+}
+if (payload.id && payload.id === gameCenterState.lastMessageId) {
+return;
+}
+gameCenterState.lastMessageId = String(payload.id || "");
+if (payload.type === "reset") {
+resetGame({ byGameCenter: true });
+return;
+}
+if (payload.type !== "move") {
+return;
+}
+const result = makeMove(payload.move, { byGameCenter: true });
+if (!result) {
+loadGameCenterFen(payload.fen, payload.lastMove ?? null);
+}
 gameCenterState = {
-status,
-player: String(payload.player || payload.alias || ""),
-reason: String(payload.reason || ""),
+...gameCenterState,
+status: "message-received",
+lastMove: String(payload.san || payload.move?.to || ""),
 };
 renderGameCenterCard();
 setNotice(gameCenterStatusText());
+}
+window.jefferyChessHandleGameCenterStatus = function jefferyChessHandleGameCenterStatus(payload = {}) {
+const status = String(payload.status || "idle");
+const merged = {
+...gameCenterState,
+status,
+player: String(payload.player || payload.alias || gameCenterState.player || ""),
+reason: String(payload.reason || ""),
+localPlayerId: String(payload.localPlayerId || gameCenterState.localPlayerId || ""),
+remotePlayerIds: Array.isArray(payload.remotePlayerIds)
+? payload.remotePlayerIds.map((id) => String(id || "")).filter(Boolean)
+: gameCenterState.remotePlayerIds,
+remotePlayers: Array.isArray(payload.remotePlayers) ? payload.remotePlayers : gameCenterState.remotePlayers,
+connected: status === "match-ready" ? true : gameCenterState.connected && status !== "failed" && status !== "cancelled",
+};
+merged.color = status === "match-ready" ? gameCenterColorForPayload(merged) : merged.color;
+if (status === "match-ready") {
+stopAiThinking();
+aiEnabled = false;
+rankedModeEnabled = false;
+professionalLeagueModeEnabled = false;
+saveRankedMode();
+saveProfessionalLeagueMode();
+clearRankedGameEligibility();
+clearProfessionalLeagueGameEligibility();
+orientation = merged.color || orientation;
+clearSelection();
+}
+if (status === "message-sent") {
+merged.lastMove = String(payload.move || gameCenterState.lastMove || "");
+}
+gameCenterState = {
+...merged,
+};
+renderGameCenterCard();
+setNotice(gameCenterStatusText());
+};
+window.jefferyChessHandleGameCenterMessage = function jefferyChessHandleGameCenterMessage(payload = {}) {
+applyGameCenterMove(payload);
 };
 function lanHostShareUrlFromCheck(check = lastLanCheck) {
 const address = Array.isArray(check?.info?.addresses) ? check.info.addresses[0] : "";

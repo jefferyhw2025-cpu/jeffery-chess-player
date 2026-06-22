@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=1.0.52" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.53" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -241,6 +241,15 @@
             <span class="review-chip" id="reviewChip">训练</span>
           </div>
           <p class="review-summary" id="reviewSummary"></p>
+          <section class="result-settlement-card" id="resultSettlementCard" hidden>
+            <div>
+              <p class="panel-label" id="resultSettlementLabel">对局结算</p>
+              <h3 id="resultSettlementTitle">胜负已记录</h3>
+            </div>
+            <div class="result-settlement-score" id="resultSettlementScore">0</div>
+            <p id="resultSettlementMeta">查看段位变化、徽章和复盘重点。</p>
+            <p id="resultSettlementPractice">下一局继续练习。</p>
+          </section>
           <section class="ranked-settlement-card" id="rankedSettlementCard" hidden>
             <div>
               <p class="panel-label" id="rankedSettlementLabel">段位结算</p>
@@ -1071,7 +1080,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.52</p>
+        <p class="release-version" id="releaseVersionText">v1.0.53</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1228,7 +1237,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.52"></script>
-    <script src="./app.js?v=1.0.52"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.53"></script>
+    <script src="./app.js?v=1.0.53"></script>
   </body>
 </html>
