@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.52" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -63,15 +63,17 @@
       </symbol>
     </svg>
 
-    <button class="profile-button" id="profileBtn" type="button" aria-label="玩家档案">
-      <span class="profile-button-badge" id="profileButtonBadge">♙</span>
-      <span id="profileBtnText">档案</span>
-    </button>
+    <div class="floating-action-bar" aria-label="快捷操作">
+      <button class="profile-button" id="profileBtn" type="button" aria-label="玩家档案">
+        <span class="profile-button-badge" id="profileButtonBadge">♙</span>
+        <span id="profileBtnText">档案</span>
+      </button>
 
-    <button class="feedback-button" id="feedbackBtn" type="button" aria-label="反馈">
-      <span class="button-icon">!</span>
-      <span id="feedbackBtnText">反馈</span>
-    </button>
+      <button class="feedback-button" id="feedbackBtn" type="button" aria-label="反馈">
+        <span class="button-icon">!</span>
+        <span id="feedbackBtnText">反馈</span>
+      </button>
+    </div>
 
     <button class="version-button" id="versionBtn" type="button" aria-label="查看版本更新">
       <span class="version-dot" id="versionUpdateDot" hidden></span>

@@ -2,7 +2,7 @@ const CACHE_NAME = "jeffery-chess-v1.0.52";
 const APP_SHELL = [
 "./",
 "./index.html",
-"./styles.css",
+"./styles.css?v=1.0.52",
 "./app.js",
 "./engine-worker.js",
 "./manifest.webmanifest",
