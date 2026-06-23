@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=1.0.56" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.57" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -447,6 +447,10 @@
                   <span class="button-icon">↗</span>
                   复制连接
                 </button>
+                <button class="action-button" id="lanSpectatorBtn" type="button">
+                  <span class="button-icon">◎</span>
+                  观战
+                </button>
                 <button class="action-button" id="lanCheckBtn" type="button">
                   <span class="button-icon">✓</span>
                   检测状态
@@ -484,6 +488,10 @@
                     <span class="lan-mode-icon">#</span>
                     <span id="lanModeCodeLabel">输入房间码</span>
                   </button>
+                  <button class="lan-mode-button" id="lanModeSpectatorBtn" type="button">
+                    <span class="lan-mode-icon">◎</span>
+                    <span id="lanModeSpectatorLabel">观战</span>
+                  </button>
                 </div>
               </article>
               <article class="game-center-card" id="gameCenterCard" hidden>
@@ -500,6 +508,10 @@
                   <button class="action-button" id="gameCenterMatchBtn" type="button">
                     <span class="button-icon">⚔</span>
                     随机匹配
+                  </button>
+                  <button class="action-button" id="gameCenterSpectateBtn" type="button">
+                    <span class="button-icon">◎</span>
+                    观战匹配
                   </button>
                   <button class="action-button" id="gameCenterDashboardBtn" type="button">
                     <span class="button-icon">★</span>
@@ -559,6 +571,28 @@
                   <span class="button-icon">▣</span>
                   生成对战二维码
                 </button>
+              </article>
+              <article class="lan-duel-card lan-spectator-card" id="lanSpectatorCard" hidden>
+                <div class="lan-duel-top">
+                  <div>
+                    <p class="lan-duel-label" id="lanSpectatorLabel">观战房间</p>
+                    <h3 id="lanSpectatorTitle">生成观战二维码</h3>
+                  </div>
+                  <span class="lan-duel-pill" id="lanSpectatorPill">未生成</span>
+                </div>
+                <p class="lan-duel-text" id="lanSpectatorText">观众使用不同的观战房间号加入，只能看棋，不能走棋。</p>
+                <p class="lan-duel-note" id="lanSpectatorNote">观战同样只限同一 Wi‑Fi / 同一局域网服务器。</p>
+                <p class="lan-duel-room" id="lanSpectatorRoom">观战房间号：—</p>
+                <div class="lan-duel-qr" id="lanSpectatorQr" aria-label="观战二维码"></div>
+                <a class="lan-duel-link" id="lanSpectatorLink" href="#"></a>
+                <div class="lan-qr-actions">
+                  <button class="action-button" id="lanSpectatorCopyQrBtn" type="button" disabled>
+                    复制二维码图片
+                  </button>
+                  <button class="action-button" id="lanSpectatorDownloadQrBtn" type="button" disabled>
+                    下载二维码图片
+                  </button>
+                </div>
               </article>
               <article class="lan-check-card" id="lanCheckCard" hidden>
                 <div class="lan-check-top">
@@ -1081,7 +1115,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.56</p>
+        <p class="release-version" id="releaseVersionText">v1.0.57</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1238,7 +1272,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.56"></script>
-    <script src="./app.js?v=1.0.56"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.57"></script>
+    <script src="./app.js?v=1.0.57"></script>
   </body>
 </html>

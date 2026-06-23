@@ -1,13 +1,15 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.56";
+const appVersion = "1.0.57";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
+const lanSpectatorRoomPrefix = "WATCH-";
 const lanProtocolVersion = 1;
 const lanMinimumCompatibleProtocolVersion = 1;
 const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.57：局域网新增观战房间号 WATCH- 前缀和观战二维码；App Store 版 LAN 与 Game Center 也预留观战入口，第三/第四位 Game Center 玩家会进入观战。",
 "v1.0.56：玩家提交反馈后会看到更清楚的反馈编号说明，方便保存编号并让开发者快速查找问题。",
 "v1.0.55：走不了棋时会说明原因，卡住的 AI 回合会自动重启，并新增“吃过路兵”说明，避免兵斜走空格看起来像 bug。",
 "v1.0.54：修复切换英文后段位胶囊、玩家档案和排行榜里段位名称仍显示中文的问题。",
@@ -79,6 +81,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.57: LAN now has WATCH-prefixed spectator room codes and spectator QR invites; the App Store LAN and Game Center flows also include spectator entry, with third/fourth Game Center players watching.",
 "v1.0.56: player feedback now explains the feedback ID more clearly so players can save it and the developer can find the report faster.",
 "v1.0.55: move blocks now explain why, stuck AI turns restart automatically, and en passant pawn captures are explained clearly.",
 "v1.0.54: fixed rank labels staying in Chinese after switching to English, including the rank chip, player profile, and leaderboards.",
@@ -926,9 +929,10 @@ lanAppModeTitle: "选择局域网方式",
 lanAppModeText: "App Store 版把常用联机方式放在这里；网页版继续使用下方输入框。",
 gameCenterLabel: "Game Center",
 gameCenterTitle: "互联网对战",
-gameCenterText: "App Store 版可用 Apple Game Center 登录、随机匹配和邀请朋友；网页版保持独立。",
+gameCenterText: "App Store 版可用 Apple Game Center 登录、随机匹配和邀请朋友；3-4 人同场时，第三/第四位会观战。",
 gameCenterAuth: "登录 Game Center",
 gameCenterMatch: "随机匹配",
+gameCenterSpectate: "观战匹配",
 gameCenterDashboard: "打开 Game Center",
 gameCenterStatusIdle: "等待登录 Game Center。",
 gameCenterStatusAuthenticating: "正在请求 Game Center 登录...",
@@ -941,6 +945,7 @@ gameCenterStatusCancelled: "已取消 Game Center 操作。",
 gameCenterStatusFailed: "Game Center 操作失败：{reason}",
 gameCenterStatusUnavailable: "当前设备暂时不能使用 Game Center：{reason}",
 gameCenterStatusConnected: "Game Center 已连接：你执{side}。",
+gameCenterStatusSpectating: "Game Center 已连接：你正在观战。",
 gameCenterStatusWaiting: "Game Center 对局中，请等待对手走棋。",
 gameCenterStatusSent: "已发送棋步：{move}",
 gameCenterStatusReceived: "收到对手棋步：{move}",
@@ -949,6 +954,7 @@ lanModeCreate: "创建房间",
 lanModeNearby: "加入附近房间",
 lanModeScan: "扫码加入",
 lanModeCode: "输入房间码",
+lanModeSpectator: "观战",
 lanModeNearbyReady: "请输入朋友给你的房间号，或让房主先创建房间。",
 lanModeScanPrompt: "请粘贴扫码得到的链接或房间号。",
 lanModeScanEmpty: "未输入扫码链接或房间号。",
@@ -968,6 +974,7 @@ lanConnect: "连接",
 lanReconnect: "重新连接",
 lanDisconnect: "断开",
 lanCopyLink: "复制连接",
+lanSpectator: "观战",
 lanCheck: "检测状态",
 lanShareLabel: "邀请链接",
 lanDuelLabel: "扫码双人对战",
@@ -981,6 +988,15 @@ lanDuelNotReady: "未生成",
 lanDuelReady: "可扫码",
 lanDuelGenerate: "生成对战二维码",
 lanDuelCreated: "双人对战二维码已生成：{room}",
+lanSpectatorLabel: "观战房间",
+lanSpectatorTitle: "生成观战二维码",
+lanSpectatorText: "观众使用不同的观战房间号加入，只能看棋，不能走棋。",
+lanSpectatorNote: "观战同样只限同一 Wi‑Fi / 同一局域网服务器。Game Center 观战需要 3 人或 4 人同场匹配。",
+lanSpectatorRoomEmpty: "观战房间号：—",
+lanSpectatorRoom: "观战房间号：{room}",
+lanSpectatorQrAria: "局域网观战二维码",
+lanSpectatorCreated: "观战房间已生成：{room}",
+lanSpectatorJoinNotice: "正在以观战者身份加入：{room}",
 lanQrCopy: "复制二维码图片",
 lanQrDownload: "下载二维码图片",
 lanQrCopied: "二维码图片已复制",
@@ -1681,9 +1697,10 @@ lanAppModeTitle: "Choose a LAN Mode",
 lanAppModeText: "The App Store build keeps common LAN actions here. The web build keeps using the room-code controls below.",
 gameCenterLabel: "Game Center",
 gameCenterTitle: "Online Play",
-gameCenterText: "The App Store build can use Apple Game Center for sign-in, matchmaking, and friend invites. The web build stays separate.",
+gameCenterText: "The App Store build can use Apple Game Center for sign-in, matchmaking, and friend invites. In 3-4 player matches, the third/fourth player watches.",
 gameCenterAuth: "Sign In to Game Center",
 gameCenterMatch: "Quick Match",
+gameCenterSpectate: "Spectator Match",
 gameCenterDashboard: "Open Game Center",
 gameCenterStatusIdle: "Waiting for Game Center sign-in.",
 gameCenterStatusAuthenticating: "Requesting Game Center sign-in...",
@@ -1696,6 +1713,7 @@ gameCenterStatusCancelled: "Game Center action cancelled.",
 gameCenterStatusFailed: "Game Center action failed: {reason}",
 gameCenterStatusUnavailable: "Game Center is unavailable on this device: {reason}",
 gameCenterStatusConnected: "Game Center connected: you play {side}.",
+gameCenterStatusSpectating: "Game Center connected: you are spectating.",
 gameCenterStatusWaiting: "Game Center game: wait for your opponent's move.",
 gameCenterStatusSent: "Move sent: {move}",
 gameCenterStatusReceived: "Opponent move received: {move}",
@@ -1704,6 +1722,7 @@ lanModeCreate: "Create Room",
 lanModeNearby: "Join Nearby",
 lanModeScan: "Scan to Join",
 lanModeCode: "Enter Room Code",
+lanModeSpectator: "Spectate",
 lanModeNearbyReady: "Enter the room code from your friend, or ask the host to create a room first.",
 lanModeScanPrompt: "Paste the scanned invite link or room code.",
 lanModeScanEmpty: "No scanned link or room code was entered.",
@@ -1723,6 +1742,7 @@ lanConnect: "Connect",
 lanReconnect: "Reconnect",
 lanDisconnect: "Disconnect",
 lanCopyLink: "Copy Link",
+lanSpectator: "Spectate",
 lanCheck: "Check Status",
 lanShareLabel: "Invite link",
 lanDuelLabel: "Scan to Duel",
@@ -1736,6 +1756,15 @@ lanDuelNotReady: "Not ready",
 lanDuelReady: "Scan ready",
 lanDuelGenerate: "Generate Duel QR",
 lanDuelCreated: "Two-player QR created: {room}",
+lanSpectatorLabel: "Spectator Room",
+lanSpectatorTitle: "Generate Spectator QR",
+lanSpectatorText: "Viewers join with a different spectator room code. They can watch, but cannot move pieces.",
+lanSpectatorNote: "Spectating also requires the same Wi-Fi / LAN server. Game Center spectating requires a 3-4 player match.",
+lanSpectatorRoomEmpty: "Spectator room code: —",
+lanSpectatorRoom: "Spectator room code: {room}",
+lanSpectatorQrAria: "LAN spectator QR code",
+lanSpectatorCreated: "Spectator room created: {room}",
+lanSpectatorJoinNotice: "Joining as spectator: {room}",
 lanQrCopy: "Copy QR image",
 lanQrDownload: "Download QR image",
 lanQrCopied: "QR image copied",
@@ -2493,6 +2522,7 @@ lanStatus: document.querySelector("#lanStatus"),
 lanRoomInput: document.querySelector("#lanRoomInput"),
 lanCreateBtn: document.querySelector("#lanCreateBtn"),
 lanConnectBtn: document.querySelector("#lanConnectBtn"),
+lanSpectatorBtn: document.querySelector("#lanSpectatorBtn"),
 lanReconnectBtn: document.querySelector("#lanReconnectBtn"),
 lanDisconnectBtn: document.querySelector("#lanDisconnectBtn"),
 lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
@@ -2507,16 +2537,19 @@ lanModeCreateBtn: document.querySelector("#lanModeCreateBtn"),
 lanModeNearbyBtn: document.querySelector("#lanModeNearbyBtn"),
 lanModeScanBtn: document.querySelector("#lanModeScanBtn"),
 lanModeCodeBtn: document.querySelector("#lanModeCodeBtn"),
+lanModeSpectatorBtn: document.querySelector("#lanModeSpectatorBtn"),
 lanModeCreateLabel: document.querySelector("#lanModeCreateLabel"),
 lanModeNearbyLabel: document.querySelector("#lanModeNearbyLabel"),
 lanModeScanLabel: document.querySelector("#lanModeScanLabel"),
 lanModeCodeLabel: document.querySelector("#lanModeCodeLabel"),
+lanModeSpectatorLabel: document.querySelector("#lanModeSpectatorLabel"),
 gameCenterCard: document.querySelector("#gameCenterCard"),
 gameCenterLabel: document.querySelector("#gameCenterLabel"),
 gameCenterTitle: document.querySelector("#gameCenterTitle"),
 gameCenterText: document.querySelector("#gameCenterText"),
 gameCenterAuthBtn: document.querySelector("#gameCenterAuthBtn"),
 gameCenterMatchBtn: document.querySelector("#gameCenterMatchBtn"),
+gameCenterSpectateBtn: document.querySelector("#gameCenterSpectateBtn"),
 gameCenterDashboardBtn: document.querySelector("#gameCenterDashboardBtn"),
 gameCenterStatus: document.querySelector("#gameCenterStatus"),
 lanHostCard: document.querySelector("#lanHostCard"),
@@ -2551,6 +2584,17 @@ lanDuelLink: document.querySelector("#lanDuelLink"),
 lanCopyQrBtn: document.querySelector("#lanCopyQrBtn"),
 lanDownloadQrBtn: document.querySelector("#lanDownloadQrBtn"),
 lanDuelQrBtn: document.querySelector("#lanDuelQrBtn"),
+lanSpectatorCard: document.querySelector("#lanSpectatorCard"),
+lanSpectatorLabel: document.querySelector("#lanSpectatorLabel"),
+lanSpectatorTitle: document.querySelector("#lanSpectatorTitle"),
+lanSpectatorPill: document.querySelector("#lanSpectatorPill"),
+lanSpectatorText: document.querySelector("#lanSpectatorText"),
+lanSpectatorNote: document.querySelector("#lanSpectatorNote"),
+lanSpectatorRoom: document.querySelector("#lanSpectatorRoom"),
+lanSpectatorQr: document.querySelector("#lanSpectatorQr"),
+lanSpectatorLink: document.querySelector("#lanSpectatorLink"),
+lanSpectatorCopyQrBtn: document.querySelector("#lanSpectatorCopyQrBtn"),
+lanSpectatorDownloadQrBtn: document.querySelector("#lanSpectatorDownloadQrBtn"),
 lanInviteCard: document.querySelector("#lanInviteCard"),
 lanInviteLabel: document.querySelector("#lanInviteLabel"),
 lanInviteTitle: document.querySelector("#lanInviteTitle"),
@@ -2756,6 +2800,7 @@ protocolVersion: lanProtocolVersion,
 reconnectAttempts: 0,
 reconnectTimer: null,
 manualDisconnect: false,
+spectatorRequested: false,
 };
 let gameCenterState = {
 status: "idle",
@@ -6277,7 +6322,8 @@ function renderLanPanel() {
 const connected = isLanConnected();
 const connecting = lanState.status === "connecting";
 const spectating = connected && lanState.color === "s";
-const room = normalizeLanRoom(els.lanRoomInput.value.trim());
+const entry = currentLanRoomEntry();
+const room = entry.room;
 els.lanStatus.textContent = spectating ? t("lanSpectating") : connected ? t("lanConnected") : connecting ? t("lanConnecting") : t("lanDisconnected");
 els.lanStatus.classList.toggle("is-connected", connected);
 els.lanStatus.classList.toggle("is-connecting", connecting);
@@ -6286,6 +6332,7 @@ els.lanPanel.classList.toggle("is-spectator", spectating);
 els.lanDetail.classList.toggle("is-spectator", spectating);
 els.lanCreateBtn.disabled = connected || connecting;
 els.lanConnectBtn.disabled = connected || connecting;
+els.lanSpectatorBtn.disabled = connecting;
 els.lanReconnectBtn.hidden = connected || connecting || !room;
 els.lanReconnectBtn.disabled = connected || connecting || !room;
 els.lanDisconnectBtn.hidden = !connected && !connecting;
@@ -6308,6 +6355,7 @@ els.lanDetail.textContent = lanState.color === "w" ? t("lanDetailWhite") : t("la
 }
 if (!room) {
 hideLanInviteCard();
+hideLanSpectatorCard();
 }
 renderLanAppModeCard();
 renderGameCenterCard();
@@ -6377,6 +6425,7 @@ els.lanTitle.textContent = t("lanTitle");
 els.lanRoomInput.placeholder = t("lanRoomPlaceholder");
 setButtonContent(els.lanCreateBtn, "+", t("lanCreate"));
 setButtonContent(els.lanConnectBtn, "LAN", t("lanConnect"));
+setButtonContent(els.lanSpectatorBtn, "◎", t("lanSpectator"));
 setButtonContent(els.lanReconnectBtn, "↻", t("lanReconnect"));
 setButtonContent(els.lanDisconnectBtn, "×", t("lanDisconnect"));
 setButtonContent(els.lanCopyLinkBtn, "↗", t("lanCopyLink"));
@@ -6390,6 +6439,11 @@ els.lanShareLabel.textContent = t("lanShareLabel");
 const duelRoom = normalizeLanRoom(els.lanRoomInput.value || els.lanDuelCard.dataset.room || "");
 const duelHref = els.lanDuelLink.getAttribute("href") || "";
 showLanDuelCard(duelRoom, duelHref && duelHref !== "#" ? els.lanDuelLink.href : "");
+if (!els.lanSpectatorCard.hidden) {
+const spectatorRoom = normalizeLanRoom(els.lanSpectatorCard.dataset.room || currentLanRoom());
+const spectatorHref = els.lanSpectatorLink.getAttribute("href") || "";
+showLanSpectatorCard(spectatorRoom, spectatorHref && spectatorHref !== "#" ? els.lanSpectatorLink.href : "");
+}
 els.lanCheckLabel.textContent = t("lanCheckLabel");
 els.lanCheckTitle.textContent = t("lanCheckTitle");
 if (!lastLanCheck) {
@@ -8038,7 +8092,7 @@ return true;
 if (isGameCenterConnected() && !canPlayGameCenterMove()) {
 clearSelection();
 renderBoard();
-setNotice(t("gameCenterStatusWaiting"));
+setNotice(gameCenterState.color === "s" ? t("gameCenterStatusSpectating") : t("gameCenterStatusWaiting"));
 return true;
 }
 if (isLanConnected() && lanState.color === "s") {
@@ -8761,6 +8815,14 @@ pendingPromotion = null;
 els.promotionDialog.hidden = true;
 }
 function resetGame({ byLan = false, byGameCenter = false } = {}) {
+if (!byLan && isLanConnected() && lanState.color === "s") {
+setNotice(t("lanSpectatorNotice"));
+return;
+}
+if (!byGameCenter && isGameCenterConnected() && gameCenterState.color === "s") {
+setNotice(t("gameCenterStatusSpectating"));
+return;
+}
 stopAiThinking();
 if ((rankedModeEnabled || professionalLeagueModeEnabled) && !byLan && !byGameCenter) {
 aiEnabled = true;
@@ -8812,7 +8874,7 @@ scheduleAiMove();
 }
 function undoMove() {
 if (isGameCenterConnected()) {
-setNotice(t("gameCenterStatusWaiting"));
+setNotice(gameCenterState.color === "s" ? t("gameCenterStatusSpectating") : t("gameCenterStatusWaiting"));
 return;
 }
 if (rankedModeEnabled) {
@@ -9470,10 +9532,12 @@ els.lanModeCreateLabel.textContent = t("lanModeCreate");
 els.lanModeNearbyLabel.textContent = t("lanModeNearby");
 els.lanModeScanLabel.textContent = t("lanModeScan");
 els.lanModeCodeLabel.textContent = t("lanModeCode");
+els.lanModeSpectatorLabel.textContent = t("lanModeSpectator");
 els.lanModeCreateBtn.disabled = busy;
 els.lanModeNearbyBtn.disabled = busy;
 els.lanModeScanBtn.disabled = busy;
 els.lanModeCodeBtn.disabled = false;
+els.lanModeSpectatorBtn.disabled = lanState.status === "connecting";
 }
 function nativeGameCenterAvailable() {
 return Boolean(
@@ -9494,7 +9558,14 @@ const ids = gameCenterPlayerIds(payload);
 if (!payload.localPlayerId || ids.length < 2) {
 return payload.color || "w";
 }
-return ids[0] === payload.localPlayerId ? "w" : "b";
+const playerIndex = ids.indexOf(payload.localPlayerId);
+if (playerIndex === 0) {
+return "w";
+}
+if (playerIndex === 1) {
+return "b";
+}
+return "s";
 }
 function isGameCenterConnected() {
 return Boolean(
@@ -9518,6 +9589,9 @@ return t("gameCenterStatusAuthRequired");
 case "matchmaker-opened":
 return t("gameCenterStatusMatchmaker");
 case "match-ready":
+if (gameCenterState.color === "s") {
+return t("gameCenterStatusSpectating");
+}
 return gameCenterState.color
 ? t("gameCenterStatusConnected", { side: sideShortName(gameCenterState.color) })
 : t("gameCenterStatusMatchReady");
@@ -9553,9 +9627,11 @@ els.gameCenterTitle.textContent = t("gameCenterTitle");
 els.gameCenterText.textContent = t("gameCenterText");
 setButtonContent(els.gameCenterAuthBtn, "GC", t("gameCenterAuth"));
 setButtonContent(els.gameCenterMatchBtn, "VS", t("gameCenterMatch"));
+setButtonContent(els.gameCenterSpectateBtn, "◎", t("gameCenterSpectate"));
 setButtonContent(els.gameCenterDashboardBtn, "★", t("gameCenterDashboard"));
 els.gameCenterAuthBtn.disabled = !available || gameCenterState.status === "authenticating";
 els.gameCenterMatchBtn.disabled = !available;
+els.gameCenterSpectateBtn.disabled = !available;
 els.gameCenterDashboardBtn.disabled = !available;
 els.gameCenterStatus.textContent = available
 ? gameCenterStatusText()
@@ -9690,7 +9766,9 @@ saveRankedMode();
 saveProfessionalLeagueMode();
 clearRankedGameEligibility();
 clearProfessionalLeagueGameEligibility();
-orientation = merged.color || orientation;
+if (merged.color === "w" || merged.color === "b") {
+orientation = merged.color;
+}
 clearSelection();
 }
 if (status === "message-sent") {
@@ -9816,9 +9894,14 @@ if (!url) {
 setNotice(els.lanHostInput.value.trim() ? t("lanJumpBadHost") : t("lanJumpNeedHost"));
 return;
 }
-const room = currentLanRoom();
-if (room) {
-url.searchParams.set("lanRoom", room);
+const entry = currentLanRoomEntry();
+if (entry.room) {
+url.searchParams.set("lanRoom", entry.room);
+if (entry.spectator) {
+url.searchParams.set("lanSpectator", "1");
+} else {
+url.searchParams.delete("lanSpectator");
+}
 }
 setNotice(t("lanJumpOpening"));
 window.location.href = url.toString();
@@ -9840,7 +9923,25 @@ return `http://127.0.0.1:${port}`;
 return "";
 }
 function currentLanRoom() {
-return normalizeLanRoom(els.lanRoomInput.value || lanState.room || "");
+return currentLanRoomEntry().room;
+}
+function spectatorLanRoomCode(room) {
+const cleanRoom = normalizeLanRoom(room);
+return cleanRoom ? `${lanSpectatorRoomPrefix}${cleanRoom}` : "";
+}
+function lanRoomEntry(value = "") {
+const clean = normalizeLanRoom(String(value || ""));
+const upper = clean.toUpperCase();
+if (upper.startsWith(lanSpectatorRoomPrefix)) {
+const room = normalizeLanRoom(clean.slice(lanSpectatorRoomPrefix.length));
+if (room) {
+return { room, spectator: true, displayRoom: spectatorLanRoomCode(room) };
+}
+}
+return { room: clean, spectator: false, displayRoom: clean };
+}
+function currentLanRoomEntry() {
+return lanRoomEntry(els.lanRoomInput.value || lanState.room || "");
 }
 function uniqueLanInfoBases() {
 if (isLanPlayablePage() && window.location.origin) {
@@ -10088,7 +10189,7 @@ return `${protocol}://${window.location.host}/lan`;
 return "ws://127.0.0.1:5174/lan";
 }
 function normalizeLanRoom(room) {
-return room.trim().replace(/[^\w-]/g, "").slice(0, 24);
+return String(room || "").trim().replace(/[^\w-]/g, "").slice(0, 24);
 }
 function createLanRoomCode() {
 const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -10102,9 +10203,14 @@ values[index] = Math.floor(Math.random() * 256);
 }
 return [...values].map((value) => alphabet[value % alphabet.length]).join("");
 }
-async function lanShareUrl(room) {
+async function lanShareUrl(room, { spectator = false } = {}) {
 const url = new URL(window.location.href);
 url.searchParams.set("lanRoom", room);
+if (spectator) {
+url.searchParams.set("lanSpectator", "1");
+} else {
+url.searchParams.delete("lanSpectator");
+}
 const localHostnames = new Set(["127.0.0.1", "localhost", "::1"]);
 if (!localHostnames.has(window.location.hostname)) {
 return url.toString();
@@ -10113,7 +10219,8 @@ const check = await fetchLanInfoStatus();
 const address = Array.isArray(check.info?.addresses) ? check.info.addresses[0] : "";
 const port = Number(check.info?.port) || 5174;
 if (check.ok && address) {
-return `http://${address}:${port}/index.html?lanRoom=${encodeURIComponent(room)}`;
+const query = `lanRoom=${encodeURIComponent(room)}${spectator ? "&lanSpectator=1" : ""}`;
+return `http://${address}:${port}/index.html?${query}`;
 }
 return url.toString();
 }
@@ -10124,6 +10231,7 @@ els.lanShareLine.hidden = true;
 els.lanShareLink.removeAttribute("href");
 els.lanShareLink.textContent = "";
 hideLanInviteCard();
+hideLanSpectatorCard();
 showLanDuelCard("", "");
 return "";
 }
@@ -10168,8 +10276,26 @@ els.lanDuelQr.innerHTML = "";
 return false;
 }
 }
+function renderLanSpectatorQr(shareUrl) {
+els.lanSpectatorQr.innerHTML = "";
+els.lanSpectatorQr.setAttribute("aria-label", t("lanSpectatorQrAria"));
+if (!shareUrl || typeof window.qrcode !== "function") {
+return false;
+}
+try {
+const qr = window.qrcode(0, "M");
+qr.addData(shareUrl);
+qr.make();
+els.lanSpectatorQr.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, title: t("lanSpectatorQrAria") });
+return true;
+} catch (error) {
+els.lanSpectatorQr.innerHTML = "";
+return false;
+}
+}
 function qrFileName(room = currentLanRoom()) {
-const cleanRoom = normalizeLanRoom(room) || "room";
+const entry = lanRoomEntry(room);
+const cleanRoom = entry.displayRoom || entry.room || "room";
 return `jeffery-chess-${cleanRoom}-qr.png`;
 }
 function qrSvgElement(qrContainer) {
@@ -10266,6 +10392,43 @@ els.lanDuelLink.textContent = "";
 const rendered = renderLanDuelQr(isReady ? shareUrl : "");
 els.lanCopyQrBtn.disabled = !rendered;
 els.lanDownloadQrBtn.disabled = !rendered;
+}
+function showLanSpectatorCard(room = "", shareUrl = "") {
+const cleanRoom = normalizeLanRoom(room);
+const spectatorRoom = spectatorLanRoomCode(cleanRoom);
+const isReady = Boolean(cleanRoom && shareUrl);
+els.lanSpectatorCard.dataset.room = cleanRoom;
+els.lanSpectatorCard.hidden = !cleanRoom && !shareUrl;
+els.lanSpectatorLabel.textContent = t("lanSpectatorLabel");
+els.lanSpectatorTitle.textContent = t("lanSpectatorTitle");
+els.lanSpectatorText.textContent = t("lanSpectatorText");
+els.lanSpectatorNote.textContent = t("lanSpectatorNote");
+els.lanSpectatorRoom.textContent = cleanRoom ? t("lanSpectatorRoom", { room: spectatorRoom }) : t("lanSpectatorRoomEmpty");
+els.lanSpectatorPill.textContent = isReady ? t("lanDuelReady") : t("lanDuelNotReady");
+els.lanSpectatorPill.classList.toggle("is-ready", isReady);
+setButtonContent(els.lanSpectatorCopyQrBtn, "⧉", t("lanQrCopy"));
+setButtonContent(els.lanSpectatorDownloadQrBtn, "↓", t("lanQrDownload"));
+if (isReady) {
+els.lanSpectatorLink.hidden = false;
+els.lanSpectatorLink.href = shareUrl;
+els.lanSpectatorLink.textContent = shareUrl;
+} else {
+els.lanSpectatorLink.hidden = true;
+els.lanSpectatorLink.removeAttribute("href");
+els.lanSpectatorLink.textContent = "";
+}
+const rendered = renderLanSpectatorQr(isReady ? shareUrl : "");
+els.lanSpectatorCopyQrBtn.disabled = !rendered;
+els.lanSpectatorDownloadQrBtn.disabled = !rendered;
+}
+function hideLanSpectatorCard() {
+els.lanSpectatorCard.hidden = true;
+els.lanSpectatorCard.dataset.room = "";
+els.lanSpectatorQr.innerHTML = "";
+els.lanSpectatorLink.removeAttribute("href");
+els.lanSpectatorLink.textContent = "";
+els.lanSpectatorCopyQrBtn.disabled = true;
+els.lanSpectatorDownloadQrBtn.disabled = true;
 }
 function showLanInviteCard(room, shareUrl) {
 const cleanRoom = normalizeLanRoom(room);
@@ -10384,6 +10547,7 @@ lanState.protocolVersion = lanProtocolVersion;
 lanState.reconnectAttempts = 0;
 if (!keepRoom) {
 lanState.room = "";
+lanState.spectatorRequested = false;
 }
 renderLanPanel();
 }
@@ -10420,6 +10584,7 @@ clearLanReconnectTimer();
 lanState.status = "connected";
 lanState.room = payload.room;
 lanState.color = payload.color;
+lanState.spectatorRequested = payload.color === "s";
 lanState.clients = payload.clients || 1;
 updateLanPeerMetadata(payload);
 lanState.reconnectAttempts = 0;
@@ -10499,11 +10664,15 @@ return false;
 return true;
 }
 async function connectLan({ reconnect = false } = {}) {
-const room = normalizeLanRoom(els.lanRoomInput.value);
+const entry = currentLanRoomEntry();
+const room = entry.room;
+const requestSpectator = reconnect
+? Boolean(entry.spectator || lanState.spectatorRequested)
+: Boolean(entry.spectator);
 if (!await preflightLanConnection(room)) {
 return false;
 }
-els.lanRoomInput.value = room;
+els.lanRoomInput.value = requestSpectator ? spectatorLanRoomCode(room) : room;
 const reconnectAttempts = reconnect ? lanState.reconnectAttempts : 0;
 if (!reconnect) {
 disconnectLan({ silent: true, manual: false });
@@ -10515,7 +10684,13 @@ saveRankedMode();
 saveProfessionalLeagueMode();
 clearRankedGameEligibility();
 clearProfessionalLeagueGameEligibility();
+if (requestSpectator) {
+const spectatorShareUrl = await lanShareUrl(room, { spectator: true });
+showLanSpectatorCard(room, spectatorShareUrl);
+setNotice(t("lanSpectatorJoinNotice", { room: spectatorLanRoomCode(room) }));
+} else {
 showLanShareLink(room);
+}
 }
 lanState = {
 socket: null,
@@ -10529,6 +10704,7 @@ protocolVersion: lanProtocolVersion,
 reconnectAttempts,
 reconnectTimer: lanState.reconnectTimer || null,
 manualDisconnect: false,
+spectatorRequested: requestSpectator,
 };
 renderLanPanel();
 try {
@@ -10541,6 +10717,7 @@ room,
 clientVersion: appVersion,
 protocolVersion: lanProtocolVersion,
 clientId: getLanClientId(),
+spectator: requestSpectator,
 }));
 });
 socket.addEventListener("message", (event) => {
@@ -10582,12 +10759,13 @@ setNotice(t("lanDisconnectedNotice"));
 }
 }
 function reconnectLan() {
-const room = currentLanRoom();
+const entry = currentLanRoomEntry();
+const room = entry.room;
 if (!room) {
 setNotice(t("lanNeedRoom"));
 return;
 }
-els.lanRoomInput.value = room;
+els.lanRoomInput.value = entry.spectator ? entry.displayRoom : room;
 connectLan();
 }
 function focusLanRoomInput() {
@@ -10611,7 +10789,8 @@ return "";
 }
 try {
 const url = new URL(raw);
-return normalizeLanRoom(url.searchParams.get("lanRoom") || "");
+const room = normalizeLanRoom(url.searchParams.get("lanRoom") || "");
+return url.searchParams.get("lanSpectator") === "1" ? spectatorLanRoomCode(room) : room;
 } catch (error) {
 return normalizeLanRoom(raw);
 }
@@ -10690,7 +10869,8 @@ setNotice(t("lanRoomCreated", { room }));
 }
 }
 async function copyLanLink() {
-const room = normalizeLanRoom(els.lanRoomInput.value);
+const entry = currentLanRoomEntry();
+const room = entry.room;
 if (!room) {
 setNotice(t("lanNeedRoom"));
 return;
@@ -10698,20 +10878,32 @@ return;
 if (!ensureLanSharePage()) {
 return;
 }
-els.lanRoomInput.value = room;
+els.lanRoomInput.value = entry.spectator ? entry.displayRoom : room;
 try {
-const shareUrl = await showLanShareLink(room);
+const shareUrl = entry.spectator
+? await lanShareUrl(room, { spectator: true })
+: await showLanShareLink(room);
+if (entry.spectator) {
+showLanSpectatorCard(room, shareUrl);
+} else {
 showLanInviteCard(room, shareUrl);
+}
 await navigator.clipboard.writeText(shareUrl);
 setNotice(t("lanCopied"));
 } catch (error) {
-const shareUrl = await showLanShareLink(room);
+const shareUrl = entry.spectator
+? await lanShareUrl(room, { spectator: true })
+: await showLanShareLink(room);
+if (entry.spectator) {
+showLanSpectatorCard(room, shareUrl);
+} else {
 showLanInviteCard(room, shareUrl);
+}
 setNotice(t("lanCopyFailed"));
 }
 }
 async function generateLanDuelQr() {
-let room = normalizeLanRoom(els.lanRoomInput.value);
+let room = currentLanRoom();
 if (!ensureLanSharePage()) {
 return;
 }
@@ -10723,6 +10915,20 @@ renderLanPanel();
 const shareUrl = await showLanShareLink(room);
 showLanInviteCard(room, shareUrl);
 setNotice(t("lanDuelCreated", { room }));
+}
+async function generateLanSpectatorRoom() {
+let room = currentLanRoom();
+if (!ensureLanSharePage()) {
+return;
+}
+if (!room) {
+room = createLanRoomCode();
+els.lanRoomInput.value = room;
+}
+renderLanPanel();
+const shareUrl = await lanShareUrl(room, { spectator: true });
+showLanSpectatorCard(room, shareUrl);
+setNotice(t("lanSpectatorCreated", { room: spectatorLanRoomCode(room) }));
 }
 function setFeedbackKind(kind) {
 feedbackKind = ["bug", "idea", "praise"].includes(kind) ? kind : "bug";
@@ -10941,6 +11147,7 @@ button.addEventListener("click", () => setFeedbackKind(button.dataset.feedbackKi
 });
 els.lanCreateBtn.addEventListener("click", createLanRoom);
 els.lanConnectBtn.addEventListener("click", connectLan);
+els.lanSpectatorBtn.addEventListener("click", generateLanSpectatorRoom);
 els.lanReconnectBtn.addEventListener("click", reconnectLan);
 els.lanDisconnectBtn.addEventListener("click", () => disconnectLan());
 els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
@@ -10948,8 +11155,10 @@ els.lanModeCreateBtn.addEventListener("click", createLanRoom);
 els.lanModeNearbyBtn.addEventListener("click", joinNearbyLanRoom);
 els.lanModeScanBtn.addEventListener("click", joinScannedLanRoom);
 els.lanModeCodeBtn.addEventListener("click", enterLanRoomCode);
+els.lanModeSpectatorBtn.addEventListener("click", generateLanSpectatorRoom);
 els.gameCenterAuthBtn.addEventListener("click", () => postGameCenterAction("authenticate"));
 els.gameCenterMatchBtn.addEventListener("click", () => postGameCenterAction("match"));
+els.gameCenterSpectateBtn.addEventListener("click", () => postGameCenterAction("spectate"));
 els.gameCenterDashboardBtn.addEventListener("click", () => postGameCenterAction("dashboard"));
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
@@ -10963,6 +11172,8 @@ openLanHostPage();
 });
 els.lanCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanDuelQr, els.lanDuelCard.dataset.room || currentLanRoom()));
 els.lanDownloadQrBtn.addEventListener("click", () => downloadLanQr(els.lanDuelQr, els.lanDuelCard.dataset.room || currentLanRoom()));
+els.lanSpectatorCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanSpectatorQr, spectatorLanRoomCode(els.lanSpectatorCard.dataset.room || currentLanRoom())));
+els.lanSpectatorDownloadQrBtn.addEventListener("click", () => downloadLanQr(els.lanSpectatorQr, spectatorLanRoomCode(els.lanSpectatorCard.dataset.room || currentLanRoom())));
 els.lanInviteCopyQrBtn.addEventListener("click", () => copyLanQr(els.lanInviteQr, els.lanInviteCard.dataset.room || currentLanRoom()));
 els.lanInviteDownloadQrBtn.addEventListener("click", () => downloadLanQr(els.lanInviteQr, els.lanInviteCard.dataset.room || currentLanRoom()));
 els.lanInviteCloseBtn.addEventListener("click", hideLanInviteCard);
@@ -11138,9 +11349,16 @@ pwaInstallState = "installed";
 setNotice(t("pwaInstallInstalled"));
 renderReleaseInfo();
 });
-const requestedLanRoom = normalizeLanRoom(new URLSearchParams(window.location.search).get("lanRoom") ?? "");
+const requestedParams = new URLSearchParams(window.location.search);
+const requestedLanRoom = normalizeLanRoom(requestedParams.get("lanRoom") ?? "");
+const requestedLanSpectator = requestedParams.get("lanSpectator") === "1";
 if (requestedLanRoom) {
-els.lanRoomInput.value = requestedLanRoom;
+els.lanRoomInput.value = requestedLanSpectator ? spectatorLanRoomCode(requestedLanRoom) : requestedLanRoom;
+if (requestedLanSpectator) {
+lanShareUrl(requestedLanRoom, { spectator: true }).then((shareUrl) => {
+showLanSpectatorCard(requestedLanRoom, shareUrl);
+});
+}
 }
 registerOfflineApp();
 applyBoardTheme(boardTheme);
