@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.55";
+const appVersion = "1.0.56";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.56：玩家提交反馈后会看到更清楚的反馈编号说明，方便保存编号并让开发者快速查找问题。",
 "v1.0.55：走不了棋时会说明原因，卡住的 AI 回合会自动重启，并新增“吃过路兵”说明，避免兵斜走空格看起来像 bug。",
 "v1.0.54：修复切换英文后段位胶囊、玩家档案和排行榜里段位名称仍显示中文的问题。",
 "v1.0.53：App Store 版 Game Center 对战加入真实棋步同步；赛后新增胜负结算卡、每日训练连续奖励提示和真实棋盘摆局引导。",
@@ -78,6 +79,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.56: player feedback now explains the feedback ID more clearly so players can save it and the developer can find the report faster.",
 "v1.0.55: move blocks now explain why, stuck AI turns restart automatically, and en passant pawn captures are explained clearly.",
 "v1.0.54: fixed rank labels staying in Chinese after switching to English, including the rank chip, player profile, and leaderboards.",
 "v1.0.53: App Store Game Center play now syncs real chess moves, with a stronger result card, daily training streak rewards, and real-board practice prompts.",
@@ -615,12 +617,13 @@ feedbackMailbox: "虚拟邮箱：{email}",
 feedbackInboxSummary: "虚拟邮箱收件箱",
 feedbackInboxEmpty: "还没有反馈",
 feedbackCount: "已保存 {count} 条反馈",
+feedbackIdHelp: "提交后会生成反馈编号，请保存编号，开发者可用它查找你的问题。",
 feedbackNeedText: "请先写下你的反馈",
 feedbackSending: "正在发送反馈...",
 feedbackSaved: "反馈已发送给开发者，谢谢你",
-feedbackSavedWithId: "反馈已发送给开发者，编号：{id}",
+feedbackSavedWithId: "反馈已发送给开发者，编号：{id}。请保存这个编号，方便开发者查找。",
 feedbackSavedLocal: "反馈已在本机保存；线上发送暂时失败",
-feedbackSavedLocalWithId: "反馈已在本机保存，编号：{id}；线上发送暂时失败",
+feedbackSavedLocalWithId: "反馈已在本机保存，编号：{id}；线上发送暂时失败。请保存编号，方便之后查找。",
 feedbackSaveFailed: "暂时无法保存反馈",
 feedbackBackupTitle: "备用发送",
 feedbackBackupText: "如果当前线路无法发送，可复制反馈内容，或打开邮箱自行选择收件人发送。",
@@ -1369,12 +1372,13 @@ feedbackMailbox: "Virtual inbox: {email}",
 feedbackInboxSummary: "Virtual Inbox",
 feedbackInboxEmpty: "No feedback yet",
 feedbackCount: "{count} feedback items saved",
+feedbackIdHelp: "A feedback ID appears after you submit. Save it so the developer can find your report.",
 feedbackNeedText: "Write your feedback first",
 feedbackSending: "Sending feedback...",
 feedbackSaved: "Feedback sent to the developer. Thank you.",
-feedbackSavedWithId: "Feedback sent to the developer. ID: {id}",
+feedbackSavedWithId: "Feedback sent to the developer. ID: {id}. Save this ID so the developer can find it.",
 feedbackSavedLocal: "Feedback was saved locally; online sending failed for now.",
-feedbackSavedLocalWithId: "Feedback saved locally. ID: {id}; online sending failed for now.",
+feedbackSavedLocalWithId: "Feedback saved locally. ID: {id}; online sending failed for now. Save this ID for later.",
 feedbackSaveFailed: "Feedback could not be saved right now",
 feedbackBackupTitle: "Backup Send",
 feedbackBackupText: "If this route cannot send, copy the feedback or open mail and choose the recipient yourself.",
@@ -2443,6 +2447,7 @@ feedbackTextLabel: document.querySelector("#feedbackTextLabel"),
 feedbackKindButtons: [...document.querySelectorAll("[data-feedback-kind]")],
 feedbackMailbox: document.querySelector("#feedbackMailbox"),
 feedbackCount: document.querySelector("#feedbackCount"),
+feedbackIdHelp: document.querySelector("#feedbackIdHelp"),
 feedbackInboxSummary: document.querySelector("#feedbackInboxSummary"),
 feedbackInboxList: document.querySelector("#feedbackInboxList"),
 feedbackBackupTitle: document.querySelector("#feedbackBackupTitle"),
@@ -6349,6 +6354,7 @@ button.textContent = feedbackKindName(button.dataset.feedbackKind);
 els.feedbackTextLabel.textContent = t("feedbackTextLabel");
 els.feedbackMailbox.textContent = t("feedbackMailbox", { email: feedbackMailboxAddress });
 els.feedbackInboxSummary.textContent = t("feedbackInboxSummary");
+els.feedbackIdHelp.textContent = t("feedbackIdHelp");
 els.cancelFeedbackBtn.textContent = t("cancel");
 els.submitFeedbackBtn.textContent = t("submitFeedback");
 updateFeedbackBackup();
