@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.53";
+const appVersion = "1.0.54";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.54：修复切换英文后段位胶囊、玩家档案和排行榜里段位名称仍显示中文的问题。",
 "v1.0.53：App Store 版 Game Center 对战加入真实棋步同步；赛后新增胜负结算卡、每日训练连续奖励提示和真实棋盘摆局引导。",
 "v1.0.52：App Store 版新增 Game Center 互联网对战入口和原生 GameKit 桥接；网页版继续保持独立，不显示该入口。",
 "v1.0.51：普通对局的悔棋按钮不再因为开局暂无走法而灰掉；没有可悔走法时会给出清楚提示，段位赛、职业联赛、局域网和 AI 思考中仍会锁定。",
@@ -76,6 +77,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.54: fixed rank labels staying in Chinese after switching to English, including the rank chip, player profile, and leaderboards.",
 "v1.0.53: App Store Game Center play now syncs real chess moves, with a stronger result card, daily training streak rewards, and real-board practice prompts.",
 "v1.0.52: added an App Store-only Game Center online play entry and native GameKit bridge while keeping the web build separate.",
 "v1.0.51: Undo stays available in normal games even before a move is made, shows a clear message when there is nothing to undo, and remains locked for ranked, Pro League, LAN, and AI-thinking states.",
@@ -7971,6 +7973,9 @@ els.moveList.scrollTop = els.moveList.scrollHeight;
 }
 function render() {
 renderLanguage();
+renderRank();
+renderProfile();
+renderLeaderboard();
 renderBoard();
 renderStatus();
 renderCaptured();
