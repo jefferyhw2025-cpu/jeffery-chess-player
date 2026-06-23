@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.54";
+const appVersion = "1.0.55";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanProtocolVersion = 1;
@@ -8,6 +8,7 @@ const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const releaseNotes = {
 zh: [
+"v1.0.55：走不了棋时会说明原因，卡住的 AI 回合会自动重启，并新增“吃过路兵”说明，避免兵斜走空格看起来像 bug。",
 "v1.0.54：修复切换英文后段位胶囊、玩家档案和排行榜里段位名称仍显示中文的问题。",
 "v1.0.53：App Store 版 Game Center 对战加入真实棋步同步；赛后新增胜负结算卡、每日训练连续奖励提示和真实棋盘摆局引导。",
 "v1.0.52：App Store 版新增 Game Center 互联网对战入口和原生 GameKit 桥接；网页版继续保持独立，不显示该入口。",
@@ -77,6 +78,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.55: move blocks now explain why, stuck AI turns restart automatically, and en passant pawn captures are explained clearly.",
 "v1.0.54: fixed rank labels staying in Chinese after switching to English, including the rank chip, player profile, and leaderboards.",
 "v1.0.53: App Store Game Center play now syncs real chess moves, with a stronger result card, daily training streak rewards, and real-board practice prompts.",
 "v1.0.52: added an App Store-only Game Center online play entry and native GameKit bridge while keeping the web build separate.",
@@ -1098,6 +1100,10 @@ lanWaitTurn: "局域网对战中，请等待对手走棋",
 lanSpectatorNotice: "你正在观战，不能走棋",
 lanAiBlocked: "局域网对战中不能开启 AI",
 lanSideBlocked: "局域网对战中不能切换执棋方",
+moveBlockedPromotion: "请先选择兵升变成哪一种棋子。",
+gameAlreadyOver: "本局已经结束，请开始新对局。",
+aiTurnWake: "现在轮到 AI 走，我已重新启动 AI。",
+enPassantNotice: "吃过路兵：兵可以斜走到空格，并吃掉刚走两格经过旁边的兵。",
 boardThemeLabel: "棋盤外觀",
 boardThemeTitle: "更換棋盤",
 boardThemeAria: "棋盤樣式選擇",
@@ -1848,6 +1854,10 @@ lanWaitTurn: "LAN match: wait for your opponent to move",
 lanSpectatorNotice: "You are watching and cannot move",
 lanAiBlocked: "AI cannot be enabled during a LAN match",
 lanSideBlocked: "You cannot switch sides during a LAN match",
+moveBlockedPromotion: "Choose what this pawn promotes to first.",
+gameAlreadyOver: "This game is over. Start a new game.",
+aiTurnWake: "It is the AI's turn, so I restarted the AI move.",
+enPassantNotice: "En passant: a pawn can move diagonally to an empty square to capture a pawn that just passed beside it.",
 boardThemeLabel: "Board Style",
 boardThemeTitle: "Change Board",
 boardThemeAria: "Board style selection",
@@ -6590,13 +6600,14 @@ return lines[seed % lines.length];
 }
 function moveNotice(move, { byAi = false, byLan = false } = {}) {
 const line = pieceMoveLine(move);
+const special = move.flags?.includes("e") ? t("enPassantNotice") : "";
 if (byAi) {
-return line ? `${t("aiMove", { san: move.san })} · ${line}` : t("aiMove", { san: move.san });
+return [t("aiMove", { san: move.san }), special, line].filter(Boolean).join(" · ");
 }
 if (byLan) {
-return line ? `${t("lanRemoteMove", { san: move.san })} · ${line}` : t("lanRemoteMove", { san: move.san });
+return [t("lanRemoteMove", { san: move.san }), special, line].filter(Boolean).join(" · ");
 }
-return line;
+return [special, line].filter(Boolean).join(" · ");
 }
 function unlockAchievement(id) {
 if (unlockedAchievements.has(id)) {
@@ -7995,28 +8006,53 @@ selectedSquare = square;
 legalMoves = game.moves({ square, verbose: true });
 renderBoard();
 }
-function handleSquare(square) {
-if (suppressNextSquareClick) {
-suppressNextSquareClick = false;
-return;
+function explainMoveBlock({ wakeAi = false } = {}) {
+if (pendingPromotion) {
+setNotice(t("moveBlockedPromotion"));
+return true;
 }
-if (pendingPromotion || game.isGameOver() || aiThinking || isAiTurn()) {
-return;
+if (game.isGameOver()) {
+setNotice(t("gameAlreadyOver"));
+return true;
+}
+if (aiThinking) {
+setNotice(t("aiThinking"));
+renderStatus();
+return true;
+}
+if (isAiTurn()) {
+if (wakeAi) {
+scheduleAiMove();
+} else {
+renderStatus();
+}
+setNotice(t("aiTurnWake"));
+return true;
 }
 if (isGameCenterConnected() && !canPlayGameCenterMove()) {
 clearSelection();
 renderBoard();
 setNotice(t("gameCenterStatusWaiting"));
-return;
+return true;
 }
 if (isLanConnected() && lanState.color === "s") {
 setNotice(t("lanSpectatorNotice"));
-return;
+return true;
 }
 if (isLanConnected() && !canPlayLanMove()) {
 clearSelection();
 renderBoard();
 setNotice(t("lanWaitTurn"));
+return true;
+}
+return false;
+}
+function handleSquare(square) {
+if (suppressNextSquareClick) {
+suppressNextSquareClick = false;
+return;
+}
+if (explainMoveBlock({ wakeAi: true })) {
 return;
 }
 const piece = game.get(square);
@@ -8096,6 +8132,9 @@ moveDragGhost(event);
 }
 function startSquareDrag(event, square) {
 if (event.pointerType === "mouse" && event.button !== 0) {
+return;
+}
+if (explainMoveBlock({ wakeAi: true })) {
 return;
 }
 if (!canStartDragFrom(square)) {
@@ -8187,6 +8226,9 @@ if (byAi) {
 aiThinking = false;
 renderStatus();
 }
+clearSelection();
+closePromotion();
+renderBoard();
 setNotice(t("invalidMove"));
 return null;
 }
