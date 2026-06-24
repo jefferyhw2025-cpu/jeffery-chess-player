@@ -10070,10 +10070,12 @@ return ["is-active", "", ""];
 function p2pDiagnosticText() {
 const peer = p2pState.peer;
 const channel = p2pState.channel;
+const diagnosticUrl = new URL(window.location.href);
+diagnosticUrl.searchParams.delete(p2pSignalParam);
 const rows = [
 "MateQuest Chess WebRTC Diagnostics",
 `Version: ${appVersion}`,
-`URL: ${window.location.href}`,
+`URL: ${diagnosticUrl.toString()}`,
 `Host: ${window.location.host}`,
 `User agent: ${navigator.userAgent}`,
 `WebRTC supported: ${p2pSupported() ? "yes" : "no"}`,
