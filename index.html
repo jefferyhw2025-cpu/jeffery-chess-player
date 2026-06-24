@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=1.0.59" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.60" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -560,6 +560,28 @@
                   <li id="p2pStepGuest">朋友：打开邀请，复制回应码发回房主。</li>
                   <li id="p2pStepFinish">房主：粘贴回应码并开始对战。</li>
                 </ol>
+                <section class="p2p-cloud" id="p2pCloudBox">
+                  <div>
+                    <h4 id="p2pCloudTitle">自动交换码</h4>
+                    <p id="p2pCloudText">有 Netlify 主站时，房主创建云房间，朋友输入房间号即可自动交换直连码。</p>
+                  </div>
+                  <div class="p2p-cloud-row">
+                    <input class="p2p-room-input" id="p2pRoomInput" autocomplete="off" maxlength="12" placeholder="房间号" />
+                    <button class="action-button primary" id="p2pCloudHostBtn" type="button">
+                      <span class="button-icon">☁</span>
+                      创建云房间
+                    </button>
+                    <button class="action-button" id="p2pCloudJoinBtn" type="button">
+                      <span class="button-icon">↘</span>
+                      加入云房间
+                    </button>
+                    <button class="action-button" id="p2pCloudStopBtn" type="button" hidden>
+                      <span class="button-icon">×</span>
+                      停止自动交换
+                    </button>
+                  </div>
+                  <p class="p2p-cloud-status" id="p2pCloudStatus">自动交换码需要 Netlify 主站可用；如果不可用，可继续使用下方手动邀请码。</p>
+                </section>
                 <textarea class="p2p-signal-input" id="p2pSignalInput" rows="3" autocomplete="off" placeholder="粘贴邀请码或回应码"></textarea>
                 <div class="p2p-signal-grid">
                   <section class="p2p-signal-card" id="p2pOfferCard" hidden>
@@ -1183,7 +1205,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.59</p>
+        <p class="release-version" id="releaseVersionText">v1.0.60</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-24</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1340,7 +1362,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.59"></script>
-    <script src="./app.js?v=1.0.59"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.60"></script>
+    <script src="./app.js?v=1.0.60"></script>
   </body>
 </html>

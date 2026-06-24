@@ -1,5 +1,6 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.59";
+const appVersion = "1.0.60";
+const iosBuildNumber = "56";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -8,11 +9,14 @@ const lanMinimumCompatibleProtocolVersion = 1;
 const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
 const p2pSignalParam = "p2pSignal";
+const p2pSignalApiPath = "/api/p2p-signal";
 const p2pProtocolVersion = 1;
 const p2pIceGatherTimeoutMs = 4500;
 const p2pConnectTimeoutMs = 20000;
+const p2pCloudPollMs = 1800;
 const releaseNotes = {
 zh: [
+"v1.0.60：WebRTC 直连新增 Netlify 云房间自动交换码，版本中心显示 GitHub 玩家版、Apple/iOS 包、Netlify 主站和信令服务状态，并生成演示资料。",
 "v1.0.59：WebRTC 直连加入房主/朋友步骤条、失败原因、复制诊断信息和 App Store 版扫码加入直连码。",
 "v1.0.58：GitHub 玩家版新增 WebRTC 双人直连，不需要本地 LAN 服务器；房主生成邀请二维码，朋友生成回应码后即可点对点下棋。",
 "v1.0.57：局域网新增观战房间号 WATCH- 前缀和观战二维码；App Store 版 LAN 与 Game Center 也预留观战入口，第三/第四位 Game Center 玩家会进入观战。",
@@ -87,6 +91,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.60: WebRTC direct play adds Netlify cloud rooms for automatic code exchange, the version center shows GitHub player, Apple/iOS package, Netlify, and signaling status, and demo materials were prepared.",
 "v1.0.59: WebRTC direct play now has host/friend steps, clearer failure reasons, copyable diagnostics, and App Store QR scanning for direct-play codes.",
 "v1.0.58: the GitHub player build now supports WebRTC two-player direct play without a local LAN server; the host shares an invite QR, the friend returns an answer code, and the browsers play peer-to-peer.",
 "v1.0.57: LAN now has WATCH-prefixed spectator room codes and spectator QR invites; the App Store LAN and Game Center flows also include spectator entry, with third/fourth Game Center players watching.",
@@ -235,6 +240,7 @@ const mistakeBookStorageKey = "local-chess-mistake-book-v1";
 const localLanServerBases = ["http://127.0.0.1:5173", "http://127.0.0.1:5174"];
 let liveVersionState = { status: "idle", version: "", url: productionSiteUrl };
 let pagesVersionState = { status: "idle", version: "", url: backupSiteUrl };
+let signalServiceState = { status: "idle", url: `${productionSiteUrl}${p2pSignalApiPath}` };
 let publishStatusState = { status: "idle" };
 const professionalLeagueScores = { win: 5, loss: -3, draw: 0 };
 const professionalLeagueAiName = {
@@ -777,6 +783,8 @@ releaseStatusDone: "发布状态已检查",
 releaseStatusLocal: "本地版本",
 releaseStatusNetlify: "Netlify",
 releaseStatusPages: "GitHub Pages",
+releaseStatusApple: "Apple/iOS 包",
+releaseStatusSignal: "直连信令",
 releaseStatusBackupLine: "备用线路",
 releaseStatusBackupOnline: "已上线：GitHub Pages",
 releaseStatusPublicVersion: "公开玩家版",
@@ -792,6 +800,8 @@ releaseStatusReady: "已同步 v{version}",
 releaseStatusHintIdle: "这里会提示 Netlify 和 GitHub Pages 是否同步。",
 releaseStatusHintPages: "GitHub Pages 未开启时，请到 GitHub 仓库 Settings -> Pages，把 Source 设为 GitHub Actions。",
 releaseStatusHintReady: "备用线路已上线，玩家可从 GitHub Pages 继续进入游戏。",
+releaseStatusSignalReady: "可用",
+releaseStatusSignalOffline: "不可用",
 releaseShareTitle: "分享给朋友",
 releaseSharePill: "公开链接",
 releaseShareText: "把这个玩家版链接发给朋友，或让朋友扫码打开。",
@@ -976,6 +986,23 @@ p2pCopyDiagnostic: "复制诊断",
 p2pStepHost: "房主：创建邀请，把链接或二维码发给朋友。",
 p2pStepGuest: "朋友：打开邀请，复制回应码发回房主。",
 p2pStepFinish: "房主：粘贴回应码并点击接受回应。",
+p2pCloudTitle: "自动交换码",
+p2pCloudText: "有 Netlify 主站时，房主创建云房间，朋友输入房间号即可自动交换直连码。",
+p2pCloudPlaceholder: "房间号",
+p2pCloudHost: "创建云房间",
+p2pCloudJoin: "加入云房间",
+p2pCloudStop: "停止自动交换",
+p2pCloudIdle: "自动交换码需要 Netlify 主站可用；如果不可用，可继续使用下方手动邀请码。",
+p2pCloudCreating: "正在创建云房间...",
+p2pCloudHostReady: "云房间 {room} 已创建。朋友输入这个房间号即可自动生成回应码。",
+p2pCloudWaitingOffer: "正在等待房主创建云房间 {room}...",
+p2pCloudGuestReady: "已加入云房间 {room}，回应码已自动发回房主。",
+p2pCloudWaitingAnswer: "正在等待朋友回应云房间 {room}...",
+p2pCloudConnected: "云房间 {room} 已完成自动交换。",
+p2pCloudStopped: "已停止自动交换码。",
+p2pCloudNeedRoom: "请输入房间号，或让房主先创建云房间。",
+p2pCloudUnavailable: "自动交换码暂时不可用，请使用手动邀请码/回应码。",
+p2pCloudBadRoom: "房间号只能包含 4-12 个英文大写字母或数字。",
 p2pSignalPlaceholder: "粘贴朋友发来的邀请码或回应码",
 p2pOfferTitle: "房主邀请码",
 p2pOfferText: "把二维码或链接发给朋友。朋友打开后会生成回应码。",
@@ -1601,6 +1628,8 @@ releaseStatusDone: "Release status checked",
 releaseStatusLocal: "Local Version",
 releaseStatusNetlify: "Netlify",
 releaseStatusPages: "GitHub Pages",
+releaseStatusApple: "Apple/iOS Package",
+releaseStatusSignal: "Direct Signaling",
 releaseStatusBackupLine: "Backup Route",
 releaseStatusBackupOnline: "Online: GitHub Pages",
 releaseStatusPublicVersion: "Public Player Build",
@@ -1616,6 +1645,8 @@ releaseStatusReady: "Synced v{version}",
 releaseStatusHintIdle: "This shows whether Netlify and GitHub Pages are synced.",
 releaseStatusHintPages: "If GitHub Pages is unavailable, open GitHub Settings -> Pages and set Source to GitHub Actions.",
 releaseStatusHintReady: "The backup route is online, so players can keep playing from GitHub Pages.",
+releaseStatusSignalReady: "Available",
+releaseStatusSignalOffline: "Unavailable",
 releaseShareTitle: "Share With Friends",
 releaseSharePill: "Public Link",
 releaseShareText: "Send this player link to a friend, or let them scan the QR code.",
@@ -1800,6 +1831,23 @@ p2pCopyDiagnostic: "Copy Diagnostics",
 p2pStepHost: "Host: create an invite, then send the link or QR to your friend.",
 p2pStepGuest: "Friend: open the invite, copy the answer code, and send it back.",
 p2pStepFinish: "Host: paste the answer code and tap Accept Answer.",
+p2pCloudTitle: "Automatic Code Exchange",
+p2pCloudText: "When the Netlify main site is available, the host creates a cloud room and the friend enters the room code to exchange direct-play codes automatically.",
+p2pCloudPlaceholder: "Room code",
+p2pCloudHost: "Create Cloud Room",
+p2pCloudJoin: "Join Cloud Room",
+p2pCloudStop: "Stop Auto Exchange",
+p2pCloudIdle: "Automatic code exchange needs the Netlify main site. If it is unavailable, use the manual invite/answer code below.",
+p2pCloudCreating: "Creating cloud room...",
+p2pCloudHostReady: "Cloud room {room} is ready. Your friend can enter this room code to send an answer automatically.",
+p2pCloudWaitingOffer: "Waiting for the host to create cloud room {room}...",
+p2pCloudGuestReady: "Joined cloud room {room}. The answer code was sent back to the host automatically.",
+p2pCloudWaitingAnswer: "Waiting for your friend to answer cloud room {room}...",
+p2pCloudConnected: "Cloud room {room} completed automatic exchange.",
+p2pCloudStopped: "Automatic code exchange stopped.",
+p2pCloudNeedRoom: "Enter a room code, or ask the host to create a cloud room first.",
+p2pCloudUnavailable: "Automatic code exchange is unavailable. Use the manual invite/answer code.",
+p2pCloudBadRoom: "Room codes must be 4-12 uppercase letters or numbers.",
 p2pSignalPlaceholder: "Paste the invite or answer code from your friend",
 p2pOfferTitle: "Host Invite Code",
 p2pOfferText: "Send this QR code or link to your friend. They will open it and create an answer code.",
@@ -2686,6 +2734,13 @@ p2pCopyDiagnosticBtn: document.querySelector("#p2pCopyDiagnosticBtn"),
 p2pStepHost: document.querySelector("#p2pStepHost"),
 p2pStepGuest: document.querySelector("#p2pStepGuest"),
 p2pStepFinish: document.querySelector("#p2pStepFinish"),
+p2pCloudTitle: document.querySelector("#p2pCloudTitle"),
+p2pCloudText: document.querySelector("#p2pCloudText"),
+p2pRoomInput: document.querySelector("#p2pRoomInput"),
+p2pCloudHostBtn: document.querySelector("#p2pCloudHostBtn"),
+p2pCloudJoinBtn: document.querySelector("#p2pCloudJoinBtn"),
+p2pCloudStopBtn: document.querySelector("#p2pCloudStopBtn"),
+p2pCloudStatus: document.querySelector("#p2pCloudStatus"),
 p2pSignalInput: document.querySelector("#p2pSignalInput"),
 p2pOfferCard: document.querySelector("#p2pOfferCard"),
 p2pOfferTitle: document.querySelector("#p2pOfferTitle"),
@@ -2973,6 +3028,11 @@ answerText: "",
 lastMessageId: "",
 failureReasonKey: "",
 connectTimer: null,
+cloudRoom: "",
+cloudRole: "",
+cloudStatus: "idle",
+cloudMessageKey: "",
+cloudTimer: null,
 };
 let nativeQrScanTarget = "lan";
 let lastLanCheck = null;
@@ -5830,6 +5890,12 @@ return t("releaseStatusOld", { version: state.version });
 }
 return t("releaseStatusReady", { version: state.version });
 }
+function signalStatusValue(state) {
+if (!state || state.status === "idle" || state.status === "checking") {
+return t("releaseStatusChecking");
+}
+return state.status === "synced" ? t("releaseStatusSignalReady") : t("releaseStatusSignalOffline");
+}
 function appendReleaseStatusRow(label, value, ok = true) {
 const row = document.createElement("div");
 row.className = "release-status-row";
@@ -5883,6 +5949,7 @@ els.releaseStatusHint.textContent = t("releaseStatusHintIdle");
 return;
 }
 appendReleaseStatusRow(t("releaseStatusLocal"), t("releaseStatusVersion", { version: appVersion }), true);
+appendReleaseStatusRow(t("releaseStatusApple"), `${t("releaseStatusVersion", { version: appVersion })} / build ${iosBuildNumber}`, true);
 appendReleaseStatusRow(
 t("releaseStatusNetlify"),
 publishStatusValue(liveVersionState),
@@ -5902,6 +5969,11 @@ appendReleaseStatusRow(
 t("releaseStatusPublicVersion"),
 pagesVersionState.version ? t("releaseStatusVersion", { version: pagesVersionState.version }) : t("releaseStatusUnavailable"),
 pagesVersionState.status === "synced",
+);
+appendReleaseStatusRow(
+t("releaseStatusSignal"),
+signalStatusValue(signalServiceState),
+signalServiceState.status === "synced",
 );
 const adminEntry = currentAdminEntryStatus();
 appendReleaseStatusRow(t("releaseStatusAdminEntry"), adminEntry.label, adminEntry.ok);
@@ -6074,15 +6146,17 @@ async function checkPublishStatus({ silent = false } = {}) {
 publishStatusState = { status: "checking" };
 liveVersionState = { status: "checking", version: "", url: productionSiteUrl };
 pagesVersionState = { status: "checking", version: "", url: backupSiteUrl };
+signalServiceState = { status: "checking", url: p2pSignalApiUrl() };
 if (!silent) {
 renderReleaseInfo();
 } else {
 renderReleaseLiveStatus();
 renderReleaseStatus();
 }
-const [netlify, pages] = await Promise.allSettled([
+const [netlify, pages, signal] = await Promise.allSettled([
 readRemoteVersion(liveVersionUrl()),
 readRemoteVersion(pagesVersionUrl()),
+checkP2pSignalService(),
 ]);
 liveVersionState = netlify.status === "fulfilled"
 ? { ...netlify.value, url: productionSiteUrl }
@@ -6090,6 +6164,9 @@ liveVersionState = netlify.status === "fulfilled"
 pagesVersionState = pages.status === "fulfilled"
 ? { ...pages.value, url: backupSiteUrl }
 : { status: "unavailable", version: "", url: backupSiteUrl };
+signalServiceState = signal.status === "fulfilled"
+? { ...signal.value, url: p2pSignalApiUrl() }
+: { status: "unavailable", version: "", url: p2pSignalApiUrl() };
 publishStatusState = { status: "done" };
 renderReleaseInfo();
 }
@@ -10083,6 +10160,10 @@ const rows = [
 `P2P role: ${p2pState.role || "none"}`,
 `P2P color: ${p2pState.color || "none"}`,
 `P2P protocol: v${p2pProtocolVersion}`,
+`Cloud room: ${p2pState.cloudRoom || "none"}`,
+`Cloud role: ${p2pState.cloudRole || "none"}`,
+`Cloud status: ${p2pState.cloudStatus || "idle"}`,
+`Signal API: ${p2pSignalApiUrl()}`,
 `Failure: ${p2pState.failureReasonKey ? t(p2pState.failureReasonKey) : "none"}`,
 `Peer connection: ${peer?.connectionState || "none"}`,
 `ICE connection: ${peer?.iceConnectionState || "none"}`,
@@ -10103,6 +10184,195 @@ setNotice(t("p2pDiagnosticCopied"));
 } catch (error) {
 setNotice(t("copyBlocked"));
 }
+}
+function cleanP2pRoomCode(room) {
+return String(room || "").trim().toUpperCase().replace(/[^A-Z0-9]/gu, "").slice(0, 12);
+}
+function validP2pRoomCode(room) {
+return /^[A-Z0-9]{4,12}$/u.test(cleanP2pRoomCode(room));
+}
+function createP2pRoomCode() {
+return createLanRoomCode();
+}
+function p2pSignalApiUrl(params = {}) {
+const base = isNetlifyHost()
+? window.location.origin
+: productionSiteUrl;
+const url = new URL(p2pSignalApiPath, base);
+Object.entries(params).forEach(([key, value]) => {
+if (value !== undefined && value !== null && value !== "") {
+url.searchParams.set(key, value);
+}
+});
+return url.toString();
+}
+function p2pCloudStatusText() {
+if (p2pState.cloudMessageKey) {
+return t(p2pState.cloudMessageKey, { room: p2pState.cloudRoom });
+}
+return t("p2pCloudIdle");
+}
+function setP2pCloudStatus(status, messageKey = "", room = p2pState.cloudRoom) {
+p2pState.cloudStatus = status;
+p2pState.cloudMessageKey = messageKey;
+p2pState.cloudRoom = cleanP2pRoomCode(room);
+renderP2pPanel();
+}
+function clearP2pCloudTimer() {
+if (p2pState.cloudTimer) {
+window.clearInterval(p2pState.cloudTimer);
+p2pState.cloudTimer = null;
+}
+}
+async function p2pSignalRequest(method, { room = "", action = "", offer = "", answer = "" } = {}) {
+const options = {
+method,
+cache: "no-store",
+};
+const url = method === "GET"
+? p2pSignalApiUrl({ room })
+: p2pSignalApiUrl();
+if (method !== "GET") {
+options.headers = {
+"Content-Type": "application/json",
+};
+options.body = JSON.stringify({
+action,
+room,
+offer,
+answer,
+version: appVersion,
+});
+}
+const response = await fetch(url, options);
+const data = await response.json().catch(() => ({}));
+if (!response.ok || !data.ok) {
+throw new Error(data.reason || `p2p-signal-${response.status}`);
+}
+return data;
+}
+async function checkP2pSignalService() {
+const response = await fetch(p2pSignalApiUrl({ health: "1" }), { cache: "no-store" });
+const data = await response.json().catch(() => ({}));
+if (!response.ok || !data.ok) {
+throw new Error("p2p-signal-unavailable");
+}
+return { status: "synced", version: appVersion, url: p2pSignalApiUrl() };
+}
+async function pollP2pCloudHost() {
+if (!p2pState.cloudRoom || p2pState.cloudRole !== "host" || isP2pConnected()) {
+clearP2pCloudTimer();
+return false;
+}
+try {
+const state = await p2pSignalRequest("GET", { room: p2pState.cloudRoom });
+if (state.answer && state.answer !== p2pState.answerText) {
+els.p2pSignalInput.value = state.answer;
+const accepted = await acceptP2pAnswerFromInput();
+if (accepted) {
+setP2pCloudStatus("connected", "p2pCloudConnected");
+clearP2pCloudTimer();
+}
+return accepted;
+}
+setP2pCloudStatus("waiting", "p2pCloudWaitingAnswer");
+} catch (error) {
+setP2pCloudStatus("failed", "p2pCloudUnavailable");
+clearP2pCloudTimer();
+}
+return false;
+}
+async function pollP2pCloudGuest() {
+if (!p2pState.cloudRoom || p2pState.cloudRole !== "guest" || isP2pConnected()) {
+clearP2pCloudTimer();
+return false;
+}
+try {
+const state = await p2pSignalRequest("GET", { room: p2pState.cloudRoom });
+if (!state.offer) {
+setP2pCloudStatus("waiting", "p2pCloudWaitingOffer");
+return false;
+}
+const joined = await joinP2pFromSignal(state.offer);
+if (!joined || !p2pState.answerText) {
+return false;
+}
+p2pState.cloudRole = "guest";
+p2pState.cloudRoom = cleanP2pRoomCode(state.room || p2pState.cloudRoom);
+await p2pSignalRequest("POST", {
+action: "answer",
+room: p2pState.cloudRoom,
+answer: p2pState.answerText,
+});
+setP2pCloudStatus("answer", "p2pCloudGuestReady");
+clearP2pCloudTimer();
+return true;
+} catch (error) {
+setP2pCloudStatus("waiting", "p2pCloudWaitingOffer");
+}
+return false;
+}
+function startP2pCloudPolling(role) {
+clearP2pCloudTimer();
+const poll = role === "host" ? pollP2pCloudHost : pollP2pCloudGuest;
+p2pState.cloudTimer = window.setInterval(poll, p2pCloudPollMs);
+}
+async function createP2pCloudRoom() {
+const room = cleanP2pRoomCode(els.p2pRoomInput.value) || createP2pRoomCode();
+if (!validP2pRoomCode(room)) {
+setNotice(t("p2pCloudBadRoom"));
+return false;
+}
+els.p2pRoomInput.value = room;
+setP2pCloudStatus("creating", "p2pCloudCreating", room);
+const started = await startP2pHost();
+if (!started || !p2pState.offerText) {
+setP2pCloudStatus("failed", "p2pCloudUnavailable", room);
+return false;
+}
+try {
+await p2pSignalRequest("POST", {
+action: "host",
+room,
+offer: p2pState.offerText,
+});
+p2pState.cloudRole = "host";
+setP2pCloudStatus("waiting", "p2pCloudHostReady", room);
+startP2pCloudPolling("host");
+setNotice(t("p2pCloudHostReady", { room }));
+return true;
+} catch (error) {
+setP2pCloudStatus("failed", "p2pCloudUnavailable", room);
+setNotice(t("p2pCloudUnavailable"));
+return false;
+}
+}
+async function joinP2pCloudRoom() {
+const room = cleanP2pRoomCode(els.p2pRoomInput.value);
+if (!validP2pRoomCode(room)) {
+setNotice(room ? t("p2pCloudBadRoom") : t("p2pCloudNeedRoom"));
+return false;
+}
+els.p2pRoomInput.value = room;
+p2pState.cloudRole = "guest";
+setP2pCloudStatus("waiting", "p2pCloudWaitingOffer", room);
+const joined = await pollP2pCloudGuest();
+if (!joined && p2pState.cloudStatus !== "failed") {
+startP2pCloudPolling("guest");
+}
+return joined;
+}
+async function stopP2pCloudExchange({ remote = true } = {}) {
+const room = p2pState.cloudRoom;
+clearP2pCloudTimer();
+p2pState.cloudRole = "";
+p2pState.cloudStatus = "idle";
+p2pState.cloudMessageKey = "";
+if (remote && room) {
+p2pSignalRequest("POST", { action: "close", room }).catch(() => {});
+}
+renderP2pPanel();
+setNotice(t("p2pCloudStopped"));
 }
 function p2pPeerConfig() {
 return {
@@ -10234,6 +10504,19 @@ setButtonContent(els.p2pJoinBtn, "↔", t("p2pJoin"));
 setButtonContent(els.p2pAcceptAnswerBtn, "✓", t("p2pAcceptAnswer"));
 setButtonContent(els.p2pDisconnectBtn, "×", t("p2pDisconnect"));
 setButtonContent(els.p2pCopyDiagnosticBtn, "!", t("p2pCopyDiagnostic"));
+els.p2pCloudTitle.textContent = t("p2pCloudTitle");
+els.p2pCloudText.textContent = t("p2pCloudText");
+els.p2pRoomInput.placeholder = t("p2pCloudPlaceholder");
+setButtonContent(els.p2pCloudHostBtn, "☁", t("p2pCloudHost"));
+setButtonContent(els.p2pCloudJoinBtn, "↘", t("p2pCloudJoin"));
+setButtonContent(els.p2pCloudStopBtn, "×", t("p2pCloudStop"));
+els.p2pCloudStatus.textContent = p2pCloudStatusText();
+els.p2pRoomInput.value = p2pState.cloudRoom || els.p2pRoomInput.value;
+const cloudBusy = ["creating", "waiting", "answer"].includes(p2pState.cloudStatus);
+els.p2pRoomInput.disabled = connected || p2pState.cloudStatus === "creating";
+els.p2pCloudHostBtn.disabled = !supported || busy || cloudBusy;
+els.p2pCloudJoinBtn.disabled = !supported || connected || p2pState.status === "connecting" || cloudBusy;
+els.p2pCloudStopBtn.hidden = !cloudBusy;
 els.p2pHostBtn.disabled = !supported || busy;
 els.p2pScanBtn.disabled = !supported || connected || p2pState.status === "connecting";
 els.p2pJoinBtn.disabled = !supported || connected || p2pState.status === "connecting";
@@ -10305,8 +10588,13 @@ function setP2pChannel(channel) {
 p2pState.channel = channel;
 channel.addEventListener("open", () => {
 clearP2pConnectTimer();
+clearP2pCloudTimer();
 p2pState.status = "connected";
 p2pState.failureReasonKey = "";
+if (p2pState.cloudRoom) {
+p2pState.cloudStatus = "connected";
+p2pState.cloudMessageKey = "p2pCloudConnected";
+}
 prepareP2pGame(p2pState.color || (p2pState.role === "host" ? "w" : "b"));
 render();
 setNotice(t("p2pConnected", { side: sideShortName(p2pState.color) }));
@@ -10341,6 +10629,7 @@ return peer;
 }
 function disconnectP2p({ silent = false } = {}) {
 clearP2pConnectTimer();
+clearP2pCloudTimer();
 p2pState.channel?.close();
 p2pState.peer?.close();
 p2pState = {
@@ -10354,6 +10643,11 @@ answerText: "",
 lastMessageId: "",
 failureReasonKey: "",
 connectTimer: null,
+cloudRoom: "",
+cloudRole: "",
+cloudStatus: "idle",
+cloudMessageKey: "",
+cloudTimer: null,
 };
 renderP2pPanel();
 if (!silent) {
@@ -10381,6 +10675,11 @@ answerText: "",
 lastMessageId: "",
 failureReasonKey: "",
 connectTimer: null,
+cloudRoom: "",
+cloudRole: "",
+cloudStatus: "idle",
+cloudMessageKey: "",
+cloudTimer: null,
 };
 setP2pChannel(channel);
 const offer = await peer.createOffer();
@@ -10443,6 +10742,11 @@ answerText: "",
 lastMessageId: "",
 failureReasonKey: "",
 connectTimer: null,
+cloudRoom: "",
+cloudRole: "",
+cloudStatus: "idle",
+cloudMessageKey: "",
+cloudTimer: null,
 };
 peer.addEventListener("datachannel", (event) => {
 setP2pChannel(event.channel);
@@ -12100,8 +12404,22 @@ els.p2pJoinBtn.addEventListener("click", joinP2pFromInput);
 els.p2pAcceptAnswerBtn.addEventListener("click", acceptP2pAnswerFromInput);
 els.p2pDisconnectBtn.addEventListener("click", () => disconnectP2p());
 els.p2pCopyDiagnosticBtn.addEventListener("click", copyP2pDiagnostic);
+els.p2pCloudHostBtn.addEventListener("click", createP2pCloudRoom);
+els.p2pCloudJoinBtn.addEventListener("click", joinP2pCloudRoom);
+els.p2pCloudStopBtn.addEventListener("click", () => stopP2pCloudExchange());
 els.p2pCopyOfferBtn.addEventListener("click", () => copyP2pSignal(p2pState.offerText));
 els.p2pCopyAnswerBtn.addEventListener("click", () => copyP2pSignal(p2pState.answerText));
+els.p2pRoomInput.addEventListener("input", () => {
+const cleaned = cleanP2pRoomCode(els.p2pRoomInput.value);
+if (els.p2pRoomInput.value !== cleaned) {
+els.p2pRoomInput.value = cleaned;
+}
+});
+els.p2pRoomInput.addEventListener("keydown", (event) => {
+if (event.key === "Enter") {
+joinP2pCloudRoom();
+}
+});
 els.p2pSignalInput.addEventListener("keydown", (event) => {
 if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
 if (p2pState.role === "host") {
