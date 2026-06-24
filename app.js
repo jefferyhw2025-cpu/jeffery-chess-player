@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.58";
+const appVersion = "1.0.59";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -10,8 +10,10 @@ const lanReconnectDelayMs = 1200;
 const p2pSignalParam = "p2pSignal";
 const p2pProtocolVersion = 1;
 const p2pIceGatherTimeoutMs = 4500;
+const p2pConnectTimeoutMs = 20000;
 const releaseNotes = {
 zh: [
+"v1.0.59：WebRTC 直连加入房主/朋友步骤条、失败原因、复制诊断信息和 App Store 版扫码加入直连码。",
 "v1.0.58：GitHub 玩家版新增 WebRTC 双人直连，不需要本地 LAN 服务器；房主生成邀请二维码，朋友生成回应码后即可点对点下棋。",
 "v1.0.57：局域网新增观战房间号 WATCH- 前缀和观战二维码；App Store 版 LAN 与 Game Center 也预留观战入口，第三/第四位 Game Center 玩家会进入观战。",
 "v1.0.56：玩家提交反馈后会看到更清楚的反馈编号说明，方便保存编号并让开发者快速查找问题。",
@@ -85,6 +87,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.59: WebRTC direct play now has host/friend steps, clearer failure reasons, copyable diagnostics, and App Store QR scanning for direct-play codes.",
 "v1.0.58: the GitHub player build now supports WebRTC two-player direct play without a local LAN server; the host shares an invite QR, the friend returns an answer code, and the browsers play peer-to-peer.",
 "v1.0.57: LAN now has WATCH-prefixed spectator room codes and spectator QR invites; the App Store LAN and Game Center flows also include spectator entry, with third/fourth Game Center players watching.",
 "v1.0.56: player feedback now explains the feedback ID more clearly so players can save it and the developer can find the report faster.",
@@ -965,9 +968,14 @@ p2pStatusConnecting: "连接中",
 p2pStatusConnected: "已直连",
 p2pStatusFailed: "连接失败",
 p2pHost: "创建直连",
+p2pScan: "扫码/粘贴",
 p2pJoin: "粘贴/加入邀请",
 p2pAcceptAnswer: "接受回应",
 p2pDisconnect: "断开直连",
+p2pCopyDiagnostic: "复制诊断",
+p2pStepHost: "房主：创建邀请，把链接或二维码发给朋友。",
+p2pStepGuest: "朋友：打开邀请，复制回应码发回房主。",
+p2pStepFinish: "房主：粘贴回应码并点击接受回应。",
 p2pSignalPlaceholder: "粘贴朋友发来的邀请码或回应码",
 p2pOfferTitle: "房主邀请码",
 p2pOfferText: "把二维码或链接发给朋友。朋友打开后会生成回应码。",
@@ -986,6 +994,19 @@ p2pSignalCopied: "直连代码已复制。",
 p2pNeedSignal: "请先粘贴邀请码或回应码。",
 p2pBadSignal: "这个直连代码无法读取，请确认复制完整。",
 p2pHostNeedsAnswer: "房主需要粘贴朋友生成的回应码。",
+p2pWrongModeOffer: "这是房主邀请。朋友打开或粘贴后会生成回应码。",
+p2pWrongModeAnswer: "这是朋友回应码。房主需要粘贴并接受它。",
+p2pFailureUnsupported: "失败原因：当前浏览器不支持 WebRTC。请使用最新版 Chrome 或 Safari。",
+p2pFailureBadSignal: "失败原因：直连码不完整或不是本局生成的链接，请重新复制完整二维码链接。",
+p2pFailureWrongRole: "失败原因：房主需要朋友的回应码；朋友需要房主的邀请码。",
+p2pFailureTimeout: "失败原因：连接超时。通常是网络太严格，建议换同一 Wi‑Fi、关闭 VPN，或以后使用 Game Center。",
+p2pFailureClosed: "失败原因：直连已断开。请重新创建邀请。",
+p2pFailureUnknown: "失败原因：连接未完成。请重新交换邀请码和回应码。",
+p2pDiagnosticCopied: "WebRTC 诊断信息已复制。",
+p2pScanPrompt: "请扫描或粘贴 WebRTC 直连二维码/链接",
+p2pScanNativeStarting: "正在打开扫码器，扫描直连邀请或回应二维码。",
+p2pScanNativeFound: "已识别直连二维码。",
+p2pScanEmpty: "没有识别到直连码，请粘贴完整链接。",
 p2pAnswerPasteNotice: "这是朋友回应码。请复制它，回到房主页面粘贴并点接受回应。",
 p2pWaitingTurn: "WebRTC 对局中，请等待对手走棋。",
 p2pRemoteMove: "直连对手：{san}",
@@ -1771,9 +1792,14 @@ p2pStatusConnecting: "Connecting",
 p2pStatusConnected: "Direct",
 p2pStatusFailed: "Failed",
 p2pHost: "Create Direct Match",
+p2pScan: "Scan / Paste",
 p2pJoin: "Paste / Join Invite",
 p2pAcceptAnswer: "Accept Answer",
 p2pDisconnect: "Disconnect Direct",
+p2pCopyDiagnostic: "Copy Diagnostics",
+p2pStepHost: "Host: create an invite, then send the link or QR to your friend.",
+p2pStepGuest: "Friend: open the invite, copy the answer code, and send it back.",
+p2pStepFinish: "Host: paste the answer code and tap Accept Answer.",
 p2pSignalPlaceholder: "Paste the invite or answer code from your friend",
 p2pOfferTitle: "Host Invite Code",
 p2pOfferText: "Send this QR code or link to your friend. They will open it and create an answer code.",
@@ -1792,6 +1818,19 @@ p2pSignalCopied: "Direct code copied.",
 p2pNeedSignal: "Paste an invite or answer code first.",
 p2pBadSignal: "Could not read this direct code. Copy the whole code or link.",
 p2pHostNeedsAnswer: "The host needs to paste the friend's answer code.",
+p2pWrongModeOffer: "This is the host invite. The friend opens or pastes it to create an answer code.",
+p2pWrongModeAnswer: "This is the friend's answer code. The host needs to paste and accept it.",
+p2pFailureUnsupported: "Reason: this browser does not support WebRTC. Use the latest Chrome or Safari.",
+p2pFailureBadSignal: "Reason: the direct code is incomplete or not from this match. Copy the whole QR link again.",
+p2pFailureWrongRole: "Reason: the host needs the friend's answer code; the friend needs the host invite.",
+p2pFailureTimeout: "Reason: connection timed out. The network may be too strict. Try the same Wi-Fi, disable VPN, or use Game Center later.",
+p2pFailureClosed: "Reason: the direct match disconnected. Create a new invite.",
+p2pFailureUnknown: "Reason: connection did not finish. Exchange the invite and answer code again.",
+p2pDiagnosticCopied: "WebRTC diagnostics copied.",
+p2pScanPrompt: "Scan or paste a WebRTC direct-play QR/link",
+p2pScanNativeStarting: "Opening scanner. Scan a direct invite or answer QR.",
+p2pScanNativeFound: "Direct QR recognized.",
+p2pScanEmpty: "No direct code recognized. Paste the whole link.",
 p2pAnswerPasteNotice: "This is the friend's answer code. Copy it, return to the host page, paste it, and tap Accept Answer.",
 p2pWaitingTurn: "WebRTC match: wait for your opponent's move.",
 p2pRemoteMove: "Direct opponent: {san}",
@@ -2639,9 +2678,14 @@ p2pTitle: document.querySelector("#p2pTitle"),
 p2pText: document.querySelector("#p2pText"),
 p2pStatus: document.querySelector("#p2pStatus"),
 p2pHostBtn: document.querySelector("#p2pHostBtn"),
+p2pScanBtn: document.querySelector("#p2pScanBtn"),
 p2pJoinBtn: document.querySelector("#p2pJoinBtn"),
 p2pAcceptAnswerBtn: document.querySelector("#p2pAcceptAnswerBtn"),
 p2pDisconnectBtn: document.querySelector("#p2pDisconnectBtn"),
+p2pCopyDiagnosticBtn: document.querySelector("#p2pCopyDiagnosticBtn"),
+p2pStepHost: document.querySelector("#p2pStepHost"),
+p2pStepGuest: document.querySelector("#p2pStepGuest"),
+p2pStepFinish: document.querySelector("#p2pStepFinish"),
 p2pSignalInput: document.querySelector("#p2pSignalInput"),
 p2pOfferCard: document.querySelector("#p2pOfferCard"),
 p2pOfferTitle: document.querySelector("#p2pOfferTitle"),
@@ -2655,6 +2699,7 @@ p2pAnswerText: document.querySelector("#p2pAnswerText"),
 p2pAnswerQr: document.querySelector("#p2pAnswerQr"),
 p2pAnswerLink: document.querySelector("#p2pAnswerLink"),
 p2pCopyAnswerBtn: document.querySelector("#p2pCopyAnswerBtn"),
+p2pError: document.querySelector("#p2pError"),
 p2pHint: document.querySelector("#p2pHint"),
 lanHostCard: document.querySelector("#lanHostCard"),
 lanHostLabel: document.querySelector("#lanHostLabel"),
@@ -2926,7 +2971,10 @@ color: "",
 offerText: "",
 answerText: "",
 lastMessageId: "",
+failureReasonKey: "",
+connectTimer: null,
 };
+let nativeQrScanTarget = "lan";
 let lastLanCheck = null;
 let lanHostRefreshPromise = null;
 let releaseHealthState = { status: "idle", rows: [] };
@@ -9984,6 +10032,76 @@ default:
 return t("p2pStatusIdle");
 }
 }
+function clearP2pConnectTimer() {
+if (p2pState.connectTimer) {
+window.clearTimeout(p2pState.connectTimer);
+p2pState.connectTimer = null;
+}
+}
+function failP2p(reasonKey = "p2pFailureUnknown", { notice = true } = {}) {
+clearP2pConnectTimer();
+p2pState.status = "failed";
+p2pState.failureReasonKey = reasonKey;
+renderP2pPanel();
+if (notice) {
+setNotice(t(reasonKey));
+}
+}
+function startP2pConnectTimer() {
+clearP2pConnectTimer();
+p2pState.connectTimer = window.setTimeout(() => {
+if (!isP2pConnected() && ["offer", "answer", "connecting"].includes(p2pState.status)) {
+failP2p("p2pFailureTimeout");
+}
+}, p2pConnectTimeoutMs);
+}
+function p2pStepState() {
+if (isP2pConnected()) {
+return ["is-done", "is-done", "is-done"];
+}
+if (p2pState.status === "answer" || p2pState.role === "guest") {
+return ["is-done", "is-active", ""];
+}
+if (p2pState.status === "offer" || p2pState.role === "host") {
+return ["is-done", "", "is-active"];
+}
+return ["is-active", "", ""];
+}
+function p2pDiagnosticText() {
+const peer = p2pState.peer;
+const channel = p2pState.channel;
+const rows = [
+"MateQuest Chess WebRTC Diagnostics",
+`Version: ${appVersion}`,
+`URL: ${window.location.href}`,
+`Host: ${window.location.host}`,
+`User agent: ${navigator.userAgent}`,
+`WebRTC supported: ${p2pSupported() ? "yes" : "no"}`,
+`P2P status: ${p2pState.status}`,
+`P2P role: ${p2pState.role || "none"}`,
+`P2P color: ${p2pState.color || "none"}`,
+`P2P protocol: v${p2pProtocolVersion}`,
+`Failure: ${p2pState.failureReasonKey ? t(p2pState.failureReasonKey) : "none"}`,
+`Peer connection: ${peer?.connectionState || "none"}`,
+`ICE connection: ${peer?.iceConnectionState || "none"}`,
+`ICE gathering: ${peer?.iceGatheringState || "none"}`,
+`Signaling: ${peer?.signalingState || "none"}`,
+`Data channel: ${channel?.readyState || "none"}`,
+`Has offer: ${p2pState.offerText ? "yes" : "no"}`,
+`Has answer: ${p2pState.answerText ? "yes" : "no"}`,
+`LAN connected: ${isLanConnected() ? "yes" : "no"}`,
+`Game Center connected: ${isGameCenterConnected() ? "yes" : "no"}`,
+];
+return rows.join("\n");
+}
+async function copyP2pDiagnostic() {
+try {
+await navigator.clipboard.writeText(p2pDiagnosticText());
+setNotice(t("p2pDiagnosticCopied"));
+} catch (error) {
+setNotice(t("copyBlocked"));
+}
+}
 function p2pPeerConfig() {
 return {
 iceServers: [
@@ -10109,14 +10227,34 @@ els.p2pStatus.textContent = supported ? p2pStatusText() : t("p2pStatusFailed");
 els.p2pStatus.classList.toggle("is-ready", connected);
 els.p2pSignalInput.placeholder = t("p2pSignalPlaceholder");
 setButtonContent(els.p2pHostBtn, "P2P", t("p2pHost"));
+setButtonContent(els.p2pScanBtn, "▣", t("p2pScan"));
 setButtonContent(els.p2pJoinBtn, "↔", t("p2pJoin"));
 setButtonContent(els.p2pAcceptAnswerBtn, "✓", t("p2pAcceptAnswer"));
 setButtonContent(els.p2pDisconnectBtn, "×", t("p2pDisconnect"));
+setButtonContent(els.p2pCopyDiagnosticBtn, "!", t("p2pCopyDiagnostic"));
 els.p2pHostBtn.disabled = !supported || busy;
+els.p2pScanBtn.disabled = !supported || connected || p2pState.status === "connecting";
 els.p2pJoinBtn.disabled = !supported || connected || p2pState.status === "connecting";
 els.p2pAcceptAnswerBtn.disabled = !supported || !["offer", "connecting"].includes(p2pState.status);
 els.p2pDisconnectBtn.hidden = !busy;
 els.p2pHint.textContent = supported ? t("p2pHint") : t("p2pUnsupported");
+const [hostStepClass, guestStepClass, finishStepClass] = p2pStepState();
+[
+[els.p2pStepHost, t("p2pStepHost"), hostStepClass],
+[els.p2pStepGuest, t("p2pStepGuest"), guestStepClass],
+[els.p2pStepFinish, t("p2pStepFinish"), finishStepClass],
+].forEach(([item, text, stateClass]) => {
+item.textContent = text;
+item.classList.toggle("is-active", stateClass === "is-active");
+item.classList.toggle("is-done", stateClass === "is-done");
+});
+const errorText = !supported
+? t("p2pFailureUnsupported")
+: p2pState.failureReasonKey
+? t(p2pState.failureReasonKey)
+: "";
+els.p2pError.hidden = !errorText;
+els.p2pError.textContent = errorText;
 els.p2pOfferTitle.textContent = t("p2pOfferTitle");
 els.p2pOfferText.textContent = t("p2pOfferText");
 setButtonContent(els.p2pCopyOfferBtn, "⧉", t("p2pCopyInvite"));
@@ -10164,7 +10302,9 @@ closePromotion();
 function setP2pChannel(channel) {
 p2pState.channel = channel;
 channel.addEventListener("open", () => {
+clearP2pConnectTimer();
 p2pState.status = "connected";
+p2pState.failureReasonKey = "";
 prepareP2pGame(p2pState.color || (p2pState.role === "host" ? "w" : "b"));
 render();
 setNotice(t("p2pConnected", { side: sideShortName(p2pState.color) }));
@@ -10180,7 +10320,9 @@ handleP2pMessage(JSON.parse(event.data));
 });
 channel.addEventListener("close", () => {
 if (p2pState.status === "connected") {
+clearP2pConnectTimer();
 p2pState.status = "idle";
+p2pState.failureReasonKey = "p2pFailureClosed";
 render();
 setNotice(t("p2pDisconnected"));
 }
@@ -10190,13 +10332,13 @@ function createP2pPeer() {
 const peer = new RTCPeerConnection(p2pPeerConfig());
 peer.addEventListener("connectionstatechange", () => {
 if (["failed", "disconnected", "closed"].includes(peer.connectionState) && p2pState.status !== "idle") {
-p2pState.status = peer.connectionState === "failed" ? "failed" : "idle";
-renderP2pPanel();
+failP2p(peer.connectionState === "failed" ? "p2pFailureTimeout" : "p2pFailureClosed", { notice: peer.connectionState === "failed" });
 }
 });
 return peer;
 }
 function disconnectP2p({ silent = false } = {}) {
+clearP2pConnectTimer();
 p2pState.channel?.close();
 p2pState.peer?.close();
 p2pState = {
@@ -10208,6 +10350,8 @@ color: "",
 offerText: "",
 answerText: "",
 lastMessageId: "",
+failureReasonKey: "",
+connectTimer: null,
 };
 renderP2pPanel();
 if (!silent) {
@@ -10216,11 +10360,12 @@ setNotice(t("p2pDisconnected"));
 }
 async function startP2pHost() {
 if (!p2pSupported()) {
-setNotice(t("p2pUnsupported"));
+failP2p("p2pFailureUnsupported");
 return false;
 }
 disconnectP2p({ silent: true });
 prepareP2pGame("w");
+try {
 const peer = createP2pPeer();
 const channel = peer.createDataChannel("matequest-chess", { ordered: true });
 p2pState = {
@@ -10232,6 +10377,8 @@ color: "w",
 offerText: "",
 answerText: "",
 lastMessageId: "",
+failureReasonKey: "",
+connectTimer: null,
 };
 setP2pChannel(channel);
 const offer = await peer.createOffer();
@@ -10247,6 +10394,10 @@ p2pState.status = "offer";
 render();
 setNotice(t("p2pOfferReady"));
 return true;
+} catch (error) {
+failP2p("p2pFailureUnknown");
+return false;
+}
 }
 async function joinP2pFromSignal(input) {
 if (!p2pSupported()) {
@@ -10257,20 +10408,27 @@ let signal;
 try {
 signal = await decodeP2pSignal(input);
 } catch (error) {
+p2pState.failureReasonKey = "p2pFailureBadSignal";
+renderP2pPanel();
 setNotice(t("p2pBadSignal"));
 return false;
 }
 if (signal.mode === "answer") {
 els.p2pSignalInput.value = typeof input === "string" ? input : "";
-setNotice(t("p2pAnswerPasteNotice"));
+p2pState.failureReasonKey = p2pState.role === "host" ? "" : "p2pFailureWrongRole";
+renderP2pPanel();
+setNotice(p2pState.role === "host" ? t("p2pWrongModeAnswer") : t("p2pAnswerPasteNotice"));
 return false;
 }
 if (signal.mode !== "offer" || !signal.description) {
+p2pState.failureReasonKey = "p2pFailureBadSignal";
+renderP2pPanel();
 setNotice(t("p2pBadSignal"));
 return false;
 }
 disconnectP2p({ silent: true });
 prepareP2pGame("b");
+try {
 const peer = createP2pPeer();
 p2pState = {
 peer,
@@ -10281,6 +10439,8 @@ color: "b",
 offerText: "",
 answerText: "",
 lastMessageId: "",
+failureReasonKey: "",
+connectTimer: null,
 };
 peer.addEventListener("datachannel", (event) => {
 setP2pChannel(event.channel);
@@ -10299,6 +10459,10 @@ p2pState.status = "answer";
 render();
 setNotice(t("p2pAnswerReady"));
 return true;
+} catch (error) {
+failP2p("p2pFailureBadSignal");
+return false;
+}
 }
 async function joinP2pFromInput() {
 const signal = els.p2pSignalInput.value.trim();
@@ -10322,18 +10486,29 @@ let signal;
 try {
 signal = await decodeP2pSignal(input);
 } catch (error) {
+p2pState.failureReasonKey = "p2pFailureBadSignal";
+renderP2pPanel();
 setNotice(t("p2pBadSignal"));
 return false;
 }
 if (signal.mode !== "answer" || !signal.description) {
-setNotice(t("p2pHostNeedsAnswer"));
+p2pState.failureReasonKey = signal.mode === "offer" ? "p2pFailureWrongRole" : "p2pFailureBadSignal";
+renderP2pPanel();
+setNotice(signal.mode === "offer" ? t("p2pWrongModeOffer") : t("p2pHostNeedsAnswer"));
 return false;
 }
+try {
 await p2pState.peer.setRemoteDescription(signal.description);
 p2pState.status = "connecting";
+p2pState.failureReasonKey = "";
+startP2pConnectTimer();
 renderP2pPanel();
 setNotice(t("p2pStatusConnecting"));
 return true;
+} catch (error) {
+failP2p("p2pFailureBadSignal");
+return false;
+}
 }
 function sendP2p(payload) {
 if (!isP2pConnected()) {
@@ -10435,6 +10610,57 @@ setNotice(t("p2pSignalCopied"));
 } catch (error) {
 setNotice(t("copyBlocked"));
 }
+}
+async function handleScannedP2pSignalText(scanned, { cancelled = false } = {}) {
+const signalText = String(scanned || "").trim();
+if (!signalText) {
+setNotice(t(cancelled ? "p2pNeedSignal" : "p2pScanEmpty"));
+els.p2pSignalInput.focus();
+return false;
+}
+els.lanPanel.open = true;
+els.p2pSignalInput.value = signalText;
+setNotice(t("p2pScanNativeFound"));
+let signal = null;
+try {
+signal = await decodeP2pSignal(signalText);
+} catch (error) {
+p2pState.failureReasonKey = "p2pFailureBadSignal";
+renderP2pPanel();
+setNotice(t("p2pBadSignal"));
+return false;
+}
+if (signal.mode === "offer") {
+return joinP2pFromSignal(signalText);
+}
+if (signal.mode === "answer") {
+if (p2pState.role === "host" && p2pState.peer) {
+return acceptP2pAnswerFromInput();
+}
+p2pState.failureReasonKey = "p2pFailureWrongRole";
+renderP2pPanel();
+setNotice(t("p2pAnswerPasteNotice"));
+return false;
+}
+p2pState.failureReasonKey = "p2pFailureBadSignal";
+renderP2pPanel();
+setNotice(t("p2pBadSignal"));
+return false;
+}
+async function scanP2pSignal() {
+if (nativeQrScannerAvailable()) {
+nativeQrScanTarget = "p2p";
+setNotice(t("p2pScanNativeStarting"));
+try {
+window.webkit.messageHandlers.scanLanQr.postMessage("p2p");
+return;
+} catch (error) {
+handleNativeQrScanError("camera-unavailable");
+return;
+}
+}
+const scanned = window.prompt(t("p2pScanPrompt"), "");
+await handleScannedP2pSignalText(scanned || "", { cancelled: scanned === null });
 }
 async function handleInitialP2pSignal(signalText) {
 if (!signalText) {
@@ -11504,6 +11730,17 @@ connectLan();
 return true;
 }
 function handleNativeQrScanError(reason = "") {
+if (nativeQrScanTarget === "p2p") {
+if (reason === "camera-denied") {
+setNotice(t("lanModeScanNativeDenied"));
+} else if (reason === "cancelled") {
+setNotice(t("lanModeScanNativeCancelled"));
+} else {
+setNotice(t("lanModeScanNativeUnavailable"));
+}
+els.p2pSignalInput.focus();
+return;
+}
 if (reason === "camera-denied") {
 setNotice(t("lanModeScanNativeDenied"));
 } else if (reason === "cancelled") {
@@ -11515,9 +11752,10 @@ focusLanRoomInput();
 }
 function joinScannedLanRoom() {
 if (nativeQrScannerAvailable()) {
+nativeQrScanTarget = "lan";
 setNotice(t("lanModeScanNativeStarting"));
 try {
-window.webkit.messageHandlers.scanLanQr.postMessage("scan");
+window.webkit.messageHandlers.scanLanQr.postMessage("lan");
 return;
 } catch (error) {
 handleNativeQrScanError("camera-unavailable");
@@ -11531,11 +11769,17 @@ function enterLanRoomCode() {
 focusLanRoomInput();
 setNotice(t("lanModeCodeFocus"));
 }
-window.jefferyChessHandleNativeQrScan = function jefferyChessHandleNativeQrScan(scanned) {
+window.jefferyChessHandleNativeQrScan = async function jefferyChessHandleNativeQrScan(scanned) {
+if (nativeQrScanTarget === "p2p") {
+await handleScannedP2pSignalText(scanned || "");
+} else {
 handleScannedLanRoomText(scanned || "");
+}
+nativeQrScanTarget = "lan";
 };
 window.jefferyChessHandleNativeQrScanError = function jefferyChessHandleNativeQrScanError(reason) {
 handleNativeQrScanError(String(reason || ""));
+nativeQrScanTarget = "lan";
 };
 async function createLanRoom() {
 const room = createLanRoomCode();
@@ -11849,9 +12093,11 @@ els.gameCenterMatchBtn.addEventListener("click", () => postGameCenterAction("mat
 els.gameCenterSpectateBtn.addEventListener("click", () => postGameCenterAction("spectate"));
 els.gameCenterDashboardBtn.addEventListener("click", () => postGameCenterAction("dashboard"));
 els.p2pHostBtn.addEventListener("click", startP2pHost);
+els.p2pScanBtn.addEventListener("click", scanP2pSignal);
 els.p2pJoinBtn.addEventListener("click", joinP2pFromInput);
 els.p2pAcceptAnswerBtn.addEventListener("click", acceptP2pAnswerFromInput);
 els.p2pDisconnectBtn.addEventListener("click", () => disconnectP2p());
+els.p2pCopyDiagnosticBtn.addEventListener("click", copyP2pDiagnostic);
 els.p2pCopyOfferBtn.addEventListener("click", () => copyP2pSignal(p2pState.offerText));
 els.p2pCopyAnswerBtn.addEventListener("click", () => copyP2pSignal(p2pState.answerText));
 els.p2pSignalInput.addEventListener("keydown", (event) => {

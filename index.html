@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=1.0.58" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.59" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -534,6 +534,10 @@
                     <span class="button-icon">P2P</span>
                     创建直连
                   </button>
+                  <button class="action-button" id="p2pScanBtn" type="button">
+                    <span class="button-icon">▣</span>
+                    扫码/粘贴
+                  </button>
                   <button class="action-button" id="p2pJoinBtn" type="button">
                     <span class="button-icon">↔</span>
                     粘贴/加入邀请
@@ -546,7 +550,16 @@
                     <span class="button-icon">×</span>
                     断开直连
                   </button>
+                  <button class="action-button" id="p2pCopyDiagnosticBtn" type="button">
+                    <span class="button-icon">!</span>
+                    复制诊断
+                  </button>
                 </div>
+                <ol class="p2p-steps" id="p2pSteps">
+                  <li id="p2pStepHost">房主：创建邀请并复制给朋友。</li>
+                  <li id="p2pStepGuest">朋友：打开邀请，复制回应码发回房主。</li>
+                  <li id="p2pStepFinish">房主：粘贴回应码并开始对战。</li>
+                </ol>
                 <textarea class="p2p-signal-input" id="p2pSignalInput" rows="3" autocomplete="off" placeholder="粘贴邀请码或回应码"></textarea>
                 <div class="p2p-signal-grid">
                   <section class="p2p-signal-card" id="p2pOfferCard" hidden>
@@ -572,6 +585,7 @@
                     </button>
                   </section>
                 </div>
+                <p class="p2p-error" id="p2pError" hidden></p>
                 <p class="lan-duel-note" id="p2pHint">GitHub 静态版可用这个方式联机；第一次连接需要邀请码和回应码各交换一次。</p>
               </article>
               <article class="lan-host-card" id="lanHostCard" hidden>
@@ -1169,7 +1183,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.58</p>
+        <p class="release-version" id="releaseVersionText">v1.0.59</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-24</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1326,7 +1340,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.58"></script>
-    <script src="./app.js?v=1.0.58"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.59"></script>
+    <script src="./app.js?v=1.0.59"></script>
   </body>
 </html>
