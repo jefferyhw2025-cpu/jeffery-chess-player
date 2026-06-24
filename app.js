@@ -1,5 +1,5 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.57";
+const appVersion = "1.0.58";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -7,8 +7,12 @@ const lanProtocolVersion = 1;
 const lanMinimumCompatibleProtocolVersion = 1;
 const lanReconnectMaxAttempts = 3;
 const lanReconnectDelayMs = 1200;
+const p2pSignalParam = "p2pSignal";
+const p2pProtocolVersion = 1;
+const p2pIceGatherTimeoutMs = 4500;
 const releaseNotes = {
 zh: [
+"v1.0.58：GitHub 玩家版新增 WebRTC 双人直连，不需要本地 LAN 服务器；房主生成邀请二维码，朋友生成回应码后即可点对点下棋。",
 "v1.0.57：局域网新增观战房间号 WATCH- 前缀和观战二维码；App Store 版 LAN 与 Game Center 也预留观战入口，第三/第四位 Game Center 玩家会进入观战。",
 "v1.0.56：玩家提交反馈后会看到更清楚的反馈编号说明，方便保存编号并让开发者快速查找问题。",
 "v1.0.55：走不了棋时会说明原因，卡住的 AI 回合会自动重启，并新增“吃过路兵”说明，避免兵斜走空格看起来像 bug。",
@@ -81,6 +85,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.58: the GitHub player build now supports WebRTC two-player direct play without a local LAN server; the host shares an invite QR, the friend returns an answer code, and the browsers play peer-to-peer.",
 "v1.0.57: LAN now has WATCH-prefixed spectator room codes and spectator QR invites; the App Store LAN and Game Center flows also include spectator entry, with third/fourth Game Center players watching.",
 "v1.0.56: player feedback now explains the feedback ID more clearly so players can save it and the developer can find the report faster.",
 "v1.0.55: move blocks now explain why, stuck AI turns restart automatically, and en passant pawn captures are explained clearly.",
@@ -950,6 +955,43 @@ gameCenterStatusWaiting: "Game Center 对局中，请等待对手走棋。",
 gameCenterStatusSent: "已发送棋步：{move}",
 gameCenterStatusReceived: "收到对手棋步：{move}",
 gameCenterStatusNotReady: "请先完成 Game Center 匹配。",
+p2pLabel: "GitHub 直连",
+p2pTitle: "免服务器双人对战",
+p2pText: "GitHub 玩家版可用 WebRTC 点对点联机：房主发邀请，朋友回传回应码，之后直接下棋。",
+p2pStatusIdle: "未连接",
+p2pStatusOffer: "等待回应",
+p2pStatusAnswer: "回应已生成",
+p2pStatusConnecting: "连接中",
+p2pStatusConnected: "已直连",
+p2pStatusFailed: "连接失败",
+p2pHost: "创建直连",
+p2pJoin: "粘贴/加入邀请",
+p2pAcceptAnswer: "接受回应",
+p2pDisconnect: "断开直连",
+p2pSignalPlaceholder: "粘贴朋友发来的邀请码或回应码",
+p2pOfferTitle: "房主邀请码",
+p2pOfferText: "把二维码或链接发给朋友。朋友打开后会生成回应码。",
+p2pAnswerTitle: "朋友回应码",
+p2pAnswerText: "把这个二维码或链接发回房主，让房主粘贴到输入框并点接受回应。",
+p2pCopyInvite: "复制邀请",
+p2pCopyAnswer: "复制回应",
+p2pQrAria: "WebRTC 直连二维码",
+p2pHint: "GitHub 静态版可用这个方式联机；第一次连接需要邀请码和回应码各交换一次。",
+p2pUnsupported: "这个浏览器暂时不支持 WebRTC，请改用最新版 Chrome 或 Safari。",
+p2pOfferReady: "直连邀请已生成。把二维码或链接发给朋友。",
+p2pAnswerReady: "回应码已生成。请发回房主，让房主粘贴并接受回应。",
+p2pConnected: "WebRTC 直连成功：你执{side}。",
+p2pDisconnected: "WebRTC 直连已断开。",
+p2pSignalCopied: "直连代码已复制。",
+p2pNeedSignal: "请先粘贴邀请码或回应码。",
+p2pBadSignal: "这个直连代码无法读取，请确认复制完整。",
+p2pHostNeedsAnswer: "房主需要粘贴朋友生成的回应码。",
+p2pAnswerPasteNotice: "这是朋友回应码。请复制它，回到房主页面粘贴并点接受回应。",
+p2pWaitingTurn: "WebRTC 对局中，请等待对手走棋。",
+p2pRemoteMove: "直连对手：{san}",
+p2pResetNotice: "对手重开了直连对局。",
+p2pAiBlocked: "WebRTC 直连中不能开启 AI。",
+p2pRankedBlocked: "WebRTC 直连不计入段位。",
 lanModeCreate: "创建房间",
 lanModeNearby: "加入附近房间",
 lanModeScan: "扫码加入",
@@ -1232,6 +1274,7 @@ rankServerVerified: "服务器已验证：本局可以计入正式段位。",
 rankServerRejected: "服务器验证失败：本局已撤销段位分。",
 rankServerUnavailable: "服务器暂时无法验证：本局只保留为本地记录。",
 rankedInvalidLan: "局域网对局不计算段位分。",
+rankedInvalidP2p: "WebRTC 直连对局不计算段位分。",
 rankedInvalidGameCenter: "Game Center 互联网对战不计算段位分。",
 rankedInvalidNotRanked: "未开启段位赛。",
 rankedInvalidNoAi: "不是完整 AI 对局。",
@@ -1718,6 +1761,43 @@ gameCenterStatusWaiting: "Game Center game: wait for your opponent's move.",
 gameCenterStatusSent: "Move sent: {move}",
 gameCenterStatusReceived: "Opponent move received: {move}",
 gameCenterStatusNotReady: "Finish Game Center matchmaking first.",
+p2pLabel: "GitHub Direct",
+p2pTitle: "Serverless Two-Player Match",
+p2pText: "The GitHub player build can use WebRTC peer-to-peer play: the host shares an invite, the friend returns an answer code, then both browsers play directly.",
+p2pStatusIdle: "Offline",
+p2pStatusOffer: "Waiting for answer",
+p2pStatusAnswer: "Answer ready",
+p2pStatusConnecting: "Connecting",
+p2pStatusConnected: "Direct",
+p2pStatusFailed: "Failed",
+p2pHost: "Create Direct Match",
+p2pJoin: "Paste / Join Invite",
+p2pAcceptAnswer: "Accept Answer",
+p2pDisconnect: "Disconnect Direct",
+p2pSignalPlaceholder: "Paste the invite or answer code from your friend",
+p2pOfferTitle: "Host Invite Code",
+p2pOfferText: "Send this QR code or link to your friend. They will open it and create an answer code.",
+p2pAnswerTitle: "Friend Answer Code",
+p2pAnswerText: "Send this QR code or link back to the host. The host pastes it and taps Accept Answer.",
+p2pCopyInvite: "Copy Invite",
+p2pCopyAnswer: "Copy Answer",
+p2pQrAria: "WebRTC direct-play QR code",
+p2pHint: "This works on the GitHub static build. The first connection needs one invite code and one answer code exchange.",
+p2pUnsupported: "This browser does not support WebRTC yet. Use the latest Chrome or Safari.",
+p2pOfferReady: "Direct invite created. Send the QR code or link to your friend.",
+p2pAnswerReady: "Answer code created. Send it back so the host can paste and accept it.",
+p2pConnected: "WebRTC direct connected: you play {side}.",
+p2pDisconnected: "WebRTC direct match disconnected.",
+p2pSignalCopied: "Direct code copied.",
+p2pNeedSignal: "Paste an invite or answer code first.",
+p2pBadSignal: "Could not read this direct code. Copy the whole code or link.",
+p2pHostNeedsAnswer: "The host needs to paste the friend's answer code.",
+p2pAnswerPasteNotice: "This is the friend's answer code. Copy it, return to the host page, paste it, and tap Accept Answer.",
+p2pWaitingTurn: "WebRTC match: wait for your opponent's move.",
+p2pRemoteMove: "Direct opponent: {san}",
+p2pResetNotice: "Your opponent restarted the direct match.",
+p2pAiBlocked: "AI cannot be enabled during a WebRTC direct match.",
+p2pRankedBlocked: "WebRTC direct matches do not count for rank.",
 lanModeCreate: "Create Room",
 lanModeNearby: "Join Nearby",
 lanModeScan: "Scan to Join",
@@ -2000,6 +2080,7 @@ rankServerVerified: "Server verified: this game can count for official rank.",
 rankServerRejected: "Server verification failed: rank points were removed.",
 rankServerUnavailable: "The server could not verify this game; it stays as a local record.",
 rankedInvalidLan: "LAN games do not change rank points.",
+rankedInvalidP2p: "WebRTC direct games do not change rank points.",
 rankedInvalidGameCenter: "Game Center online games do not change rank points.",
 rankedInvalidNotRanked: "Ranked mode was not enabled.",
 rankedInvalidNoAi: "This was not a complete AI game.",
@@ -2552,6 +2633,29 @@ gameCenterMatchBtn: document.querySelector("#gameCenterMatchBtn"),
 gameCenterSpectateBtn: document.querySelector("#gameCenterSpectateBtn"),
 gameCenterDashboardBtn: document.querySelector("#gameCenterDashboardBtn"),
 gameCenterStatus: document.querySelector("#gameCenterStatus"),
+p2pCard: document.querySelector("#p2pCard"),
+p2pLabel: document.querySelector("#p2pLabel"),
+p2pTitle: document.querySelector("#p2pTitle"),
+p2pText: document.querySelector("#p2pText"),
+p2pStatus: document.querySelector("#p2pStatus"),
+p2pHostBtn: document.querySelector("#p2pHostBtn"),
+p2pJoinBtn: document.querySelector("#p2pJoinBtn"),
+p2pAcceptAnswerBtn: document.querySelector("#p2pAcceptAnswerBtn"),
+p2pDisconnectBtn: document.querySelector("#p2pDisconnectBtn"),
+p2pSignalInput: document.querySelector("#p2pSignalInput"),
+p2pOfferCard: document.querySelector("#p2pOfferCard"),
+p2pOfferTitle: document.querySelector("#p2pOfferTitle"),
+p2pOfferText: document.querySelector("#p2pOfferText"),
+p2pOfferQr: document.querySelector("#p2pOfferQr"),
+p2pOfferLink: document.querySelector("#p2pOfferLink"),
+p2pCopyOfferBtn: document.querySelector("#p2pCopyOfferBtn"),
+p2pAnswerCard: document.querySelector("#p2pAnswerCard"),
+p2pAnswerTitle: document.querySelector("#p2pAnswerTitle"),
+p2pAnswerText: document.querySelector("#p2pAnswerText"),
+p2pAnswerQr: document.querySelector("#p2pAnswerQr"),
+p2pAnswerLink: document.querySelector("#p2pAnswerLink"),
+p2pCopyAnswerBtn: document.querySelector("#p2pCopyAnswerBtn"),
+p2pHint: document.querySelector("#p2pHint"),
 lanHostCard: document.querySelector("#lanHostCard"),
 lanHostLabel: document.querySelector("#lanHostLabel"),
 lanHostTitle: document.querySelector("#lanHostTitle"),
@@ -2811,6 +2915,16 @@ localPlayerId: "",
 remotePlayerIds: [],
 remotePlayers: [],
 connected: false,
+lastMessageId: "",
+};
+let p2pState = {
+peer: null,
+channel: null,
+status: "idle",
+role: "",
+color: "",
+offerText: "",
+answerText: "",
 lastMessageId: "",
 };
 let lastLanCheck = null;
@@ -4096,13 +4210,14 @@ return amount > 0 ? `+${amount}` : String(amount);
 function rankScoreForLevel(level = aiLevel) {
 return aiRankScores[level] ?? aiRankScores[3];
 }
-function isAiRankScoredGame({ byLan = false, byGameCenter = false } = {}) {
+function isAiRankScoredGame({ byLan = false, byGameCenter = false, byP2p = false } = {}) {
 return (
 rankedModeEnabled &&
 rankedGameEligible &&
 aiEnabled &&
 !byLan &&
 !byGameCenter &&
+!byP2p &&
 game.history().length > 0 &&
 !currentGameUsedTip &&
 rankedGameAiLevel === aiLevel &&
@@ -4115,14 +4230,14 @@ return "draw";
 }
 return resultColor === humanColor ? "win" : "loss";
 }
-function getAiRankDelta(resultColor, { byLan = false, byGameCenter = false } = {}) {
-if (!isAiRankScoredGame({ byLan, byGameCenter })) {
+function getAiRankDelta(resultColor, { byLan = false, byGameCenter = false, byP2p = false } = {}) {
+if (!isAiRankScoredGame({ byLan, byGameCenter, byP2p })) {
 return 0;
 }
 const scores = rankScoreForLevel(aiLevel);
 return scores[humanResultOutcome(resultColor)] ?? 0;
 }
-function isProfessionalLeagueScoredGame({ byLan = false, byGameCenter = false } = {}) {
+function isProfessionalLeagueScoredGame({ byLan = false, byGameCenter = false, byP2p = false } = {}) {
 return (
 professionalLeagueModeEnabled &&
 professionalLeagueGameEligible &&
@@ -4130,6 +4245,7 @@ Boolean(currentAccount()) &&
 aiEnabled &&
 !byLan &&
 !byGameCenter &&
+!byP2p &&
 game.history().length > 0
 );
 }
@@ -4314,8 +4430,8 @@ renderLeaderboard();
 onlineLeagueStatus = "offline";
 }
 }
-function recordProfessionalLeagueResult(resultColor, { byLan = false, byGameCenter = false } = {}) {
-if (!isProfessionalLeagueScoredGame({ byLan, byGameCenter })) {
+function recordProfessionalLeagueResult(resultColor, { byLan = false, byGameCenter = false, byP2p = false } = {}) {
+if (!isProfessionalLeagueScoredGame({ byLan, byGameCenter, byP2p })) {
 return "";
 }
 const outcome = humanResultOutcome(resultColor);
@@ -4345,12 +4461,15 @@ draw: signedPoints(scores.draw),
 loss: signedPoints(scores.loss),
 });
 }
-function rankedInvalidReasonKey({ byLan = false, byGameCenter = false } = {}) {
+function rankedInvalidReasonKey({ byLan = false, byGameCenter = false, byP2p = false } = {}) {
 if (byLan || isLanConnected()) {
 return "rankedInvalidLan";
 }
 if (byGameCenter || isGameCenterConnected()) {
 return "rankedInvalidGameCenter";
+}
+if (byP2p || isP2pConnected()) {
+return "rankedInvalidP2p";
 }
 if (!rankedModeEnabled) {
 return "rankedInvalidNotRanked";
@@ -4383,7 +4502,7 @@ return t("rankedSettlementDraw");
 }
 function buildRankedSettlement(
 resultColor,
-{ byLan = false, byGameCenter = false, rankedScored = false, requestedRankDelta = 0, appliedRankDelta = 0 } = {},
+{ byLan = false, byGameCenter = false, byP2p = false, rankedScored = false, requestedRankDelta = 0, appliedRankDelta = 0 } = {},
 ) {
 const outcome = humanResultOutcome(resultColor);
 const points = rankedScored ? appliedRankDelta : 0;
@@ -4394,7 +4513,7 @@ rankedScored && shouldUseRankServerVerification()
 ? "rankScoreFloorNotice"
 : rankedScored
 ? "rankedSettlementReasonLocal"
-: rankedInvalidReasonKey({ byLan, byGameCenter });
+: rankedInvalidReasonKey({ byLan, byGameCenter, byP2p });
 return {
 valid: rankedScored,
 outcome,
@@ -4406,7 +4525,7 @@ verification: rankedScored ? (shouldUseRankServerVerification() ? "checking" : "
 function shouldUseRankServerVerification() {
 return window.location.protocol === "https:" && isNetlifyHost();
 }
-function rankVerificationPayload(resultColor, { byLan = false, byGameCenter = false } = {}) {
+function rankVerificationPayload(resultColor, { byLan = false, byGameCenter = false, byP2p = false } = {}) {
 return {
 appVersion,
 playerId: getOnlinePlayerId(),
@@ -4425,6 +4544,7 @@ rankedGameHumanColor,
 usedTip: currentGameUsedTip,
 byLan,
 byGameCenter,
+byP2p,
 professionalUnlocked: isProfessionalAiUnlocked(),
 };
 }
@@ -4484,7 +4604,7 @@ renderPostGameReview();
 saveCurrentGame();
 }
 function markRankedGameEligible() {
-rankedGameEligible = rankedModeEnabled && aiEnabled && !isLanConnected();
+rankedGameEligible = rankedModeEnabled && aiEnabled && !isLanConnected() && !isP2pConnected();
 rankedGameAiLevel = aiLevel;
 rankedGameHumanColor = humanColor;
 }
@@ -4492,7 +4612,7 @@ function clearRankedGameEligibility() {
 rankedGameEligible = false;
 }
 function markProfessionalLeagueGameEligible() {
-professionalLeagueGameEligible = Boolean(currentAccount()) && professionalLeagueModeEnabled && aiEnabled && !isLanConnected();
+professionalLeagueGameEligible = Boolean(currentAccount()) && professionalLeagueModeEnabled && aiEnabled && !isLanConnected() && !isP2pConnected();
 }
 function clearProfessionalLeagueGameEligibility() {
 professionalLeagueGameEligible = false;
@@ -6359,6 +6479,7 @@ hideLanSpectatorCard();
 }
 renderLanAppModeCard();
 renderGameCenterCard();
+renderP2pPanel();
 renderLanHostCard();
 renderLanJumpCard();
 const existingDuelHref = els.lanDuelLink.getAttribute("href") || "";
@@ -6433,6 +6554,7 @@ setButtonContent(els.lanCheckBtn, "✓", t("lanCheck"));
 setButtonContent(els.lanDiagnosticBtn, "?", t("lanDiagnostic"));
 renderLanAppModeCard();
 renderGameCenterCard();
+renderP2pPanel();
 renderLanHostCard();
 renderLanJumpCard();
 els.lanShareLabel.textContent = t("lanShareLabel");
@@ -7286,7 +7408,7 @@ const pieceType = checkingPieces[0]?.piece.type ?? "q";
 playCheckSound(pieceType, game.isCheckmate(), checkingPieces.length, startDelay);
 }
 function isAiTurn() {
-return aiEnabled && !isGameCenterConnected() && game.turn() !== humanColor && !game.isGameOver();
+return aiEnabled && !isGameCenterConnected() && !isP2pConnected() && game.turn() !== humanColor && !game.isGameOver();
 }
 function renderBoard() {
 const shownFiles = orientedFiles();
@@ -7457,10 +7579,11 @@ isAiTurn() ||
 rankedModeEnabled ||
 professionalLeagueModeEnabled ||
 (isGameCenterConnected() && !canPlayGameCenterMove()) ||
+(isP2pConnected() && !canPlayP2pMove()) ||
 (isLanConnected() && !canPlayLanMove());
 els.tutorialBtn.disabled = aiThinking || Boolean(pendingPromotion);
 els.undoBtn.disabled =
-aiThinking || isLanConnected() || isGameCenterConnected() || rankedModeEnabled || professionalLeagueModeEnabled;
+aiThinking || isLanConnected() || isGameCenterConnected() || isP2pConnected() || rankedModeEnabled || professionalLeagueModeEnabled;
 els.fenInput.value = game.fen();
 renderMusicButton();
 renderAiPanel();
@@ -7488,7 +7611,7 @@ const stats = currentLeagueStats();
 els.professionalLeagueBtn.classList.toggle("is-active", professionalLeagueModeEnabled);
 els.professionalLeagueBtn.setAttribute("aria-pressed", String(professionalLeagueModeEnabled));
 els.professionalLeagueBtn.setAttribute("aria-label", t("professionalLeagueAria"));
-els.professionalLeagueBtn.disabled = isLanConnected() || isGameCenterConnected() || aiThinking;
+els.professionalLeagueBtn.disabled = isLanConnected() || isGameCenterConnected() || isP2pConnected() || aiThinking;
 setButtonContent(els.professionalLeagueBtn, "♛", t("professionalLeagueMode"));
 els.professionalLeagueDetail.textContent = professionalLeagueModeEnabled
 ? t("professionalLeagueDetailOn", professionalLeagueScores)
@@ -7531,12 +7654,12 @@ els.aiTitle.textContent = aiEnabled ? t("playAs", { side: humanSide }) : t("loca
 els.aiBadge.textContent = aiThinking ? t("thinking") : aiEnabled ? t("aiPlays", { side: aiSide }) : t("off");
 els.aiBadge.classList.toggle("is-thinking", aiThinking);
 els.aiToggleBtn.classList.toggle("is-active", aiEnabled);
-els.aiToggleBtn.disabled = isLanConnected() || isGameCenterConnected();
-els.playerSideBtn.disabled = isLanConnected() || isGameCenterConnected();
+els.aiToggleBtn.disabled = isLanConnected() || isGameCenterConnected() || isP2pConnected();
+els.playerSideBtn.disabled = isLanConnected() || isGameCenterConnected() || isP2pConnected();
 els.rankedModeBtn.classList.toggle("is-active", rankedModeEnabled);
 els.rankedModeBtn.setAttribute("aria-pressed", String(rankedModeEnabled));
 els.rankedModeBtn.setAttribute("aria-label", t("rankedModeAria"));
-els.rankedModeBtn.disabled = isLanConnected() || isGameCenterConnected() || aiThinking;
+els.rankedModeBtn.disabled = isLanConnected() || isGameCenterConnected() || isP2pConnected() || aiThinking;
 setButtonContent(els.aiToggleBtn, "AI", aiEnabled ? t("disableAi") : t("enableAi"));
 setButtonContent(els.playerSideBtn, humanColor === "w" ? "♙" : "♟", t("playAs", { side: humanSide }));
 setButtonContent(els.rankedModeBtn, "★", t("rankedMode"));
@@ -7561,7 +7684,7 @@ const isActive = professionalLeagueModeEnabled ? level === 6 : level === aiLevel
 const isProfessionalLocked = !professionalLeagueModeEnabled && level === 6 && !isProfessionalAiUnlocked();
 const isRankedLocked = rankedGameEligible && game.history().length > 0 && level !== aiLevel;
 button.classList.toggle("is-active", isActive);
-button.disabled = aiThinking || isGameCenterConnected() || professionalLeagueModeEnabled || isProfessionalLocked || isRankedLocked;
+button.disabled = aiThinking || isGameCenterConnected() || isP2pConnected() || professionalLeagueModeEnabled || isProfessionalLocked || isRankedLocked;
 button.setAttribute("aria-pressed", String(isActive));
 button.replaceChildren();
 const label = document.createElement("span");
@@ -7892,8 +8015,8 @@ els.materialLead.textContent = t("materialEven");
 renderRank();
 renderProfile();
 }
-function updateMasterNoHintChallenge(resultColor, { byLan = false } = {}) {
-if (byLan || !aiEnabled || aiLevel !== 5) {
+function updateMasterNoHintChallenge(resultColor, { byLan = false, byGameCenter = false, byP2p = false } = {}) {
+if (byLan || byGameCenter || byP2p || !aiEnabled || aiLevel !== 5) {
 return "";
 }
 if (resultColor === humanColor && !currentGameUsedTip) {
@@ -7910,7 +8033,7 @@ masterNoHintWinStreak = 0;
 saveMasterNoHintWinStreak();
 return currentGameUsedTip ? t("geniusStreakHintReset") : t("geniusStreakReset");
 }
-function recordGameResult({ byAi = false, byLan = false, byGameCenter = false } = {}) {
+function recordGameResult({ byAi = false, byLan = false, byGameCenter = false, byP2p = false } = {}) {
 if (recordedResult || !game.isGameOver()) {
 return "";
 }
@@ -7919,32 +8042,33 @@ recordedResult = opposite(game.turn());
 } else {
 recordedResult = "d";
 }
-const rankedScored = isAiRankScoredGame({ byLan, byGameCenter });
+const rankedScored = isAiRankScoredGame({ byLan, byGameCenter, byP2p });
 updateMatchScore(recordedResult, 1);
 updateFriendRecord(recordedResult, 1);
-const requestedRankDelta = getAiRankDelta(recordedResult, { byLan, byGameCenter });
+const requestedRankDelta = getAiRankDelta(recordedResult, { byLan, byGameCenter, byP2p });
 recordedRankDelta = requestedRankDelta ? updateRankPoints(requestedRankDelta) : 0;
-const professionalLeagueNotice = recordProfessionalLeagueResult(recordedResult, { byLan, byGameCenter });
+const professionalLeagueNotice = recordProfessionalLeagueResult(recordedResult, { byLan, byGameCenter, byP2p });
 lastRankedSettlement = buildRankedSettlement(recordedResult, {
 byLan,
 byGameCenter,
+byP2p,
 rankedScored,
 requestedRankDelta,
 appliedRankDelta: recordedRankDelta,
 });
-const rankedVerificationPayload = rankedScored ? rankVerificationPayload(recordedResult, { byLan, byGameCenter }) : null;
+const rankedVerificationPayload = rankedScored ? rankVerificationPayload(recordedResult, { byLan, byGameCenter, byP2p }) : null;
 const rankedVerificationPgn = rankedVerificationPayload?.pgn;
-recordedProfileOutcome = profileOutcomeForResult(recordedResult, { byLan });
+recordedProfileOutcome = profileOutcomeForResult(recordedResult, { byLan: byLan || byP2p || byGameCenter });
 updateProfileGameResult(recordedProfileOutcome, 1);
 postGameReview = buildPostGameReview(recordedResult);
 savePostGameMistakeEntry(recordedResult, postGameReview);
 if (rankedScored) {
 updateDailyTask("ranked-complete", 1);
 }
-if (!byLan && !byGameCenter && aiEnabled && recordedResult === humanColor && !currentGameUsedTip) {
+if (!byLan && !byGameCenter && !byP2p && aiEnabled && recordedResult === humanColor && !currentGameUsedTip) {
 updateDailyTask("no-hint-ai-win", 1);
 }
-const challengeNotice = updateMasterNoHintChallenge(recordedResult, { byLan });
+const challengeNotice = updateMasterNoHintChallenge(recordedResult, { byLan, byGameCenter, byP2p });
 const resultNotices = [];
 if (rankedScored) {
 resultNotices.push(
@@ -7952,7 +8076,7 @@ requestedRankDelta < 0 && recordedRankDelta === 0
 ? t("rankScoreFloorNotice")
 : t("rankScoreNotice", { points: signedPoints(recordedRankDelta) }),
 );
-} else if (!byLan && !byGameCenter) {
+} else if (!byLan && !byGameCenter && !byP2p) {
 resultNotices.push(t("rankNoAiScoreNotice"));
 }
 if (challengeNotice) {
@@ -7961,7 +8085,7 @@ resultNotices.push(challengeNotice);
 if (professionalLeagueNotice) {
 resultNotices.push(professionalLeagueNotice);
 }
-if (!byLan && !byGameCenter) {
+if (!byLan && !byGameCenter && !byP2p) {
 if (recordedResult === "d") {
 unlockAchievement("peace-maker");
 } else if (!byAi || recordedResult === humanColor) {
@@ -8095,6 +8219,12 @@ renderBoard();
 setNotice(gameCenterState.color === "s" ? t("gameCenterStatusSpectating") : t("gameCenterStatusWaiting"));
 return true;
 }
+if (isP2pConnected() && !canPlayP2pMove()) {
+clearSelection();
+renderBoard();
+setNotice(t("p2pWaitingTurn"));
+return true;
+}
 if (isLanConnected() && lanState.color === "s") {
 setNotice(t("lanSpectatorNotice"));
 return true;
@@ -8129,7 +8259,8 @@ return;
 if (
 piece?.color === game.turn() &&
 (!isLanConnected() || piece.color === lanState.color) &&
-(!isGameCenterConnected() || piece.color === gameCenterState.color)
+(!isGameCenterConnected() || piece.color === gameCenterState.color) &&
+(!isP2pConnected() || piece.color === p2pState.color)
 ) {
 selectSquare(square);
 return;
@@ -8147,12 +8278,16 @@ return false;
 if (isGameCenterConnected() && !canPlayGameCenterMove()) {
 return false;
 }
+if (isP2pConnected() && !canPlayP2pMove()) {
+return false;
+}
 const piece = game.get(square);
 return Boolean(
 piece &&
 piece.color === game.turn() &&
 (!isLanConnected() || piece.color === lanState.color) &&
-(!isGameCenterConnected() || piece.color === gameCenterState.color),
+(!isGameCenterConnected() || piece.color === gameCenterState.color) &&
+(!isP2pConnected() || piece.color === p2pState.color),
 );
 }
 function moveDragGhost(event) {
@@ -8252,7 +8387,7 @@ return;
 }
 makeMove({ from, to: targetSquare });
 }
-function makeMove(move, { byAi = false, byLan = false, byGameCenter = false } = {}) {
+function makeMove(move, { byAi = false, byLan = false, byGameCenter = false, byP2p = false } = {}) {
 try {
 const result = game.move(move);
 restoredSavedGameAvailable = false;
@@ -8264,18 +8399,20 @@ render();
 playMoveSound(result);
 playPositionSound(0.22);
 nativeHaptic(game.isGameOver() ? "result" : "move");
-if (!byAi && !byLan && !byGameCenter) {
+if (!byAi && !byLan && !byGameCenter && !byP2p) {
 trackProfileMove(result);
 trackMoveAchievements(result);
 }
-const challengeNotice = recordGameResult({ byAi, byLan, byGameCenter });
+const challengeNotice = recordGameResult({ byAi, byLan, byGameCenter, byP2p });
 saveCurrentGame();
 startBackgroundMusic();
-if (!byAi && !byLan && !byGameCenter && isLanConnected()) {
+if (!byAi && !byLan && !byGameCenter && !byP2p && isLanConnected()) {
 sendLanMove(result);
-} else if (!byAi && !byLan && !byGameCenter && isGameCenterConnected()) {
+} else if (!byAi && !byLan && !byGameCenter && !byP2p && isGameCenterConnected()) {
 sendGameCenterMove(result);
-} else if (!byAi && !byLan && !byGameCenter) {
+} else if (!byAi && !byLan && !byGameCenter && !byP2p && isP2pConnected()) {
+sendP2pMove(result);
+} else if (!byAi && !byLan && !byGameCenter && !byP2p) {
 scheduleAiMove();
 }
 const notice = moveNotice(result, { byAi, byLan });
@@ -8814,7 +8951,7 @@ function closePromotion() {
 pendingPromotion = null;
 els.promotionDialog.hidden = true;
 }
-function resetGame({ byLan = false, byGameCenter = false } = {}) {
+function resetGame({ byLan = false, byGameCenter = false, byP2p = false } = {}) {
 if (!byLan && isLanConnected() && lanState.color === "s") {
 setNotice(t("lanSpectatorNotice"));
 return;
@@ -8824,7 +8961,7 @@ setNotice(t("gameCenterStatusSpectating"));
 return;
 }
 stopAiThinking();
-if ((rankedModeEnabled || professionalLeagueModeEnabled) && !byLan && !byGameCenter) {
+if ((rankedModeEnabled || professionalLeagueModeEnabled) && !byLan && !byGameCenter && !byP2p) {
 aiEnabled = true;
 orientation = humanColor;
 }
@@ -8843,21 +8980,21 @@ activeTrainingMode = "";
 activeTrainingPuzzleId = "";
 postGameReview = null;
 lastRankedSettlement = null;
-if (rankedModeEnabled && !byLan && !byGameCenter) {
+if (rankedModeEnabled && !byLan && !byGameCenter && !byP2p) {
 markRankedGameEligible();
 } else {
 clearRankedGameEligibility();
 }
-if (professionalLeagueModeEnabled && !byLan && !byGameCenter) {
+if (professionalLeagueModeEnabled && !byLan && !byGameCenter && !byP2p) {
 markProfessionalLeagueGameEligible();
 } else {
 clearProfessionalLeagueGameEligibility();
 }
 closePromotion();
 setNotice(
-rankedModeEnabled && !byLan && !byGameCenter
+rankedModeEnabled && !byLan && !byGameCenter && !byP2p
 ? t("rankedStarted")
-: professionalLeagueModeEnabled && !byLan && !byGameCenter
+: professionalLeagueModeEnabled && !byLan && !byGameCenter && !byP2p
 ? t("professionalLeagueStarted", professionalLeagueScores)
 : t("newGameStarted"),
 );
@@ -8868,13 +9005,19 @@ if (isLanConnected() && !byLan) {
 sendLan({ type: "reset" });
 } else if (isGameCenterConnected() && !byGameCenter) {
 sendGameCenterReset();
-} else if (!isLanConnected() && !isGameCenterConnected()) {
+} else if (isP2pConnected() && !byP2p) {
+sendP2pReset();
+} else if (!isLanConnected() && !isGameCenterConnected() && !isP2pConnected()) {
 scheduleAiMove();
 }
 }
 function undoMove() {
 if (isGameCenterConnected()) {
 setNotice(gameCenterState.color === "s" ? t("gameCenterStatusSpectating") : t("gameCenterStatusWaiting"));
+return;
+}
+if (isP2pConnected()) {
+setNotice(t("p2pWaitingTurn"));
 return;
 }
 if (rankedModeEnabled) {
@@ -8932,6 +9075,10 @@ setNotice(t("copyBlocked"));
 function loadFen() {
 if (isGameCenterConnected()) {
 setNotice(t("gameCenterStatusWaiting"));
+return;
+}
+if (isP2pConnected()) {
+setNotice(t("p2pWaitingTurn"));
 return;
 }
 if (rankedModeEnabled || rankedGameEligible || professionalLeagueModeEnabled || professionalLeagueGameEligible) {
@@ -8992,6 +9139,10 @@ if (isGameCenterConnected()) {
 setNotice(t("gameCenterStatusWaiting"));
 return false;
 }
+if (isP2pConnected()) {
+setNotice(t("p2pWaitingTurn"));
+return false;
+}
 stopAiThinking();
 try {
 const preview = new Chess(fen);
@@ -9049,6 +9200,10 @@ if (isGameCenterConnected()) {
 setNotice(t("gameCenterStatusWaiting"));
 return;
 }
+if (isP2pConnected()) {
+setNotice(t("p2pAiBlocked"));
+return;
+}
 if (rankedModeEnabled && aiEnabled) {
 setNotice(t("rankedNeedsAi"));
 return;
@@ -9085,6 +9240,10 @@ if (isGameCenterConnected()) {
 setNotice(t("gameCenterStatusWaiting"));
 return;
 }
+if (isP2pConnected()) {
+setNotice(t("p2pRankedBlocked"));
+return;
+}
 stopAiThinking();
 professionalLeagueModeEnabled = !professionalLeagueModeEnabled;
 saveProfessionalLeagueMode();
@@ -9110,6 +9269,10 @@ if (isGameCenterConnected()) {
 setNotice(t("gameCenterStatusWaiting"));
 return;
 }
+if (isP2pConnected()) {
+setNotice(t("p2pRankedBlocked"));
+return;
+}
 stopAiThinking();
 rankedModeEnabled = !rankedModeEnabled;
 saveRankedMode();
@@ -9133,6 +9296,10 @@ return;
 }
 if (isGameCenterConnected()) {
 setNotice(t("gameCenterStatusWaiting"));
+return;
+}
+if (isP2pConnected()) {
+setNotice(t("p2pWaitingTurn"));
 return;
 }
 stopAiThinking();
@@ -9177,6 +9344,11 @@ scheduleAiMove();
 function setAiLevel(level) {
 stopAiThinking();
 const nextLevel = Math.min(6, Math.max(1, level));
+if (isP2pConnected()) {
+setNotice(t("p2pWaitingTurn"));
+renderStatus();
+return;
+}
 if (professionalLeagueModeEnabled) {
 setNotice(t("professionalLeagueLevelLocked"));
 renderStatus();
@@ -9758,6 +9930,7 @@ connected: status === "match-ready" ? true : gameCenterState.connected && status
 };
 merged.color = status === "match-ready" ? gameCenterColorForPayload(merged) : merged.color;
 if (status === "match-ready") {
+disconnectP2p({ silent: true });
 stopAiThinking();
 aiEnabled = false;
 rankedModeEnabled = false;
@@ -9782,6 +9955,520 @@ setNotice(gameCenterStatusText());
 };
 window.jefferyChessHandleGameCenterMessage = function jefferyChessHandleGameCenterMessage(payload = {}) {
 applyGameCenterMove(payload);
+};
+function p2pSupported() {
+return typeof window.RTCPeerConnection === "function";
+}
+function isP2pConnected() {
+return p2pState.status === "connected" && p2pState.channel?.readyState === "open";
+}
+function canPlayP2pMove() {
+return isP2pConnected() && p2pState.color === game.turn();
+}
+function createP2pMessageId(prefix = "p2p") {
+return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+function p2pStatusText() {
+switch (p2pState.status) {
+case "offer":
+return t("p2pStatusOffer");
+case "answer":
+return t("p2pStatusAnswer");
+case "connecting":
+return t("p2pStatusConnecting");
+case "connected":
+return t("p2pStatusConnected");
+case "failed":
+return t("p2pStatusFailed");
+default:
+return t("p2pStatusIdle");
+}
+}
+function p2pPeerConfig() {
+return {
+iceServers: [
+{ urls: "stun:stun.l.google.com:19302" },
+{ urls: "stun:stun.cloudflare.com:3478" },
+],
+};
+}
+function uint8ToBase64Url(bytes) {
+let binary = "";
+for (let index = 0; index < bytes.length; index += 1) {
+binary += String.fromCharCode(bytes[index]);
+}
+return window.btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/u, "");
+}
+function base64UrlToUint8(text) {
+const normalized = String(text || "").replace(/-/g, "+").replace(/_/g, "/");
+const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+const binary = window.atob(padded);
+const bytes = new Uint8Array(binary.length);
+for (let index = 0; index < binary.length; index += 1) {
+bytes[index] = binary.charCodeAt(index);
+}
+return bytes;
+}
+async function encodeP2pSignal(payload) {
+const json = JSON.stringify(payload);
+if (window.CompressionStream) {
+try {
+const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"));
+const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+return `wrtc1.gz.${uint8ToBase64Url(bytes)}`;
+} catch (error) {
+}
+}
+return `wrtc1.raw.${uint8ToBase64Url(new TextEncoder().encode(json))}`;
+}
+async function decodeP2pSignal(input) {
+const raw = String(input || "").trim();
+if (!raw) {
+throw new Error("missing-p2p-signal");
+}
+let code = raw;
+try {
+const url = new URL(raw);
+code = url.searchParams.get(p2pSignalParam) || url.hash.replace(/^#/, "") || raw;
+} catch (error) {
+}
+code = decodeURIComponent(String(code || "").trim());
+const [, mode, data] = code.match(/^wrtc1\.(gz|raw)\.(.+)$/u) || [];
+if (!mode || !data) {
+throw new Error("bad-p2p-signal");
+}
+const bytes = base64UrlToUint8(data);
+if (mode === "gz") {
+if (!window.DecompressionStream) {
+throw new Error("p2p-decompress-unavailable");
+}
+const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+return JSON.parse(await new Response(stream).text());
+}
+return JSON.parse(new TextDecoder().decode(bytes));
+}
+function p2pSignalUrl(signal) {
+const url = new URL(window.location.href);
+url.searchParams.delete("lanRoom");
+url.searchParams.delete("lanSpectator");
+url.searchParams.set(p2pSignalParam, signal);
+return url.toString();
+}
+function waitForIceGathering(peer) {
+if (peer.iceGatheringState === "complete") {
+return Promise.resolve();
+}
+return new Promise((resolve) => {
+let done = false;
+const finish = () => {
+if (done) {
+return;
+}
+done = true;
+peer.removeEventListener("icegatheringstatechange", handleChange);
+window.clearTimeout(timer);
+resolve();
+};
+const handleChange = () => {
+if (peer.iceGatheringState === "complete") {
+finish();
+}
+};
+const timer = window.setTimeout(finish, p2pIceGatherTimeoutMs);
+peer.addEventListener("icegatheringstatechange", handleChange);
+});
+}
+function renderP2pSignalQr(container, link, labelKey = "p2pQrAria") {
+container.innerHTML = "";
+container.setAttribute("aria-label", t(labelKey));
+if (!link || typeof window.qrcode !== "function") {
+return false;
+}
+try {
+const qr = window.qrcode(0, "L");
+qr.addData(link);
+qr.make();
+container.innerHTML = qr.createSvgTag({ cellSize: 3, margin: 2, title: t(labelKey) });
+return true;
+} catch (error) {
+container.innerHTML = "";
+return false;
+}
+}
+function renderP2pPanel() {
+if (!els.p2pCard) {
+return;
+}
+const supported = p2pSupported();
+const busy = ["offer", "answer", "connecting", "connected"].includes(p2pState.status);
+const connected = isP2pConnected();
+els.p2pLabel.textContent = t("p2pLabel");
+els.p2pTitle.textContent = t("p2pTitle");
+els.p2pText.textContent = t("p2pText");
+els.p2pStatus.textContent = supported ? p2pStatusText() : t("p2pStatusFailed");
+els.p2pStatus.classList.toggle("is-ready", connected);
+els.p2pSignalInput.placeholder = t("p2pSignalPlaceholder");
+setButtonContent(els.p2pHostBtn, "P2P", t("p2pHost"));
+setButtonContent(els.p2pJoinBtn, "↔", t("p2pJoin"));
+setButtonContent(els.p2pAcceptAnswerBtn, "✓", t("p2pAcceptAnswer"));
+setButtonContent(els.p2pDisconnectBtn, "×", t("p2pDisconnect"));
+els.p2pHostBtn.disabled = !supported || busy;
+els.p2pJoinBtn.disabled = !supported || connected || p2pState.status === "connecting";
+els.p2pAcceptAnswerBtn.disabled = !supported || !["offer", "connecting"].includes(p2pState.status);
+els.p2pDisconnectBtn.hidden = !busy;
+els.p2pHint.textContent = supported ? t("p2pHint") : t("p2pUnsupported");
+els.p2pOfferTitle.textContent = t("p2pOfferTitle");
+els.p2pOfferText.textContent = t("p2pOfferText");
+setButtonContent(els.p2pCopyOfferBtn, "⧉", t("p2pCopyInvite"));
+const offerLink = p2pState.offerText ? p2pSignalUrl(p2pState.offerText) : "";
+els.p2pOfferCard.hidden = !offerLink;
+if (offerLink) {
+els.p2pOfferLink.href = offerLink;
+els.p2pOfferLink.textContent = offerLink;
+renderP2pSignalQr(els.p2pOfferQr, offerLink);
+} else {
+els.p2pOfferLink.removeAttribute("href");
+els.p2pOfferLink.textContent = "";
+els.p2pOfferQr.innerHTML = "";
+}
+els.p2pAnswerTitle.textContent = t("p2pAnswerTitle");
+els.p2pAnswerText.textContent = t("p2pAnswerText");
+setButtonContent(els.p2pCopyAnswerBtn, "⧉", t("p2pCopyAnswer"));
+const answerLink = p2pState.answerText ? p2pSignalUrl(p2pState.answerText) : "";
+els.p2pAnswerCard.hidden = !answerLink;
+if (answerLink) {
+els.p2pAnswerLink.href = answerLink;
+els.p2pAnswerLink.textContent = answerLink;
+renderP2pSignalQr(els.p2pAnswerQr, answerLink);
+} else {
+els.p2pAnswerLink.removeAttribute("href");
+els.p2pAnswerLink.textContent = "";
+els.p2pAnswerQr.innerHTML = "";
+}
+}
+function prepareP2pGame(color) {
+disconnectLan({ silent: true, manual: true });
+stopAiThinking();
+aiEnabled = false;
+rankedModeEnabled = false;
+professionalLeagueModeEnabled = false;
+saveRankedMode();
+saveProfessionalLeagueMode();
+clearRankedGameEligibility();
+clearProfessionalLeagueGameEligibility();
+humanColor = color;
+orientation = color;
+clearSelection();
+closePromotion();
+}
+function setP2pChannel(channel) {
+p2pState.channel = channel;
+channel.addEventListener("open", () => {
+p2pState.status = "connected";
+prepareP2pGame(p2pState.color || (p2pState.role === "host" ? "w" : "b"));
+render();
+setNotice(t("p2pConnected", { side: sideShortName(p2pState.color) }));
+if (p2pState.role === "host") {
+sendP2pSync();
+}
+});
+channel.addEventListener("message", (event) => {
+try {
+handleP2pMessage(JSON.parse(event.data));
+} catch (error) {
+}
+});
+channel.addEventListener("close", () => {
+if (p2pState.status === "connected") {
+p2pState.status = "idle";
+render();
+setNotice(t("p2pDisconnected"));
+}
+});
+}
+function createP2pPeer() {
+const peer = new RTCPeerConnection(p2pPeerConfig());
+peer.addEventListener("connectionstatechange", () => {
+if (["failed", "disconnected", "closed"].includes(peer.connectionState) && p2pState.status !== "idle") {
+p2pState.status = peer.connectionState === "failed" ? "failed" : "idle";
+renderP2pPanel();
+}
+});
+return peer;
+}
+function disconnectP2p({ silent = false } = {}) {
+p2pState.channel?.close();
+p2pState.peer?.close();
+p2pState = {
+peer: null,
+channel: null,
+status: "idle",
+role: "",
+color: "",
+offerText: "",
+answerText: "",
+lastMessageId: "",
+};
+renderP2pPanel();
+if (!silent) {
+setNotice(t("p2pDisconnected"));
+}
+}
+async function startP2pHost() {
+if (!p2pSupported()) {
+setNotice(t("p2pUnsupported"));
+return false;
+}
+disconnectP2p({ silent: true });
+prepareP2pGame("w");
+const peer = createP2pPeer();
+const channel = peer.createDataChannel("matequest-chess", { ordered: true });
+p2pState = {
+peer,
+channel,
+status: "connecting",
+role: "host",
+color: "w",
+offerText: "",
+answerText: "",
+lastMessageId: "",
+};
+setP2pChannel(channel);
+const offer = await peer.createOffer();
+await peer.setLocalDescription(offer);
+await waitForIceGathering(peer);
+p2pState.offerText = await encodeP2pSignal({
+mode: "offer",
+protocolVersion: p2pProtocolVersion,
+appVersion,
+description: peer.localDescription,
+});
+p2pState.status = "offer";
+render();
+setNotice(t("p2pOfferReady"));
+return true;
+}
+async function joinP2pFromSignal(input) {
+if (!p2pSupported()) {
+setNotice(t("p2pUnsupported"));
+return false;
+}
+let signal;
+try {
+signal = await decodeP2pSignal(input);
+} catch (error) {
+setNotice(t("p2pBadSignal"));
+return false;
+}
+if (signal.mode === "answer") {
+els.p2pSignalInput.value = typeof input === "string" ? input : "";
+setNotice(t("p2pAnswerPasteNotice"));
+return false;
+}
+if (signal.mode !== "offer" || !signal.description) {
+setNotice(t("p2pBadSignal"));
+return false;
+}
+disconnectP2p({ silent: true });
+prepareP2pGame("b");
+const peer = createP2pPeer();
+p2pState = {
+peer,
+channel: null,
+status: "connecting",
+role: "guest",
+color: "b",
+offerText: "",
+answerText: "",
+lastMessageId: "",
+};
+peer.addEventListener("datachannel", (event) => {
+setP2pChannel(event.channel);
+});
+await peer.setRemoteDescription(signal.description);
+const answer = await peer.createAnswer();
+await peer.setLocalDescription(answer);
+await waitForIceGathering(peer);
+p2pState.answerText = await encodeP2pSignal({
+mode: "answer",
+protocolVersion: p2pProtocolVersion,
+appVersion,
+description: peer.localDescription,
+});
+p2pState.status = "answer";
+render();
+setNotice(t("p2pAnswerReady"));
+return true;
+}
+async function joinP2pFromInput() {
+const signal = els.p2pSignalInput.value.trim();
+if (!signal) {
+setNotice(t("p2pNeedSignal"));
+return false;
+}
+return joinP2pFromSignal(signal);
+}
+async function acceptP2pAnswerFromInput() {
+if (!p2pState.peer || p2pState.role !== "host") {
+setNotice(t("p2pHostNeedsAnswer"));
+return false;
+}
+const input = els.p2pSignalInput.value.trim();
+if (!input) {
+setNotice(t("p2pNeedSignal"));
+return false;
+}
+let signal;
+try {
+signal = await decodeP2pSignal(input);
+} catch (error) {
+setNotice(t("p2pBadSignal"));
+return false;
+}
+if (signal.mode !== "answer" || !signal.description) {
+setNotice(t("p2pHostNeedsAnswer"));
+return false;
+}
+await p2pState.peer.setRemoteDescription(signal.description);
+p2pState.status = "connecting";
+renderP2pPanel();
+setNotice(t("p2pStatusConnecting"));
+return true;
+}
+function sendP2p(payload) {
+if (!isP2pConnected()) {
+return false;
+}
+p2pState.channel.send(JSON.stringify({
+id: createP2pMessageId(),
+appVersion,
+protocolVersion: p2pProtocolVersion,
+...payload,
+}));
+return true;
+}
+function sendP2pSync() {
+sendP2p({
+type: "sync",
+fen: game.fen(),
+lastMove,
+});
+}
+function sendP2pMove(result) {
+sendP2p({
+type: "move",
+move: {
+from: result.from,
+to: result.to,
+promotion: result.promotion,
+},
+san: result.san,
+fen: game.fen(),
+lastMove,
+});
+}
+function sendP2pReset() {
+sendP2p({
+type: "reset",
+fen: game.fen(),
+lastMove,
+});
+}
+function loadP2pFen(fen, last = null) {
+if (!fen) {
+return;
+}
+try {
+game.load(fen);
+currentGameUsedTip = false;
+lastMove = last;
+recordedResult = null;
+recordedProfileOutcome = null;
+recordedRankDelta = 0;
+clearRecordedLeagueResult();
+postGameReview = null;
+lastRankedSettlement = null;
+clearRankedGameEligibility();
+clearProfessionalLeagueGameEligibility();
+clearSelection();
+closePromotion();
+render();
+saveCurrentGame();
+playPositionSound(0.18);
+} catch (error) {
+}
+}
+function applyP2pMove(payload = {}) {
+if (payload.id && payload.id === p2pState.lastMessageId) {
+return;
+}
+p2pState.lastMessageId = String(payload.id || "");
+if (payload.type === "reset") {
+resetGame({ byP2p: true });
+setNotice(t("p2pResetNotice"));
+return;
+}
+if (payload.type === "sync") {
+loadP2pFen(payload.fen, payload.lastMove ?? null);
+return;
+}
+if (payload.type !== "move") {
+return;
+}
+const result = makeMove(payload.move, { byP2p: true });
+if (!result) {
+loadP2pFen(payload.fen, payload.lastMove ?? null);
+}
+setNotice(t("p2pRemoteMove", { san: payload.san || payload.move?.to || "" }));
+}
+function handleP2pMessage(payload = {}) {
+applyP2pMove(payload);
+}
+async function copyP2pSignal(signal) {
+if (!signal) {
+setNotice(t("p2pNeedSignal"));
+return;
+}
+try {
+await navigator.clipboard.writeText(p2pSignalUrl(signal));
+setNotice(t("p2pSignalCopied"));
+} catch (error) {
+setNotice(t("copyBlocked"));
+}
+}
+async function handleInitialP2pSignal(signalText) {
+if (!signalText) {
+return;
+}
+els.lanPanel.open = true;
+els.p2pSignalInput.value = signalText;
+let signal = null;
+try {
+signal = await decodeP2pSignal(signalText);
+} catch (error) {
+setNotice(t("p2pBadSignal"));
+return;
+}
+if (signal.mode === "offer") {
+await joinP2pFromSignal(signalText);
+} else if (signal.mode === "answer") {
+setNotice(t("p2pAnswerPasteNotice"));
+}
+}
+window.jefferyChessP2pTest = {
+startHost: startP2pHost,
+join: joinP2pFromSignal,
+accept: async (signal) => {
+els.p2pSignalInput.value = signal;
+return acceptP2pAnswerFromInput();
+},
+connected: isP2pConnected,
+offer: () => p2pState.offerText,
+answer: () => p2pState.answerText,
+color: () => p2pState.color,
+fen: () => game.fen(),
+move: (move) => makeMove(move),
+reset: () => resetGame(),
 };
 function lanHostShareUrlFromCheck(check = lastLanCheck) {
 const address = Array.isArray(check?.info?.addresses) ? check.info.addresses[0] : "";
@@ -10675,6 +11362,7 @@ return false;
 els.lanRoomInput.value = requestSpectator ? spectatorLanRoomCode(room) : room;
 const reconnectAttempts = reconnect ? lanState.reconnectAttempts : 0;
 if (!reconnect) {
+disconnectP2p({ silent: true });
 disconnectLan({ silent: true, manual: false });
 stopAiThinking();
 aiEnabled = false;
@@ -11160,6 +11848,21 @@ els.gameCenterAuthBtn.addEventListener("click", () => postGameCenterAction("auth
 els.gameCenterMatchBtn.addEventListener("click", () => postGameCenterAction("match"));
 els.gameCenterSpectateBtn.addEventListener("click", () => postGameCenterAction("spectate"));
 els.gameCenterDashboardBtn.addEventListener("click", () => postGameCenterAction("dashboard"));
+els.p2pHostBtn.addEventListener("click", startP2pHost);
+els.p2pJoinBtn.addEventListener("click", joinP2pFromInput);
+els.p2pAcceptAnswerBtn.addEventListener("click", acceptP2pAnswerFromInput);
+els.p2pDisconnectBtn.addEventListener("click", () => disconnectP2p());
+els.p2pCopyOfferBtn.addEventListener("click", () => copyP2pSignal(p2pState.offerText));
+els.p2pCopyAnswerBtn.addEventListener("click", () => copyP2pSignal(p2pState.answerText));
+els.p2pSignalInput.addEventListener("keydown", (event) => {
+if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+if (p2pState.role === "host") {
+acceptP2pAnswerFromInput();
+} else {
+joinP2pFromInput();
+}
+}
+});
 els.lanDuelQrBtn.addEventListener("click", generateLanDuelQr);
 els.lanCheckBtn.addEventListener("click", checkLanStatus);
 els.lanDiagnosticBtn.addEventListener("click", openLanDiagnostic);
@@ -11329,6 +12032,7 @@ window.addEventListener("keydown", unlockAudio, { once: true });
 window.addEventListener("beforeunload", () => {
 saveCurrentGame();
 disconnectLan({ silent: true });
+disconnectP2p({ silent: true });
 });
 function registerOfflineApp() {
 if (!("serviceWorker" in navigator) || !["http:", "https:"].includes(window.location.protocol)) {
@@ -11352,6 +12056,7 @@ renderReleaseInfo();
 const requestedParams = new URLSearchParams(window.location.search);
 const requestedLanRoom = normalizeLanRoom(requestedParams.get("lanRoom") ?? "");
 const requestedLanSpectator = requestedParams.get("lanSpectator") === "1";
+const requestedP2pSignal = requestedParams.get(p2pSignalParam) ?? "";
 if (requestedLanRoom) {
 els.lanRoomInput.value = requestedLanSpectator ? spectatorLanRoomCode(requestedLanRoom) : requestedLanRoom;
 if (requestedLanSpectator) {
@@ -11371,3 +12076,4 @@ checkForUpdates({ silent: true });
 fetchOfficialRankProfile();
 scheduleAiMove();
 updateAdminStarVisibility();
+handleInitialP2pSignal(requestedP2pSignal);

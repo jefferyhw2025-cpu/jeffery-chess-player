@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=1.0.57" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.58" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -519,6 +519,60 @@
                   </button>
                 </div>
                 <p class="game-center-status" id="gameCenterStatus">等待登录 Game Center。</p>
+              </article>
+              <article class="p2p-card" id="p2pCard">
+                <div class="p2p-top">
+                  <div>
+                    <p class="lan-duel-label" id="p2pLabel">GitHub 直连</p>
+                    <h3 id="p2pTitle">免服务器双人对战</h3>
+                    <p id="p2pText">房主生成邀请二维码，朋友打开后生成回应码，房主粘贴回应后即可点对点下棋。</p>
+                  </div>
+                  <span class="lan-duel-pill" id="p2pStatus">未连接</span>
+                </div>
+                <div class="p2p-actions">
+                  <button class="action-button primary" id="p2pHostBtn" type="button">
+                    <span class="button-icon">P2P</span>
+                    创建直连
+                  </button>
+                  <button class="action-button" id="p2pJoinBtn" type="button">
+                    <span class="button-icon">↔</span>
+                    粘贴/加入邀请
+                  </button>
+                  <button class="action-button" id="p2pAcceptAnswerBtn" type="button">
+                    <span class="button-icon">✓</span>
+                    接受回应
+                  </button>
+                  <button class="action-button" id="p2pDisconnectBtn" type="button" hidden>
+                    <span class="button-icon">×</span>
+                    断开直连
+                  </button>
+                </div>
+                <textarea class="p2p-signal-input" id="p2pSignalInput" rows="3" autocomplete="off" placeholder="粘贴邀请码或回应码"></textarea>
+                <div class="p2p-signal-grid">
+                  <section class="p2p-signal-card" id="p2pOfferCard" hidden>
+                    <div>
+                      <h4 id="p2pOfferTitle">房主邀请码</h4>
+                      <p id="p2pOfferText">把二维码或链接发给朋友。朋友打开后会生成回应码。</p>
+                    </div>
+                    <div class="lan-duel-qr p2p-qr" id="p2pOfferQr" aria-label="WebRTC 邀请二维码"></div>
+                    <a class="lan-duel-link" id="p2pOfferLink" href="#"></a>
+                    <button class="action-button" id="p2pCopyOfferBtn" type="button">
+                      复制邀请
+                    </button>
+                  </section>
+                  <section class="p2p-signal-card" id="p2pAnswerCard" hidden>
+                    <div>
+                      <h4 id="p2pAnswerTitle">朋友回应码</h4>
+                      <p id="p2pAnswerText">把这个二维码或链接发回房主，让房主粘贴到输入框并点接受回应。</p>
+                    </div>
+                    <div class="lan-duel-qr p2p-qr" id="p2pAnswerQr" aria-label="WebRTC 回应二维码"></div>
+                    <a class="lan-duel-link" id="p2pAnswerLink" href="#"></a>
+                    <button class="action-button" id="p2pCopyAnswerBtn" type="button">
+                      复制回应
+                    </button>
+                  </section>
+                </div>
+                <p class="lan-duel-note" id="p2pHint">GitHub 静态版可用这个方式联机；第一次连接需要邀请码和回应码各交换一次。</p>
               </article>
               <article class="lan-host-card" id="lanHostCard" hidden>
                 <div>
@@ -1115,8 +1169,8 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.57</p>
-        <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-06</p>
+        <p class="release-version" id="releaseVersionText">v1.0.58</p>
+        <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-24</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
           <div>
@@ -1272,7 +1326,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.57"></script>
-    <script src="./app.js?v=1.0.57"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.58"></script>
+    <script src="./app.js?v=1.0.58"></script>
   </body>
 </html>
