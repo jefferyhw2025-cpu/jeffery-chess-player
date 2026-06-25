@@ -942,6 +942,17 @@ languageTitle: "中英文",
 languageAria: "语言选择",
 lanLabel: "局域网",
 lanTitle: "局域网对战",
+networkGuideLabel: "联网方式",
+networkGuideTitle: "应该用哪一种？",
+networkGuideText: "同 Wi‑Fi 用 LAN；不同网络用云房间；Netlify 不可用时用手动直连；iOS 以后用 Game Center。",
+networkGuideLanLabel: "LAN",
+networkGuideLanText: "同一个 Wi‑Fi，房主运行局域网启动器。",
+networkGuideCloudLabel: "云房间",
+networkGuideCloudText: "不同网络也能用房间号自动交换直连码。",
+networkGuideP2pLabel: "手动直连",
+networkGuideP2pText: "Netlify 不可用时，用邀请码和回应码备用。",
+networkGuideGameCenterLabel: "Game Center",
+networkGuideGameCenterText: "App Store 版未来用于苹果账号互联网匹配。",
 lanAppModeLabel: "App 联机",
 lanAppModeTitle: "选择局域网方式",
 lanAppModeText: "App Store 版把常用联机方式放在这里；网页版继续使用下方输入框。",
@@ -1787,6 +1798,17 @@ languageTitle: "Chinese / English",
 languageAria: "Language selection",
 lanLabel: "LAN",
 lanTitle: "LAN Match",
+networkGuideLabel: "Connection Guide",
+networkGuideTitle: "Which mode should I use?",
+networkGuideText: "Same Wi‑Fi: use LAN. Different networks: use Cloud Rooms. If Netlify is unavailable, use Manual Direct. Later on iOS, use Game Center.",
+networkGuideLanLabel: "LAN",
+networkGuideLanText: "Same Wi‑Fi; the host runs the LAN launcher.",
+networkGuideCloudLabel: "Cloud Room",
+networkGuideCloudText: "Use a room code to exchange direct-play codes automatically, even across different networks.",
+networkGuideP2pLabel: "Manual Direct",
+networkGuideP2pText: "Fallback with invite and answer codes when Netlify is unavailable.",
+networkGuideGameCenterLabel: "Game Center",
+networkGuideGameCenterText: "Future App Store mode for Apple-account internet matchmaking.",
 lanAppModeLabel: "App LAN",
 lanAppModeTitle: "Choose a LAN Mode",
 lanAppModeText: "The App Store build keeps common LAN actions here. The web build keeps using the room-code controls below.",
@@ -2697,6 +2719,18 @@ lanCopyLinkBtn: document.querySelector("#lanCopyLinkBtn"),
 lanDetail: document.querySelector("#lanDetail"),
 lanCheckBtn: document.querySelector("#lanCheckBtn"),
 lanDiagnosticBtn: document.querySelector("#lanDiagnosticBtn"),
+networkGuideCard: document.querySelector("#networkGuideCard"),
+networkGuideLabel: document.querySelector("#networkGuideLabel"),
+networkGuideTitle: document.querySelector("#networkGuideTitle"),
+networkGuideText: document.querySelector("#networkGuideText"),
+networkGuideLanLabel: document.querySelector("#networkGuideLanLabel"),
+networkGuideLanText: document.querySelector("#networkGuideLanText"),
+networkGuideCloudLabel: document.querySelector("#networkGuideCloudLabel"),
+networkGuideCloudText: document.querySelector("#networkGuideCloudText"),
+networkGuideP2pLabel: document.querySelector("#networkGuideP2pLabel"),
+networkGuideP2pText: document.querySelector("#networkGuideP2pText"),
+networkGuideGameCenterLabel: document.querySelector("#networkGuideGameCenterLabel"),
+networkGuideGameCenterText: document.querySelector("#networkGuideGameCenterText"),
 lanAppModeCard: document.querySelector("#lanAppModeCard"),
 lanAppModeLabel: document.querySelector("#lanAppModeLabel"),
 lanAppModeTitle: document.querySelector("#lanAppModeTitle"),
@@ -6602,6 +6636,7 @@ if (!room) {
 hideLanInviteCard();
 hideLanSpectatorCard();
 }
+renderNetworkGuide();
 renderLanAppModeCard();
 renderGameCenterCard();
 renderP2pPanel();
@@ -6613,6 +6648,22 @@ showLanDuelCard(room, room ? existingDuelShare : "");
 if (!els.lanCheckCard.hidden) {
 renderLanCheckResult();
 }
+}
+function renderNetworkGuide() {
+if (!els.networkGuideCard) {
+return;
+}
+els.networkGuideLabel.textContent = t("networkGuideLabel");
+els.networkGuideTitle.textContent = t("networkGuideTitle");
+els.networkGuideText.textContent = t("networkGuideText");
+els.networkGuideLanLabel.textContent = t("networkGuideLanLabel");
+els.networkGuideLanText.textContent = t("networkGuideLanText");
+els.networkGuideCloudLabel.textContent = t("networkGuideCloudLabel");
+els.networkGuideCloudText.textContent = t("networkGuideCloudText");
+els.networkGuideP2pLabel.textContent = t("networkGuideP2pLabel");
+els.networkGuideP2pText.textContent = t("networkGuideP2pText");
+els.networkGuideGameCenterLabel.textContent = t("networkGuideGameCenterLabel");
+els.networkGuideGameCenterText.textContent = t("networkGuideGameCenterText");
 }
 function renderLanguage() {
 document.documentElement.lang = currentLanguage === "en" ? "en" : "zh-CN";
