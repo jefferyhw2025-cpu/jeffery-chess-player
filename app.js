@@ -1,6 +1,6 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.62";
-const iosBuildNumber = "58";
+const appVersion = "1.0.63";
+const iosBuildNumber = "59";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -16,6 +16,7 @@ const p2pConnectTimeoutMs = 20000;
 const p2pCloudPollMs = 1800;
 const releaseNotes = {
 zh: [
+"v1.0.63：云端档案现在优先按登录账号保存和恢复，反馈会自动附带版本、设备、联机方式和房间状态诊断；App Store 上架资料加入真机 Game Center 测试重点。",
 "v1.0.62：云端档案显示账号绑定和最近同步时间；联机失败会更主动提示复制诊断；App Store 截图素材更新为更商业化标题。",
 "v1.0.61：新增三步联机向导、登录玩家自动云端安全备份/恢复提示，并继续加严公开玩家版安全审计。",
 "v1.0.60：WebRTC 直连新增 Netlify 云房间自动交换码，版本中心显示 GitHub 玩家版、Apple/iOS 包、Netlify 主站和信令服务状态，并生成演示资料。",
@@ -93,6 +94,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.63: Cloud profiles now save and restore by signed-in account first, feedback automatically includes version/device/network diagnostics, and App Store materials highlight real-device Game Center test points.",
 "v1.0.62: Cloud profiles now show account binding and last sync time; connection failures push players toward copyable diagnostics; App Store screenshots use stronger marketing captions.",
 "v1.0.61: Added a three-choice connection guide, automatic safe cloud backup and restore hints for logged-in players, and stricter public-player safety audits.",
 "v1.0.60: WebRTC direct play adds Netlify cloud rooms for automatic code exchange, the version center shows GitHub player, Apple/iOS package, Netlify, and signaling status, and demo materials were prepared.",
@@ -2737,6 +2739,7 @@ feedbackAccountInput: document.querySelector("#feedbackAccountInput"),
 feedbackLanguageInput: document.querySelector("#feedbackLanguageInput"),
 feedbackFenInput: document.querySelector("#feedbackFenInput"),
 feedbackPgnInput: document.querySelector("#feedbackPgnInput"),
+feedbackDiagnosticInput: document.querySelector("#feedbackDiagnosticInput"),
 feedbackPageInput: document.querySelector("#feedbackPageInput"),
 feedbackCreatedAtInput: document.querySelector("#feedbackCreatedAtInput"),
 cancelFeedbackBtn: document.querySelector("#cancelFeedbackBtn"),
@@ -4199,6 +4202,37 @@ return entries.length;
 function createFeedbackId() {
 return `FB-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }
+function feedbackDiagnosticText() {
+const room = typeof currentLanRoom === "function" ? currentLanRoom() : "";
+const rows = [
+"MateQuest Chess Feedback Diagnostics",
+`Version: ${appVersion}`,
+`iOS build: ${iosBuildNumber}`,
+`Page: ${window.location.href}`,
+`Host: ${window.location.host || "file"}`,
+`Language: ${currentLanguage}`,
+`User agent: ${navigator.userAgent}`,
+`Network mode: ${connectionDiagnosticModeText()}`,
+`WebRTC support: ${connectionDiagnosticBrowserText()}`,
+`LAN connected: ${isLanConnected() ? "yes" : "no"}`,
+`LAN room: ${room || "none"}`,
+`LAN color: ${lanState.color || "none"}`,
+`P2P status: ${p2pState.status}`,
+`P2P cloud room: ${p2pState.cloudRoom || "none"}`,
+`P2P cloud status: ${p2pState.cloudStatus || "idle"}`,
+`Game Center status: ${gameCenterState.status || "idle"}`,
+`Game Center connected: ${isGameCenterConnected() ? "yes" : "no"}`,
+`Account bound: ${currentAccountId ? "yes" : "no"}`,
+`Rank points: ${Math.max(0, Math.floor(Number(rankPoints)) || 0)}`,
+`FEN: ${typeof game?.fen === "function" ? game.fen() : "none"}`,
+];
+if (lastLanCheck) {
+rows.push("");
+rows.push("LAN diagnostic:");
+rows.push(...lanDiagnosticRows(lastLanCheck).map(([label, value]) => `${label}: ${value}`));
+}
+return rows.join("\n");
+}
 function feedbackBackupBody() {
 const account = currentAccount();
 const text = els.feedbackText?.value.trim() || "";
@@ -4214,6 +4248,7 @@ page: "Page",
 time: "Time",
 fen: "FEN",
 pgn: "PGN",
+diagnostic: "Diagnostics",
 message: "Message",
 empty: "(empty)",
 }
@@ -4226,6 +4261,7 @@ page: "页面",
 time: "时间",
 fen: "FEN",
 pgn: "PGN",
+diagnostic: "诊断信息",
 message: "内容",
 empty: "（空）",
 };
@@ -4238,6 +4274,9 @@ labels.title,
 `${labels.time}: ${new Date().toISOString()}`,
 `${labels.fen}: ${fen}`,
 `${labels.pgn}: ${pgn || labels.empty}`,
+"",
+`${labels.diagnostic}:`,
+feedbackDiagnosticText(),
 "",
 `${labels.message}:`,
 text || labels.empty,
@@ -4286,6 +4325,7 @@ els.feedbackAccountInput.value = entry.account;
 els.feedbackLanguageInput.value = entry.language;
 els.feedbackFenInput.value = entry.fen;
 els.feedbackPgnInput.value = entry.pgn;
+els.feedbackDiagnosticInput.value = entry.diagnostic;
 els.feedbackPageInput.value = window.location.href;
 els.feedbackCreatedAtInput.value = entry.createdAt;
 const response = await fetch("/", {
@@ -5531,10 +5571,10 @@ return null;
 return account;
 }
 function profileCloudAutoStateKey() {
-return `${profileCloudAutoBackupStorageKey}:${getOnlinePlayerId()}`;
+return `${profileCloudAutoBackupStorageKey}:${currentAccountId || getOnlinePlayerId()}`;
 }
 function profileCloudRestoreCheckKey() {
-return `${profileCloudRestoreCheckStorageKey}:${getOnlinePlayerId()}`;
+return `${profileCloudRestoreCheckStorageKey}:${currentAccountId || getOnlinePlayerId()}`;
 }
 function cloudProfileFingerprint(profile = collectSafeProfileExportData()) {
 const summary = profile.summary ?? {};
@@ -5610,7 +5650,7 @@ method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
 playerId: getOnlinePlayerId(),
-accountId: currentAccountId || getOnlinePlayerId(),
+accountId: currentAccountId || "",
 displayName: cleanPlayerDisplayName(account.name),
 profile,
 }),
@@ -5649,6 +5689,7 @@ setProfileCloudStatus("profileCloudAutoChecking", {}, { notice: false });
 try {
 const params = new URLSearchParams({
 playerId,
+accountId: currentAccountId || "",
 displayName: cleanPlayerDisplayName(account.name),
 ts: String(Date.now()),
 });
@@ -5698,6 +5739,7 @@ setProfileCloudStatus("profileCloudLoading");
 try {
 const params = new URLSearchParams({
 playerId: getOnlinePlayerId(),
+accountId: currentAccountId || "",
 displayName: cleanPlayerDisplayName(account.name),
 ts: String(Date.now()),
 });
@@ -12597,6 +12639,7 @@ account: account?.name ?? t("accountGuest"),
 language: currentLanguage,
 fen: game.fen(),
 pgn: game.pgn(),
+diagnostic: feedbackDiagnosticText(),
 status: "new",
 reply: "",
 createdAt: new Date().toISOString(),

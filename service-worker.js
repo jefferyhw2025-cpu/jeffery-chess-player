@@ -1,8 +1,8 @@
-const CACHE_NAME = "jeffery-chess-v1.0.62";
+const CACHE_NAME = "jeffery-chess-v1.0.63";
 const APP_SHELL = [
 "./",
 "./index.html",
-"./styles.css?v=1.0.62",
+"./styles.css?v=1.0.63",
 "./app.js",
 "./engine-worker.js",
 "./manifest.webmanifest",
