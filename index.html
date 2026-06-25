@@ -6,7 +6,7 @@
     <title>国际象棋</title>
     <meta name="theme-color" content="#245039" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=1.0.60" />
+    <link rel="stylesheet" href="./styles.css?v=1.0.61" />
   </head>
   <body>
     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden">
@@ -470,6 +470,20 @@
                   <p class="lan-duel-label" id="networkGuideLabel">联网方式</p>
                   <h3 id="networkGuideTitle">应该用哪一种？</h3>
                   <p id="networkGuideText">同 Wi‑Fi 用 LAN；不同网络用云房间；iOS 以后用 Game Center。</p>
+                </div>
+                <div class="network-guide-actions" id="networkGuideActions" role="group" aria-label="选择联机方式">
+                  <button class="network-guide-button" id="networkGuideWifiBtn" type="button">
+                    <span>Wi‑Fi</span>
+                    同一个 Wi‑Fi
+                  </button>
+                  <button class="network-guide-button" id="networkGuideCloudBtn" type="button">
+                    <span>Cloud</span>
+                    不在同一个 Wi‑Fi
+                  </button>
+                  <button class="network-guide-button" id="networkGuideAppBtn" type="button">
+                    <span>iOS</span>
+                    iPhone App 联机
+                  </button>
                 </div>
                 <dl class="network-guide-list">
                   <div>
@@ -1230,7 +1244,7 @@
             ×
           </button>
         </div>
-        <p class="release-version" id="releaseVersionText">v1.0.60</p>
+        <p class="release-version" id="releaseVersionText">v1.0.61</p>
         <p class="release-resource-time" id="releaseResourceTime">资源时间：2026-06-24</p>
         <p class="release-update-status" id="releaseUpdateStatus">可检查是否有新版本。</p>
         <article class="release-live-card" id="releaseLiveCard">
@@ -1387,7 +1401,7 @@
     </div>
 
     <script src="./vendor/chess-global.js"></script>
-    <script src="./vendor/qrcode-generator.js?v=1.0.60"></script>
-    <script src="./app.js?v=1.0.60"></script>
+    <script src="./vendor/qrcode-generator.js?v=1.0.61"></script>
+    <script src="./app.js?v=1.0.61"></script>
   </body>
 </html>

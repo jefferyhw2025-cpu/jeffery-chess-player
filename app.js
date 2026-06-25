@@ -1,6 +1,6 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.60";
-const iosBuildNumber = "56";
+const appVersion = "1.0.61";
+const iosBuildNumber = "57";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -16,6 +16,7 @@ const p2pConnectTimeoutMs = 20000;
 const p2pCloudPollMs = 1800;
 const releaseNotes = {
 zh: [
+"v1.0.61：新增三步联机向导、登录玩家自动云端安全备份/恢复提示，并继续加严公开玩家版安全审计。",
 "v1.0.60：WebRTC 直连新增 Netlify 云房间自动交换码，版本中心显示 GitHub 玩家版、Apple/iOS 包、Netlify 主站和信令服务状态，并生成演示资料。",
 "v1.0.59：WebRTC 直连加入房主/朋友步骤条、失败原因、复制诊断信息和 App Store 版扫码加入直连码。",
 "v1.0.58：GitHub 玩家版新增 WebRTC 双人直连，不需要本地 LAN 服务器；房主生成邀请二维码，朋友生成回应码后即可点对点下棋。",
@@ -91,6 +92,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.61: Added a three-choice connection guide, automatic safe cloud backup and restore hints for logged-in players, and stricter public-player safety audits.",
 "v1.0.60: WebRTC direct play adds Netlify cloud rooms for automatic code exchange, the version center shows GitHub player, Apple/iOS package, Netlify, and signaling status, and demo materials were prepared.",
 "v1.0.59: WebRTC direct play now has host/friend steps, clearer failure reasons, copyable diagnostics, and App Store QR scanning for direct-play codes.",
 "v1.0.58: the GitHub player build now supports WebRTC two-player direct play without a local LAN server; the host shares an invite QR, the friend returns an answer code, and the browsers play peer-to-peer.",
@@ -228,6 +230,8 @@ const safeAccountProfileStorageKey = "local-chess-safe-account-profile-v1";
 const tutorialLessonStorageKey = "local-chess-tutorial-lessons-v1";
 const profileBackupStorageKey = "local-chess-profile-backup-v1";
 const profileExportReminderStorageKey = "local-chess-profile-export-reminder-v1";
+const profileCloudAutoBackupStorageKey = "local-chess-profile-cloud-auto-v1";
+const profileCloudRestoreCheckStorageKey = "local-chess-profile-cloud-restore-check-v1";
 const profilePayloadTypes = new Set(["matequest-chess-profile", "jeffery-chess-profile"]);
 const onlineRankMigrationStorageKey = "local-chess-online-rank-migration-v1";
 const volumeSettingsStorageKey = "local-chess-volume-settings-v1";
@@ -242,6 +246,8 @@ let liveVersionState = { status: "idle", version: "", url: productionSiteUrl };
 let pagesVersionState = { status: "idle", version: "", url: backupSiteUrl };
 let signalServiceState = { status: "idle", url: `${productionSiteUrl}${p2pSignalApiPath}` };
 let publishStatusState = { status: "idle" };
+let profileCloudAutoBackupTimer = null;
+let profileCloudRestoreCheckedForAccount = "";
 const professionalLeagueScores = { win: 5, loss: -3, draw: 0 };
 const professionalLeagueAiName = {
 zh: "联赛冠军 AI",
@@ -706,6 +712,9 @@ profileCloudReady: "云端备份会保存段位、成就、职业联赛积分和
 profileCloudNeedAccount: "请先登录或注册，再使用云端备份。",
 profileCloudSaving: "正在同步安全档案到云端...",
 profileCloudSaved: "云端备份已保存。",
+profileCloudAutoSaved: "已自动备份玩家档案到云端。",
+profileCloudAutoChecking: "正在检查云端是否有可恢复档案...",
+profileCloudAutoRestoreReady: "云端有更完整的档案：{rank} 分、{achievements} 个成就、职业联赛 {league} 分。请在下方导入预览里确认。",
 profileCloudLoading: "正在读取云端备份...",
 profileCloudEmpty: "还没有找到云端备份。",
 profileCloudPreview: "已读取云端备份，请在导入预览里确认。",
@@ -945,6 +954,14 @@ lanTitle: "局域网对战",
 networkGuideLabel: "联网方式",
 networkGuideTitle: "应该用哪一种？",
 networkGuideText: "同 Wi‑Fi 用 LAN；不同网络用云房间；Netlify 不可用时用手动直连；iOS 以后用 Game Center。",
+networkGuideActionsAria: "选择联机方式",
+networkGuideWifiChoice: "同一个 Wi‑Fi",
+networkGuideCloudChoice: "不在同一个 Wi‑Fi",
+networkGuideAppChoice: "iPhone App 联机",
+networkGuideWifiNotice: "已切到同 Wi‑Fi 模式：房主启动局域网服务器后，创建房间或输入房间号。",
+networkGuideCloudNotice: "已切到云房间：房主创建云房间，朋友输入房间号即可自动交换直连码。",
+networkGuideAppNotice: "已切到 iPhone App 联机：可用 App 的局域网按钮和未来 Game Center。",
+networkGuideAppUnavailable: "网页版请使用 LAN 或云房间；iPhone App 版会显示 Game Center 联机入口。",
 networkGuideLanLabel: "LAN",
 networkGuideLanText: "同一个 Wi‑Fi，房主运行局域网启动器。",
 networkGuideCloudLabel: "云房间",
@@ -1562,6 +1579,9 @@ profileCloudReady: "Cloud backup saves rank, achievements, Pro League points, an
 profileCloudNeedAccount: "Log in or register before using cloud backup.",
 profileCloudSaving: "Syncing safe profile to the cloud...",
 profileCloudSaved: "Cloud backup saved.",
+profileCloudAutoSaved: "Player profile automatically backed up to the cloud.",
+profileCloudAutoChecking: "Checking whether a restorable cloud profile exists...",
+profileCloudAutoRestoreReady: "A fuller cloud profile is available: {rank} points, {achievements} achievements, {league} Pro League points. Confirm it in the import preview below.",
 profileCloudLoading: "Loading cloud backup...",
 profileCloudEmpty: "No cloud backup found yet.",
 profileCloudPreview: "Cloud backup loaded. Confirm it in the import preview.",
@@ -1801,6 +1821,14 @@ lanTitle: "LAN Match",
 networkGuideLabel: "Connection Guide",
 networkGuideTitle: "Which mode should I use?",
 networkGuideText: "Same Wi‑Fi: use LAN. Different networks: use Cloud Rooms. If Netlify is unavailable, use Manual Direct. Later on iOS, use Game Center.",
+networkGuideActionsAria: "Choose connection mode",
+networkGuideWifiChoice: "Same Wi‑Fi",
+networkGuideCloudChoice: "Different Network",
+networkGuideAppChoice: "iPhone App Play",
+networkGuideWifiNotice: "Same Wi‑Fi mode selected: the host starts the LAN server, then creates or enters a room code.",
+networkGuideCloudNotice: "Cloud Room mode selected: the host creates a cloud room and the friend enters the room code for automatic code exchange.",
+networkGuideAppNotice: "iPhone App mode selected: use the App LAN buttons and future Game Center play.",
+networkGuideAppUnavailable: "On the web, use LAN or Cloud Rooms. The iPhone App build shows the Game Center entry.",
 networkGuideLanLabel: "LAN",
 networkGuideLanText: "Same Wi‑Fi; the host runs the LAN launcher.",
 networkGuideCloudLabel: "Cloud Room",
@@ -2723,6 +2751,10 @@ networkGuideCard: document.querySelector("#networkGuideCard"),
 networkGuideLabel: document.querySelector("#networkGuideLabel"),
 networkGuideTitle: document.querySelector("#networkGuideTitle"),
 networkGuideText: document.querySelector("#networkGuideText"),
+networkGuideActions: document.querySelector("#networkGuideActions"),
+networkGuideWifiBtn: document.querySelector("#networkGuideWifiBtn"),
+networkGuideCloudBtn: document.querySelector("#networkGuideCloudBtn"),
+networkGuideAppBtn: document.querySelector("#networkGuideAppBtn"),
 networkGuideLanLabel: document.querySelector("#networkGuideLanLabel"),
 networkGuideLanText: document.querySelector("#networkGuideLanText"),
 networkGuideCloudLabel: document.querySelector("#networkGuideCloudLabel"),
@@ -3306,6 +3338,7 @@ return new Set();
 function saveAchievements() {
 try {
 window.localStorage.setItem(achievementStorageId(), JSON.stringify([...unlockedAchievements]));
+scheduleProfileCloudAutoBackup("achievements");
 } catch (error) {
 }
 }
@@ -3606,6 +3639,7 @@ return createEmptyProfileActivity();
 function saveProfileActivity() {
 try {
 window.localStorage.setItem(profileActivityStorageId(), JSON.stringify(normalizeProfileActivity(profileActivity)));
+scheduleProfileCloudAutoBackup("profile-activity");
 } catch (error) {
 }
 }
@@ -3735,6 +3769,7 @@ return createDailyProgress();
 function saveDailyProgress() {
 try {
 window.localStorage.setItem(dailyTaskStorageId(), JSON.stringify(normalizeDailyProgress(dailyProgress)));
+scheduleProfileCloudAutoBackup("daily-progress");
 } catch (error) {
 }
 }
@@ -3749,6 +3784,7 @@ return 0;
 function saveDailyStars() {
 try {
 window.localStorage.setItem(dailyStarsStorageId(), String(dailyStars));
+scheduleProfileCloudAutoBackup("daily-stars");
 } catch (error) {
 }
 }
@@ -3835,6 +3871,7 @@ return createDailyTrainingProgress();
 function saveDailyTraining() {
 try {
 window.localStorage.setItem(dailyTrainingStorageId(), JSON.stringify(normalizeDailyTraining(dailyTraining)));
+scheduleProfileCloudAutoBackup("daily-training");
 } catch (error) {
 }
 }
@@ -4410,6 +4447,7 @@ stats.losses = Math.max(0, stats.losses + amount);
 stats.updatedAt = new Date().toISOString();
 account.updatedAt = stats.updatedAt;
 saveAccounts();
+scheduleProfileCloudAutoBackup("professional-league");
 return stats.points - previousPoints;
 }
 function formatShortDate(value) {
@@ -5435,12 +5473,14 @@ clearProfileImportPreview();
 setNotice(t("profileImportBad"));
 }
 }
-function setProfileCloudStatus(key, values = {}) {
+function setProfileCloudStatus(key, values = {}, { notice = true } = {}) {
 const message = t(key, values);
 if (els.profileCloudStatus) {
 els.profileCloudStatus.textContent = message;
 }
+if (notice) {
 setNotice(message);
+}
 }
 function requireCloudBackupAccount() {
 const account = currentAccount();
@@ -5450,16 +5490,80 @@ return null;
 }
 return account;
 }
-async function syncProfileCloudBackup() {
+function profileCloudAutoStateKey() {
+return `${profileCloudAutoBackupStorageKey}:${getOnlinePlayerId()}`;
+}
+function profileCloudRestoreCheckKey() {
+return `${profileCloudRestoreCheckStorageKey}:${getOnlinePlayerId()}`;
+}
+function cloudProfileFingerprint(profile = collectSafeProfileExportData()) {
+const summary = profile.summary ?? {};
+return JSON.stringify({
+account: currentAccountId || "guest",
+rank: summary.rankPoints || 0,
+achievements: summary.achievements || 0,
+league: summary.leaguePoints || 0,
+stars: summary.dailyStars || 0,
+training: summary.dailyTrainingStreak || 0,
+games: summary.completedGames || 0,
+wins: summary.wins || 0,
+hasGame: Boolean(summary.hasSavedGame),
+});
+}
+function loadCloudAutoBackupState() {
+try {
+const state = JSON.parse(window.localStorage.getItem(profileCloudAutoStateKey()) ?? "null");
+return state && typeof state === "object" ? state : {};
+} catch (error) {
+return {};
+}
+}
+function saveCloudAutoBackupState(fingerprint, updatedAt = new Date().toISOString()) {
+try {
+window.localStorage.setItem(profileCloudAutoStateKey(), JSON.stringify({ fingerprint, updatedAt, appVersion }));
+} catch (error) {
+}
+}
+function localProfileSummary() {
+return collectSafeProfileExportData().summary;
+}
+function cloudProfileHasMoreProgress(summary = {}) {
+const local = localProfileSummary();
+return (
+Math.max(0, Math.floor(Number(summary.rankPoints)) || 0) > local.rankPoints ||
+Math.max(0, Math.floor(Number(summary.achievements)) || 0) > local.achievements ||
+Math.max(0, Math.floor(Number(summary.leaguePoints)) || 0) > local.leaguePoints ||
+Math.max(0, Math.floor(Number(summary.dailyStars)) || 0) > local.dailyStars ||
+Math.max(0, Math.floor(Number(summary.dailyTrainingStreak)) || 0) > local.dailyTrainingStreak ||
+Math.max(0, Math.floor(Number(summary.completedGames)) || 0) > local.completedGames ||
+(Boolean(summary.hasSavedGame) && !local.hasSavedGame)
+);
+}
+function scheduleProfileCloudAutoBackup(reason = "progress") {
+if (!isProfileCloudBackupAvailable() || !currentAccount()) {
+return;
+}
+window.clearTimeout(profileCloudAutoBackupTimer);
+profileCloudAutoBackupTimer = window.setTimeout(() => {
+syncProfileCloudBackup({ automatic: true, reason }).catch(() => {});
+}, 1800);
+}
+async function syncProfileCloudBackup(options = {}) {
+const automatic = Boolean(options?.automatic);
 if (!isProfileCloudBackupAvailable()) {
-setProfileCloudStatus("profileCloudHiddenIos");
+setProfileCloudStatus("profileCloudHiddenIos", {}, { notice: !automatic });
 return;
 }
 const account = requireCloudBackupAccount();
 if (!account) {
 return;
 }
-setProfileCloudStatus("profileCloudSaving");
+const profile = collectSafeProfileExportData();
+const fingerprint = cloudProfileFingerprint(profile);
+if (automatic && loadCloudAutoBackupState().fingerprint === fingerprint) {
+return;
+}
+setProfileCloudStatus("profileCloudSaving", {}, { notice: !automatic });
 try {
 const response = await fetch("/api/profile-backup", {
 method: "POST",
@@ -5467,16 +5571,77 @@ headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
 playerId: getOnlinePlayerId(),
 displayName: cleanPlayerDisplayName(account.name),
-profile: collectSafeProfileExportData(),
+profile,
 }),
 });
 const result = await response.json();
 if (!response.ok || !result.ok) {
 throw new Error(result.reason || "profile-cloud-save-failed");
 }
-setProfileCloudStatus("profileCloudSaved");
+saveCloudAutoBackupState(fingerprint, result.updatedAt);
+setProfileCloudStatus(automatic ? "profileCloudAutoSaved" : "profileCloudSaved", {}, { notice: !automatic });
 } catch (error) {
+setProfileCloudStatus("profileCloudUnavailable", {}, { notice: !automatic });
+}
+}
+async function checkProfileCloudRestoreHint({ force = false, silent = true } = {}) {
+const account = currentAccount();
+if (!isProfileCloudBackupAvailable() || !account || pendingProfileImportPayload) {
+return false;
+}
+const playerId = getOnlinePlayerId();
+if (!force && profileCloudRestoreCheckedForAccount === playerId) {
+return false;
+}
+profileCloudRestoreCheckedForAccount = playerId;
+try {
+if (!force) {
+const checkedAt = Number(window.localStorage.getItem(profileCloudRestoreCheckKey()) || "0");
+if (Date.now() - checkedAt < 10 * 60 * 1000) {
+return false;
+}
+}
+window.localStorage.setItem(profileCloudRestoreCheckKey(), String(Date.now()));
+} catch (error) {
+}
+setProfileCloudStatus("profileCloudAutoChecking", {}, { notice: false });
+try {
+const params = new URLSearchParams({
+playerId,
+displayName: cleanPlayerDisplayName(account.name),
+ts: String(Date.now()),
+});
+const response = await fetch(`/api/profile-backup?${params.toString()}`, { cache: "no-store" });
+const result = await response.json();
+if (response.status === 404 || result.reason === "missing") {
+renderProfile();
+return false;
+}
+if (!response.ok || !result.ok || !result.profile) {
+throw new Error(result.reason || "profile-cloud-load-failed");
+}
+const summary = profileImportSummary(result.profile);
+const comparableSummary = result.profile.summary ?? {
+rankPoints: summary.rank,
+achievements: summary.achievements,
+leaguePoints: summary.league,
+dailyTrainingStreak: summary.training,
+hasSavedGame: summary.game === t("profileImportHasGame"),
+};
+if (!cloudProfileHasMoreProgress(comparableSummary)) {
+renderProfile();
+return false;
+}
+pendingProfileImportSummary = summary;
+pendingProfileImportPayload = result.profile;
+renderProfileImportPreview();
+setProfileCloudStatus("profileCloudAutoRestoreReady", summary, { notice: !silent });
+return true;
+} catch (error) {
+if (!silent) {
 setProfileCloudStatus("profileCloudUnavailable");
+}
+return false;
 }
 }
 async function restoreProfileCloudBackup() {
@@ -6656,6 +6821,10 @@ return;
 els.networkGuideLabel.textContent = t("networkGuideLabel");
 els.networkGuideTitle.textContent = t("networkGuideTitle");
 els.networkGuideText.textContent = t("networkGuideText");
+els.networkGuideActions.setAttribute("aria-label", t("networkGuideActionsAria"));
+setButtonContent(els.networkGuideWifiBtn, "Wi‑Fi", t("networkGuideWifiChoice"));
+setButtonContent(els.networkGuideCloudBtn, "Cloud", t("networkGuideCloudChoice"));
+setButtonContent(els.networkGuideAppBtn, "iOS", t("networkGuideAppChoice"));
 els.networkGuideLanLabel.textContent = t("networkGuideLanLabel");
 els.networkGuideLanText.textContent = t("networkGuideLanText");
 els.networkGuideCloudLabel.textContent = t("networkGuideCloudLabel");
@@ -6664,6 +6833,38 @@ els.networkGuideP2pLabel.textContent = t("networkGuideP2pLabel");
 els.networkGuideP2pText.textContent = t("networkGuideP2pText");
 els.networkGuideGameCenterLabel.textContent = t("networkGuideGameCenterLabel");
 els.networkGuideGameCenterText.textContent = t("networkGuideGameCenterText");
+}
+function selectNetworkGuideMode(mode) {
+if (els.lanPanel) {
+els.lanPanel.open = true;
+}
+for (const [button, value] of [
+[els.networkGuideWifiBtn, "wifi"],
+[els.networkGuideCloudBtn, "cloud"],
+[els.networkGuideAppBtn, "app"],
+]) {
+button?.classList.toggle("is-active", mode === value);
+button?.setAttribute("aria-pressed", String(mode === value));
+}
+if (mode === "wifi") {
+setNotice(t("networkGuideWifiNotice"));
+els.lanRoomInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
+els.lanRoomInput.focus();
+return;
+}
+if (mode === "cloud") {
+setNotice(t("networkGuideCloudNotice"));
+els.p2pCard?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+window.setTimeout(() => els.p2pRoomInput?.focus(), 120);
+return;
+}
+if (isIosAppBuild()) {
+setNotice(t("networkGuideAppNotice"));
+els.lanAppModeCard?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+return;
+}
+setNotice(t("networkGuideAppUnavailable"));
+els.p2pCard?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 function renderLanguage() {
 document.documentElement.lang = currentLanguage === "en" ? "en" : "zh-CN";
@@ -6823,6 +7024,7 @@ if (account) {
 account.matchScore = normalizeScore(matchScore);
 account.updatedAt = new Date().toISOString();
 saveAccounts();
+scheduleProfileCloudAutoBackup("score");
 return;
 }
 window.localStorage.setItem(scoreStorageKey, JSON.stringify(matchScore));
@@ -6887,6 +7089,7 @@ if (account) {
 account.rankPoints = Math.max(0, Math.floor(Number(rankPoints)) || 0);
 account.updatedAt = new Date().toISOString();
 saveAccounts();
+scheduleProfileCloudAutoBackup("rank");
 return;
 }
 window.localStorage.setItem(rankStorageKey, String(rankPoints));
@@ -9684,6 +9887,8 @@ unlockedAchievements = loadAchievements();
 closeAuth();
 resetGameForAccountSwitch(t("accountRegisterSuccess", { name }));
 fetchOfficialRankProfile({ notify: true });
+scheduleProfileCloudAutoBackup("register");
+checkProfileCloudRestoreHint({ force: true }).catch(() => {});
 return;
 }
 const account = accounts[accountId];
@@ -9709,6 +9914,8 @@ enforceProfessionalAiAccess();
 closeAuth();
 resetGameForAccountSwitch(t("accountLoginSuccess", { name: account.name }));
 fetchOfficialRankProfile({ notify: true });
+scheduleProfileCloudAutoBackup("login");
+checkProfileCloudRestoreHint({ force: true }).catch(() => {});
 }
 function logoutAccount() {
 saveMatchScore();
@@ -12230,6 +12437,7 @@ closeMoreMenu();
 closeRankSummary();
 renderProfile();
 els.profileDialog.hidden = false;
+checkProfileCloudRestoreHint().catch(() => {});
 window.setTimeout(() => els.closeProfileBtn.focus(), 0);
 }
 function closeProfile() {
@@ -12440,6 +12648,9 @@ els.lanSpectatorBtn.addEventListener("click", generateLanSpectatorRoom);
 els.lanReconnectBtn.addEventListener("click", reconnectLan);
 els.lanDisconnectBtn.addEventListener("click", () => disconnectLan());
 els.lanCopyLinkBtn.addEventListener("click", copyLanLink);
+els.networkGuideWifiBtn.addEventListener("click", () => selectNetworkGuideMode("wifi"));
+els.networkGuideCloudBtn.addEventListener("click", () => selectNetworkGuideMode("cloud"));
+els.networkGuideAppBtn.addEventListener("click", () => selectNetworkGuideMode("app"));
 els.lanModeCreateBtn.addEventListener("click", createLanRoom);
 els.lanModeNearbyBtn.addEventListener("click", joinNearbyLanRoom);
 els.lanModeScanBtn.addEventListener("click", joinScannedLanRoom);
