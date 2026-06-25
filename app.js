@@ -1,6 +1,6 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.61";
-const iosBuildNumber = "57";
+const appVersion = "1.0.62";
+const iosBuildNumber = "58";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -16,6 +16,7 @@ const p2pConnectTimeoutMs = 20000;
 const p2pCloudPollMs = 1800;
 const releaseNotes = {
 zh: [
+"v1.0.62：云端档案显示账号绑定和最近同步时间；联机失败会更主动提示复制诊断；App Store 截图素材更新为更商业化标题。",
 "v1.0.61：新增三步联机向导、登录玩家自动云端安全备份/恢复提示，并继续加严公开玩家版安全审计。",
 "v1.0.60：WebRTC 直连新增 Netlify 云房间自动交换码，版本中心显示 GitHub 玩家版、Apple/iOS 包、Netlify 主站和信令服务状态，并生成演示资料。",
 "v1.0.59：WebRTC 直连加入房主/朋友步骤条、失败原因、复制诊断信息和 App Store 版扫码加入直连码。",
@@ -92,6 +93,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.62: Cloud profiles now show account binding and last sync time; connection failures push players toward copyable diagnostics; App Store screenshots use stronger marketing captions.",
 "v1.0.61: Added a three-choice connection guide, automatic safe cloud backup and restore hints for logged-in players, and stricter public-player safety audits.",
 "v1.0.60: WebRTC direct play adds Netlify cloud rooms for automatic code exchange, the version center shows GitHub player, Apple/iOS package, Netlify, and signaling status, and demo materials were prepared.",
 "v1.0.59: WebRTC direct play now has host/friend steps, clearer failure reasons, copyable diagnostics, and App Store QR scanning for direct-play codes.",
@@ -713,6 +715,9 @@ profileCloudNeedAccount: "请先登录或注册，再使用云端备份。",
 profileCloudSaving: "正在同步安全档案到云端...",
 profileCloudSaved: "云端备份已保存。",
 profileCloudAutoSaved: "已自动备份玩家档案到云端。",
+profileCloudBound: "已绑定云端账号：{name} · 最近同步 {date}",
+profileCloudBoundPending: "已绑定云端账号：{name}。完成对局或训练后会自动同步，也可以手动点同步云端。",
+profileCloudSameNameRestore: "换设备时，用同一用户名注册/登录，再点恢复云端即可找回段位、成就和联赛积分。",
 profileCloudAutoChecking: "正在检查云端是否有可恢复档案...",
 profileCloudAutoRestoreReady: "云端有更完整的档案：{rank} 分、{achievements} 个成就、职业联赛 {league} 分。请在下方导入预览里确认。",
 profileCloudLoading: "正在读取云端备份...",
@@ -1057,6 +1062,8 @@ p2pFailureWrongRole: "失败原因：房主需要朋友的回应码；朋友需�
 p2pFailureTimeout: "失败原因：连接超时。通常是网络太严格，建议换同一 Wi‑Fi、关闭 VPN，或以后使用 Game Center。",
 p2pFailureClosed: "失败原因：直连已断开。请重新创建邀请。",
 p2pFailureUnknown: "失败原因：连接未完成。请重新交换邀请码和回应码。",
+p2pFailureWithDiagnostic: "{reason} 请点击“复制诊断”发给房主或开发者。",
+p2pFailureDiagnosticPrompt: "点击“复制诊断”可发送版本、浏览器、房间和连接状态。",
 p2pDiagnosticCopied: "WebRTC 诊断信息已复制。",
 p2pScanPrompt: "请扫描或粘贴 WebRTC 直连二维码/链接",
 p2pScanNativeStarting: "正在打开扫码器，扫描直连邀请或回应二维码。",
@@ -1184,6 +1191,14 @@ lanDiagnosticDone: "完成",
 lanDiagnosticAddress: "局域网地址",
 lanDiagnosticAddressReady: "{url}",
 lanDiagnosticAddressMissing: "未检测到局域网地址，请先运行局域网启动器。",
+connectionDiagnosticMode: "联机方式",
+connectionDiagnosticBrowser: "浏览器支持",
+connectionDiagnosticLanMode: "同 Wi‑Fi LAN",
+connectionDiagnosticCloudMode: "云房间 / WebRTC",
+connectionDiagnosticGameCenterMode: "iPhone App / Game Center",
+connectionDiagnosticLocalMode: "本地页面",
+connectionDiagnosticWebrtcReady: "支持 WebRTC",
+connectionDiagnosticWebrtcMissing: "不支持 WebRTC，请换最新版 Safari 或 Chrome",
 lanDiagnosticColor: "我的颜色",
 lanDiagnosticColorWhite: "白方",
 lanDiagnosticColorBlack: "黑方",
@@ -1580,6 +1595,9 @@ profileCloudNeedAccount: "Log in or register before using cloud backup.",
 profileCloudSaving: "Syncing safe profile to the cloud...",
 profileCloudSaved: "Cloud backup saved.",
 profileCloudAutoSaved: "Player profile automatically backed up to the cloud.",
+profileCloudBound: "Cloud account bound: {name} · last synced {date}",
+profileCloudBoundPending: "Cloud account bound: {name}. It auto-syncs after games or training, or you can tap Cloud Backup.",
+profileCloudSameNameRestore: "On another device, use the same username, then tap Restore Cloud to recover rank, achievements, and league points.",
 profileCloudAutoChecking: "Checking whether a restorable cloud profile exists...",
 profileCloudAutoRestoreReady: "A fuller cloud profile is available: {rank} points, {achievements} achievements, {league} Pro League points. Confirm it in the import preview below.",
 profileCloudLoading: "Loading cloud backup...",
@@ -1924,6 +1942,8 @@ p2pFailureWrongRole: "Reason: the host needs the friend's answer code; the frien
 p2pFailureTimeout: "Reason: connection timed out. The network may be too strict. Try the same Wi-Fi, disable VPN, or use Game Center later.",
 p2pFailureClosed: "Reason: the direct match disconnected. Create a new invite.",
 p2pFailureUnknown: "Reason: connection did not finish. Exchange the invite and answer code again.",
+p2pFailureWithDiagnostic: "{reason} Tap Copy Diagnostics and send it to the host or developer.",
+p2pFailureDiagnosticPrompt: "Copy Diagnostics includes version, browser, room, and connection status.",
 p2pDiagnosticCopied: "WebRTC diagnostics copied.",
 p2pScanPrompt: "Scan or paste a WebRTC direct-play QR/link",
 p2pScanNativeStarting: "Opening scanner. Scan a direct invite or answer QR.",
@@ -2051,6 +2071,14 @@ lanDiagnosticDone: "Done",
 lanDiagnosticAddress: "LAN address",
 lanDiagnosticAddressReady: "{url}",
 lanDiagnosticAddressMissing: "No LAN address detected. Run the LAN launcher first.",
+connectionDiagnosticMode: "Connection mode",
+connectionDiagnosticBrowser: "Browser support",
+connectionDiagnosticLanMode: "Same Wi-Fi LAN",
+connectionDiagnosticCloudMode: "Cloud room / WebRTC",
+connectionDiagnosticGameCenterMode: "iPhone App / Game Center",
+connectionDiagnosticLocalMode: "Local page",
+connectionDiagnosticWebrtcReady: "WebRTC supported",
+connectionDiagnosticWebrtcMissing: "WebRTC unsupported; use the latest Safari or Chrome",
 lanDiagnosticColor: "My color",
 lanDiagnosticColorWhite: "White",
 lanDiagnosticColorBlack: "Black",
@@ -5158,6 +5186,18 @@ return t("profileMaterialLead", { side: t("black"), amount: Math.abs(materialDif
 }
 return t("profileMaterialEven");
 }
+function profileCloudBoundStatusText(account) {
+if (!account) {
+return t("profileCloudIdle");
+}
+const state = loadCloudAutoBackupState();
+const name = cleanPlayerDisplayName(account.name);
+if (state.updatedAt) {
+const date = formatProfileDate(state.updatedAt) || String(state.updatedAt).slice(0, 10);
+return t("profileCloudBound", { name, date });
+}
+return `${t("profileCloudBoundPending", { name })} ${t("profileCloudSameNameRestore")}`;
+}
 function renderProfile() {
 const account = currentAccount();
 const isLoggedIn = Boolean(account);
@@ -5231,7 +5271,7 @@ els.profileCloudBackupBtn.disabled = !cloudBackupAvailable || !isLoggedIn;
 els.profileCloudRestoreBtn.disabled = !cloudBackupAvailable || !isLoggedIn;
 if (els.profileCloudStatus) {
 els.profileCloudStatus.textContent = cloudBackupAvailable
-? isLoggedIn ? t("profileCloudReady") : t("profileCloudIdle")
+? isLoggedIn ? profileCloudBoundStatusText(account) : t("profileCloudIdle")
 : t("profileCloudHiddenIos");
 }
 renderProfileImportPreview();
@@ -5570,6 +5610,7 @@ method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
 playerId: getOnlinePlayerId(),
+accountId: currentAccountId || getOnlinePlayerId(),
 displayName: cleanPlayerDisplayName(account.name),
 profile,
 }),
@@ -10379,7 +10420,7 @@ p2pState.status = "failed";
 p2pState.failureReasonKey = reasonKey;
 renderP2pPanel();
 if (notice) {
-setNotice(t(reasonKey));
+setNotice(t("p2pFailureWithDiagnostic", { reason: t(reasonKey) }));
 }
 }
 function startP2pConnectTimer() {
@@ -10797,7 +10838,9 @@ const errorText = !supported
 ? t(p2pState.failureReasonKey)
 : "";
 els.p2pError.hidden = !errorText;
-els.p2pError.textContent = errorText;
+els.p2pError.textContent = errorText ? t("p2pFailureWithDiagnostic", { reason: errorText }) : "";
+els.p2pCopyDiagnosticBtn.classList.toggle("primary", Boolean(errorText));
+els.p2pCopyDiagnosticBtn.title = errorText ? t("p2pFailureDiagnosticPrompt") : "";
 els.p2pOfferTitle.textContent = t("p2pOfferTitle");
 els.p2pOfferText.textContent = t("p2pOfferText");
 setButtonContent(els.p2pCopyOfferBtn, "⧉", t("p2pCopyInvite"));
@@ -11528,6 +11571,23 @@ return t("lanDiagnosticAddressReady", { url: `${check.base}/index.html` });
 }
 return t("lanDiagnosticAddressMissing");
 }
+function connectionDiagnosticModeText() {
+if (isGameCenterConnected() || isIosAppBuild()) {
+return t("connectionDiagnosticGameCenterMode");
+}
+if (p2pState.cloudRoom || ["offer", "answer", "connecting", "connected", "failed"].includes(p2pState.status)) {
+return t("connectionDiagnosticCloudMode");
+}
+if (isLanPlayablePage() || isLanConnected() || currentLanRoom()) {
+return t("connectionDiagnosticLanMode");
+}
+return t("connectionDiagnosticLocalMode");
+}
+function connectionDiagnosticBrowserText() {
+return p2pSupported()
+? t("connectionDiagnosticWebrtcReady")
+: t("connectionDiagnosticWebrtcMissing");
+}
 function appendLanCheckRow(label, value, href = "") {
 const row = document.createElement("div");
 row.className = "lan-check-row";
@@ -11584,6 +11644,8 @@ openLanDiagnosticFromStatus(check, { urgent: true });
 }
 function lanDiagnosticRows(check = lastLanCheck) {
 return [
+[t("connectionDiagnosticMode"), connectionDiagnosticModeText()],
+[t("connectionDiagnosticBrowser"), connectionDiagnosticBrowserText()],
 [t("lanCheckServer"), check?.ok ? t("lanCheckServerOn") : t("lanCheckServerOff")],
 [t("lanCheckPage"), lanCurrentPageCheckText()],
 [t("lanCheckRoom"), lanRoomCheckText()],
