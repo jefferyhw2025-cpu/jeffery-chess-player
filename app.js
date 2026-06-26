@@ -1,6 +1,6 @@
 const { Chess } = window.ChessLib;
-const appVersion = "1.0.64";
-const iosBuildNumber = "60";
+const appVersion = "1.0.65";
+const iosBuildNumber = "61";
 const productionSiteUrl = "https://jeffery-chess-game.netlify.app";
 const backupSiteUrl = "https://jefferyhw2025-cpu.github.io/jeffery-chess-player/";
 const lanSpectatorRoomPrefix = "WATCH-";
@@ -16,6 +16,7 @@ const p2pConnectTimeoutMs = 20000;
 const p2pCloudPollMs = 1800;
 const releaseNotes = {
 zh: [
+"v1.0.65：版本中心新增当前线路提示，可直接看见 Netlify、GitHub Pages、Apple/iOS 包是否同步；玩家档案会自动保存一份本机安全备份，换设备前仍可手动导出。",
 "v1.0.64：首次打开会显示每日残局、挑战 AI、赛后复盘三步引导；私有反馈工具可按联机、走棋、声音和版本筛选；App Store 隐私与真机测试资料已重新核对。",
 "v1.0.63：云端档案现在优先按登录账号保存和恢复，反馈会自动附带版本、设备、联机方式和房间状态诊断；App Store 上架资料加入真机 Game Center 测试重点。",
 "v1.0.62：云端档案显示账号绑定和最近同步时间；联机失败会更主动提示复制诊断；App Store 截图素材更新为更商业化标题。",
@@ -95,6 +96,7 @@ zh: [
 "玩家档案增加完成局数、胜率、常用棋子和最后保存时间。",
 ],
 en: [
+"v1.0.65: The version center now shows the current route and whether Netlify, GitHub Pages, and Apple/iOS are synced; player profiles also keep an automatic local safe backup alongside manual export.",
 "v1.0.64: First launch now guides players through Daily Puzzle, AI Challenge, and Game Review; the feedback admin can filter by online, move, sound, and version issues; App Store privacy and real-device test materials were rechecked.",
 "v1.0.63: Cloud profiles now save and restore by signed-in account first, feedback automatically includes version/device/network diagnostics, and App Store materials highlight real-device Game Center test points.",
 "v1.0.62: Cloud profiles now show account binding and last sync time; connection failures push players toward copyable diagnostics; App Store screenshots use stronger marketing captions.",
@@ -253,6 +255,7 @@ let pagesVersionState = { status: "idle", version: "", url: backupSiteUrl };
 let signalServiceState = { status: "idle", url: `${productionSiteUrl}${p2pSignalApiPath}` };
 let publishStatusState = { status: "idle" };
 let profileCloudAutoBackupTimer = null;
+let profileLocalAutoBackupTimer = null;
 let profileCloudRestoreCheckedForAccount = "";
 const professionalLeagueScores = { win: 5, loss: -3, draw: 0 };
 const professionalLeagueAiName = {
@@ -798,6 +801,12 @@ releaseStatusTitle: "发布状态面板",
 releaseStatusIdle: "打开版本中心后会检查本地、Netlify、GitHub Pages 和共享包版本。",
 releaseStatusChecking: "正在检查发布状态...",
 releaseStatusDone: "发布状态已检查",
+releaseStatusCurrentRoute: "当前线路",
+releaseStatusRouteNetlify: "Netlify 主站",
+releaseStatusRoutePages: "GitHub Pages 备用站",
+releaseStatusRouteApple: "Apple/iOS App",
+releaseStatusRouteLocal: "本地预览",
+releaseStatusRouteFile: "本地文件",
 releaseStatusLocal: "本地版本",
 releaseStatusNetlify: "Netlify",
 releaseStatusPages: "GitHub Pages",
@@ -818,6 +827,7 @@ releaseStatusReady: "已同步 v{version}",
 releaseStatusHintIdle: "这里会提示 Netlify 和 GitHub Pages 是否同步。",
 releaseStatusHintPages: "GitHub Pages 未开启时，请到 GitHub 仓库 Settings -> Pages，把 Source 设为 GitHub Actions。",
 releaseStatusHintReady: "备用线路已上线，玩家可从 GitHub Pages 继续进入游戏。",
+releaseStatusHintMixed: "GitHub Pages 已是最新版；Netlify 主站还需重新部署，云端功能可能暂时使用旧版。",
 releaseStatusSignalReady: "可用",
 releaseStatusSignalOffline: "不可用",
 releaseShareTitle: "分享给朋友",
@@ -828,7 +838,7 @@ releaseShareCopied: "已复制公开玩家版链接。",
 releaseShareQrAria: "公开玩家版二维码",
 releaseProfileBackupTitle: "保护玩家档案",
 releaseProfileBackupPill: "云端准备",
-releaseProfileBackupText: "更新、换设备或以后同步云端前，建议导出一次安全档案。导出文件只保存游戏进度，不包含登录密码哈希、反馈内容或私人临时资料。",
+releaseProfileBackupText: "游戏会自动保留一份本机安全备份；更新、换设备或以后同步云端前，仍建议手动导出一次。导出文件只保存游戏进度，不包含登录密码哈希、反馈内容或私人临时资料。",
 releaseProfileBackupButton: "导出安全档案",
 releaseProfileImportButton: "导入安全档案",
 releaseProfileImportPrompt: "请选择之前导出的安全档案 JSON 文件。",
@@ -1678,6 +1688,12 @@ releaseStatusTitle: "Release Status",
 releaseStatusIdle: "The version center checks local, Netlify, GitHub Pages, and share package versions.",
 releaseStatusChecking: "Checking release status...",
 releaseStatusDone: "Release status checked",
+releaseStatusCurrentRoute: "Current Route",
+releaseStatusRouteNetlify: "Netlify Main Site",
+releaseStatusRoutePages: "GitHub Pages Backup",
+releaseStatusRouteApple: "Apple/iOS App",
+releaseStatusRouteLocal: "Local Preview",
+releaseStatusRouteFile: "Local File",
 releaseStatusLocal: "Local Version",
 releaseStatusNetlify: "Netlify",
 releaseStatusPages: "GitHub Pages",
@@ -1698,6 +1714,7 @@ releaseStatusReady: "Synced v{version}",
 releaseStatusHintIdle: "This shows whether Netlify and GitHub Pages are synced.",
 releaseStatusHintPages: "If GitHub Pages is unavailable, open GitHub Settings -> Pages and set Source to GitHub Actions.",
 releaseStatusHintReady: "The backup route is online, so players can keep playing from GitHub Pages.",
+releaseStatusHintMixed: "GitHub Pages is current; Netlify still needs redeploying, so cloud features may temporarily use the older version.",
 releaseStatusSignalReady: "Available",
 releaseStatusSignalOffline: "Unavailable",
 releaseShareTitle: "Share With Friends",
@@ -1708,7 +1725,7 @@ releaseShareCopied: "Public player link copied.",
 releaseShareQrAria: "Public player QR code",
 releaseProfileBackupTitle: "Protect Player Profile",
 releaseProfileBackupPill: "Cloud Ready",
-releaseProfileBackupText: "Before updating, changing devices, or future cloud sync, export a safe profile. The file keeps game progress only; it does not include login password hashes, feedback text, or private temporary data.",
+releaseProfileBackupText: "The game keeps an automatic local safe backup. Before updating, changing devices, or future cloud sync, still export a safe profile manually. The file keeps game progress only; it does not include login password hashes, feedback text, or private temporary data.",
 releaseProfileBackupButton: "Export Safe Profile",
 releaseProfileImportButton: "Import Safe Profile",
 releaseProfileImportPrompt: "Choose a previously exported safe profile JSON file.",
@@ -5099,6 +5116,13 @@ return snapshot;
 return null;
 }
 }
+function scheduleProfileLocalAutoBackup(reason = "progress") {
+window.clearTimeout(profileLocalAutoBackupTimer);
+profileLocalAutoBackupTimer = window.setTimeout(() => {
+saveProfileBackup(`auto:${reason}`);
+renderReleaseProfileBackup();
+}, 1200);
+}
 function loadProfileBackup() {
 try {
 const backup = JSON.parse(window.localStorage.getItem(profileBackupStorageKey) ?? "null");
@@ -5622,6 +5646,7 @@ Math.max(0, Math.floor(Number(summary.completedGames)) || 0) > local.completedGa
 );
 }
 function scheduleProfileCloudAutoBackup(reason = "progress") {
+scheduleProfileLocalAutoBackup(reason);
 if (!isProfileCloudBackupAvailable() || !currentAccount()) {
 return;
 }
@@ -6212,6 +6237,24 @@ return { label: t("releaseStatusAdminLocal"), ok: true };
 }
 return { label: t("releaseStatusAdminWarning"), ok: false };
 }
+function currentReleaseRouteLabel() {
+if (isIosAppBuild()) {
+return t("releaseStatusRouteApple");
+}
+if (isBackupSiteHost()) {
+return t("releaseStatusRoutePages");
+}
+if (window.location.hostname === new URL(productionSiteUrl).hostname) {
+return t("releaseStatusRouteNetlify");
+}
+if (["127.0.0.1", "localhost"].includes(window.location.hostname) || window.location.hostname.startsWith("192.168.")) {
+return t("releaseStatusRouteLocal");
+}
+if (window.location.protocol === "file:") {
+return t("releaseStatusRouteFile");
+}
+return window.location.hostname || t("releaseStatusUnavailable");
+}
 function renderReleaseStatus() {
 if (!els.releaseStatusTitle || !els.releaseStatusPill || !els.releaseStatusList) {
 return;
@@ -6232,6 +6275,7 @@ els.releaseStatusHint.textContent = t("releaseStatusHintIdle");
 }
 return;
 }
+appendReleaseStatusRow(t("releaseStatusCurrentRoute"), currentReleaseRouteLabel(), true);
 appendReleaseStatusRow(t("releaseStatusLocal"), t("releaseStatusVersion", { version: appVersion }), true);
 appendReleaseStatusRow(t("releaseStatusApple"), `${t("releaseStatusVersion", { version: appVersion })} / build ${iosBuildNumber}`, true);
 appendReleaseStatusRow(
@@ -6264,7 +6308,9 @@ appendReleaseStatusRow(t("releaseStatusAdminEntry"), adminEntry.label, adminEntr
 appendReleaseStatusRow(t("releaseStatusShare"), t("releaseStatusVersion", { version: appVersion }), true);
 if (els.releaseStatusHint) {
 els.releaseStatusHint.textContent =
-pagesVersionState.status === "synced"
+pagesVersionState.status === "synced" && liveVersionState.status === "outdated"
+? t("releaseStatusHintMixed")
+: pagesVersionState.status === "synced"
 ? t("releaseStatusHintReady")
 : pagesVersionState.status === "unavailable"
 ? t("releaseStatusHintPages")
@@ -7113,6 +7159,7 @@ scheduleProfileCloudAutoBackup("score");
 return;
 }
 window.localStorage.setItem(scoreStorageKey, JSON.stringify(matchScore));
+scheduleProfileLocalAutoBackup("score");
 }
 function renderFriendMode() {
 if (!els.friendWhiteName || !els.friendBlackName) {
@@ -7178,6 +7225,7 @@ scheduleProfileCloudAutoBackup("rank");
 return;
 }
 window.localStorage.setItem(rankStorageKey, String(rankPoints));
+scheduleProfileLocalAutoBackup("rank");
 }
 function updateRankPoints(amount) {
 const previousPoints = rankPoints;
